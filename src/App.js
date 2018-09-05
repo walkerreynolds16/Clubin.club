@@ -1,0 +1,295 @@
+import React, { Component } from 'react';
+import YouTube from 'react-youtube';
+import {SortableContainer, SortableElement, arrayMove} from 'react-sortable-hoc';
+// import Modal from 'react-modal';
+import { TextField, validator } from 'react-textfield';
+import {Button, FormGroup, FormControl, ListGroup, ListGroupItem, Modal} from 'react-bootstrap';
+import Axios from 'axios'
+import logo from './logo.svg';
+import './App.css';
+
+var video = '2g811Eo7K8U'
+const youtubeAPIKey = 'AIzaSyD7edp0KrX7oft2f-zL2uEnQFhW4Uj5OvE'
+
+const listStyle = {
+  display:'inline-block',
+  position:'fixed',
+  width:'30%',
+  top:'5px',
+  left:'5px'
+}
+
+const playerStyle = {
+  display:'inline',
+  position:'relative',
+  left:'30%',
+  marginLeft:'20px',
+  top:'5px'
+}
+
+const addVideoModalStyle = {
+  content : {
+    top                   : '50%',
+    left                  : '50%',
+    right                 : 'auto',
+    bottom                : 'auto',
+    marginRight           : '-50%',
+    transform             : 'translate(-50%, -50%)',
+    width                 : '40%',
+    height                : '60%'
+  }
+};
+
+const SortableItem = SortableElement(({value}) => {
+  var image = 'http://img.youtube.com/vi/' + value.id + '/0.jpg'
+
+  return (
+    <div onClick={() => {video=value.id}}>
+      <li style={{'listStyle':'none', 'display':'flex','alignItems':'center','marginBottom':'15px'}}>
+        <img src={image} style={{'width':'120px','height':'90px'}}/>
+        <h5 style={{'display':'inline-block','fontWeight':'bold', 'marginLeft':'5px'}}>{value.title}</h5>
+      </li>
+    </div>
+    
+  );
+});
+
+const SortableList = SortableContainer(({items}) => {
+  return (
+    <ul>
+      {items.map((value, index) => (
+        <SortableItem key={`item-${index}`} index={index} value={value} />
+      ))}
+    </ul>
+  );
+});
+
+
+class App extends Component {
+
+  constructor(props){
+    super(props)
+
+    this.state = {
+      listItems: [
+        {id:'iUzAylE7MBY',title:'Get SWATTED! - Demo Disk Gameplay'},
+        {id:'UyMGTYb6pew',title:'GRAB MY WOOD - Demo Disk Gameplay'},
+        {id:'jwGEuO3RucA',title:'HITLER IS ALIVE?!? - Demo Disk Gameplay'},
+        {id:'8EbxFdQFCfk',title:'WORST RESTAURANT EVER - Demo Disk Gameplay'}
+      ],
+      showAddVideoModal: false,
+      addVideoSearchTerm: '',
+      playerWidth: '',
+      playerHeight: '',
+      searchList: []
+
+    }
+  }
+
+  updatePage = () => {
+    console.log('updating')
+    this.forceUpdate()
+  }
+
+  componentDidMount() {
+    this.updateWindowDimensions()
+    window.addEventListener('resize', this.updateWindowDimensions);
+  }
+
+  componentWillUnmount() {
+    window.removeEventListener('resize', this.updateWindowDimensions);
+  }
+
+  updateWindowDimensions = () => {
+    var width = window.innerWidth * .65
+    var height = width * (9/16)
+
+    this.setState({
+      playerWidth: (width) + 'px',
+      playerHeight: (height) + 'px',
+    })
+  }
+
+  onSortEnd = ({oldIndex, newIndex}) => {
+    this.setState({
+      listItems: arrayMove(this.state.listItems, oldIndex, newIndex),
+    });
+  };
+
+  onReady(event) {
+    // access to player in all event handlers via event.target
+    event.target.pauseVideo();
+  }
+
+  onAddVideo = () => {
+    console.log('add new video')
+    this.onShowAddVideoModal()
+  }
+
+  onShowAddVideoModal = () => {
+    this.setState({
+      showAddVideoModal: true
+    })
+  }
+
+  onCloseAddVideoModal = () => {
+    this.setState({
+      showAddVideoModal: false,
+      searchList: [],
+      addVideoSearchTerm: ''
+    })
+  }
+
+  handleAddVideoIDChange= (event) => {
+    this.setState({
+      addVideoSearchTerm: event.target.value
+    })
+  }
+
+  onAddVideoButton = () => {
+    //Add new video to item list
+    
+    var videoId = this.state.addVideoSearchTerm.slice()
+
+    var url = 'https://www.googleapis.com/youtube/v3/videos?id=' + videoId + '&key=' + youtubeAPIKey + '&part=snippet'
+
+    Axios.get(url)
+    .then(response => {
+      var videoTitle = response['data']['items'][0]['snippet']['title']
+
+      var itemList = this.state.listItems.slice()
+      itemList.push({id:videoId, title:videoTitle})
+
+      this.setState({
+        listItems: itemList
+      })
+
+      this.forceUpdate()
+    })
+    
+
+    //close add video modal
+    this.setState({
+      showAddVideoModal: false
+    })
+  }
+
+  onAddVideoSearch = (e) => {
+    e.preventDefault();
+
+    var q = this.state.addVideoSearchTerm
+    var maxResults = 25
+    var url = 'https://www.googleapis.com/youtube/v3/search?q=' + q + '&key=' + youtubeAPIKey + '&maxResults=' + maxResults + '&part=snippet'
+    
+    Axios.get(url)
+    .then(response => {
+      console.log(response)
+
+      var results = response['data']['items']
+      var searchList = []
+
+      for(var i = 0; i < results.length; i++){
+        var item = results[i]
+
+        var videoId = item['id']['videoId']
+        var videoTitle = item['snippet']['title']
+
+        if(videoId !== undefined){
+          //add videos to a list to be displayed on the modal
+          
+          searchList.push({id:videoId, title:videoTitle})
+          
+        }
+
+      }
+
+      this.setState({
+        searchList: searchList
+      })
+
+    })
+
+    
+  }
+
+  onSearchListItemClicked = (index) => {
+    console.log('Index = ' + index)
+  }
+  
+  render() {
+
+    const opts = {
+      width: this.state.playerWidth,
+      height: this.state.playerHeight,
+      playerVars: { // https://developers.google.com/youtube/player_parameters
+        autoplay: 0,
+        controls: 1
+      }
+    }; 
+
+    return (
+      <div >
+        
+        <div style={listStyle}>
+          <fieldset style={{'border':'p2'}}>
+            <button onClick={this.onAddVideo}>Add Video</button>
+
+            <div>
+              <SortableList 
+                items={this.state.listItems} 
+                onSortEnd={this.onSortEnd}
+                distance={5} />
+            </div>
+            
+
+          </fieldset>
+        </div>
+
+        <div style={playerStyle}>
+          <YouTube
+            videoId={video}
+            opts={opts}
+            onReady={this.onReady}
+          />
+        </div>
+
+
+        <Modal show={this.state.showAddVideoModal} onHide={this.onCloseAddVideoModal} bsSize='large'>
+          <Modal.Header closeButton>
+            <Modal.Title>Add Video to List</Modal.Title>
+          </Modal.Header>
+          <Modal.Body>
+          <div style={{'overflowY':'auto'}}>
+              <form>
+                <input value={this.state.addVideoSearchTerm} onChange={this.handleAddVideoIDChange}/>
+                <Button onClick={(e) => {this.onAddVideoSearch(e)}} >Search</Button>
+              </form>
+
+              <ListGroup>
+                {this.state.searchList.map((value, index) => {
+                  var imageLink = 'http://img.youtube.com/vi/' + value.id + '/0.jpg'
+
+                  return(
+                    <ListGroupItem style={{'position':'relative'}}>
+                      <img src={imageLink} style={{'width':'120px','height':'90px'}}/>
+                      <h5 style={{'display':'inline-block','fontWeight':'bold', 'marginLeft':'5px', 'wordWrap':'break-all'}}>{value.title}</h5>
+                      <Button bsSize="large" style={{'position':'fixed', 'right':'5px', 'top':'20px'}} onClick={() => this.onSearchListItemClicked(index)}>+</Button>
+                    </ListGroupItem>
+                  )
+
+                })}
+              </ListGroup>
+
+            </div>
+          </Modal.Body>
+          <Modal.Footer>
+            <Button onClick={this.onCloseAddVideoModal}>Close</Button>
+          </Modal.Footer>
+        </Modal>
+
+      </div>
+    );
+  }
+}
+
+export default App;
