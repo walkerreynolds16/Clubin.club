@@ -8,7 +8,7 @@ import Axios from 'axios'
 import logo from './logo.svg';
 import './App.css';
 
-var video = '2g811Eo7K8U'
+var video = 'iUzAylE7MBY'
 const youtubeAPIKey = 'AIzaSyD7edp0KrX7oft2f-zL2uEnQFhW4Uj5OvE'
 
 const listStyle = {
@@ -27,24 +27,13 @@ const playerStyle = {
   top:'5px'
 }
 
-const addVideoModalStyle = {
-  content : {
-    top                   : '50%',
-    left                  : '50%',
-    right                 : 'auto',
-    bottom                : 'auto',
-    marginRight           : '-50%',
-    transform             : 'translate(-50%, -50%)',
-    width                 : '40%',
-    height                : '60%'
-  }
-};
+
 
 const SortableItem = SortableElement(({value}) => {
   var image = 'http://img.youtube.com/vi/' + value.id + '/0.jpg'
 
   return (
-    <div onClick={() => {video=value.id}}>
+    <div>
       <li style={{'listStyle':'none', 'display':'flex','alignItems':'center','marginBottom':'15px'}}>
         <img src={image} style={{'width':'120px','height':'90px'}}/>
         <h5 style={{'display':'inline-block','fontWeight':'bold', 'marginLeft':'5px'}}>{value.title}</h5>
@@ -118,7 +107,29 @@ class App extends Component {
 
   onReady(event) {
     // access to player in all event handlers via event.target
-    event.target.pauseVideo();
+    event.target.pause
+  }
+
+  onPlayerStateChange = (event) => {
+    if(event.data === 0){
+      this.skipCurrentVideo()
+    }
+  }
+
+  skipCurrentVideo = () => {
+    console.log('skipping')
+    var topItem = this.state.listItems.splice(0,1)
+    var listCopy = this.state.listItems.slice()
+
+    
+    listCopy.push(topItem[0])
+    video = listCopy[0].id
+
+    this.setState({
+      listItems: listCopy
+    })
+
+    this.forceUpdate()
   }
 
   onAddVideo = () => {
@@ -146,74 +157,69 @@ class App extends Component {
     })
   }
 
-  onAddVideoButton = () => {
-    //Add new video to item list
-    
-    var videoId = this.state.addVideoSearchTerm.slice()
-
-    var url = 'https://www.googleapis.com/youtube/v3/videos?id=' + videoId + '&key=' + youtubeAPIKey + '&part=snippet'
-
-    Axios.get(url)
-    .then(response => {
-      var videoTitle = response['data']['items'][0]['snippet']['title']
-
-      var itemList = this.state.listItems.slice()
-      itemList.push({id:videoId, title:videoTitle})
-
-      this.setState({
-        listItems: itemList
-      })
-
-      this.forceUpdate()
-    })
-    
-
-    //close add video modal
-    this.setState({
-      showAddVideoModal: false
-    })
-  }
-
   onAddVideoSearch = (e) => {
-    e.preventDefault();
-
+    if(e != undefined){
+      e.preventDefault(); 
+    }
+    
     var q = this.state.addVideoSearchTerm
     var maxResults = 25
     var url = 'https://www.googleapis.com/youtube/v3/search?q=' + q + '&key=' + youtubeAPIKey + '&maxResults=' + maxResults + '&part=snippet'
     
-    Axios.get(url)
-    .then(response => {
-      console.log(response)
+    if(q.length >= 1){
+      Axios.get(url)
+        .then(response => {
+          console.log(response)
 
-      var results = response['data']['items']
-      var searchList = []
+          var results = response['data']['items']
+          var searchList = []
 
-      for(var i = 0; i < results.length; i++){
-        var item = results[i]
+          for(var i = 0; i < results.length; i++){
+            var item = results[i]
 
-        var videoId = item['id']['videoId']
-        var videoTitle = item['snippet']['title']
+            var videoId = item['id']['videoId']
+            var videoTitle = item['snippet']['title']
 
-        if(videoId !== undefined){
-          //add videos to a list to be displayed on the modal
-          
-          searchList.push({id:videoId, title:videoTitle})
-          
-        }
+            if(videoId !== undefined){
+              //add videos to a list to be displayed on the modal
+              searchList.push({id:videoId, title:videoTitle})
+              
+            }
 
-      }
+          }
 
-      this.setState({
-        searchList: searchList
-      })
+          this.setState({
+            searchList: searchList
+          })
 
-    })
+        })
+    }
 
-    
   }
 
   onSearchListItemClicked = (index) => {
     console.log('Index = ' + index)
+
+    var list = this.state.listItems.slice()
+    var searchRes = this.state.searchList.slice()
+
+    list.push(searchRes[index])
+
+    this.setState({
+      listItems: list
+    })
+
+    this.forceUpdate()
+  }
+
+  handleKeyPress = (event) =>{
+    event.preventDefault()
+    console.log(event.key)
+    
+    if(event.key == 'Enter'){
+      this.onAddVideoSearch()
+    }
+    
   }
   
   render() {
@@ -222,7 +228,7 @@ class App extends Component {
       width: this.state.playerWidth,
       height: this.state.playerHeight,
       playerVars: { // https://developers.google.com/youtube/player_parameters
-        autoplay: 0,
+        autoplay: 1,
         controls: 1
       }
     }; 
@@ -250,7 +256,9 @@ class App extends Component {
             videoId={video}
             opts={opts}
             onReady={this.onReady}
-          />
+            onStateChange={this.onPlayerStateChange}/>
+
+          <Button bsSize='large' onClick={() => this.skipCurrentVideo()}>></Button>
         </div>
 
 
@@ -262,7 +270,7 @@ class App extends Component {
           <div style={{'overflowY':'auto'}}>
               <form>
                 <input value={this.state.addVideoSearchTerm} onChange={this.handleAddVideoIDChange}/>
-                <Button onClick={(e) => {this.onAddVideoSearch(e)}} >Search</Button>
+                <Button onClick={(e) => {this.onAddVideoSearch(e)}}>Search</Button>
               </form>
 
               <ListGroup>
@@ -270,10 +278,10 @@ class App extends Component {
                   var imageLink = 'http://img.youtube.com/vi/' + value.id + '/0.jpg'
 
                   return(
-                    <ListGroupItem style={{'position':'relative'}}>
+                    <ListGroupItem style={{'position':'relative'}} onClick={() => this.onSearchListItemClicked(index)}>
                       <img src={imageLink} style={{'width':'120px','height':'90px'}}/>
                       <h5 style={{'display':'inline-block','fontWeight':'bold', 'marginLeft':'5px', 'wordWrap':'break-all'}}>{value.title}</h5>
-                      <Button bsSize="large" style={{'position':'fixed', 'right':'5px', 'top':'20px'}} onClick={() => this.onSearchListItemClicked(index)}>+</Button>
+                      {/* <Button bsSize="large" style={{'position':'fixed', 'right':'5px', 'top':'20px'}} onClick={() => this.onSearchListItemClicked(index)}>+</Button> */}
                     </ListGroupItem>
                   )
 
