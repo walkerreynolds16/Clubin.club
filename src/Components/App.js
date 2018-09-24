@@ -5,8 +5,7 @@ import {SortableContainer, SortableElement, arrayMove} from 'react-sortable-hoc'
 import { TextField, validator } from 'react-textfield';
 import {Button, FormGroup, FormControl, ListGroup, ListGroupItem, Modal} from 'react-bootstrap';
 import Axios from 'axios'
-import logo from './logo.svg';
-import './App.css';
+import '../Styles/App.css';
 
 var video = 'iUzAylE7MBY'
 const youtubeAPIKey = 'AIzaSyD7edp0KrX7oft2f-zL2uEnQFhW4Uj5OvE'
@@ -26,8 +25,6 @@ const playerStyle = {
   marginLeft:'20px',
   top:'5px'
 }
-
-
 
 const SortableItem = SortableElement(({value}) => {
   var image = 'http://img.youtube.com/vi/' + value.id + '/0.jpg'
@@ -221,6 +218,14 @@ class App extends Component {
     }
     
   }
+
+  testBackendCall = () => {
+    var url = 'http://localhost:5000/hello?name=Walker'
+    Axios.get(url)
+      .then(response => {
+        console.log(response)
+      })
+  }
   
   render() {
 
@@ -228,19 +233,21 @@ class App extends Component {
       width: this.state.playerWidth,
       height: this.state.playerHeight,
       playerVars: { // https://developers.google.com/youtube/player_parameters
-        autoplay: 1,
+        autoplay: 0,
         controls: 1
       }
     }; 
 
     return (
       <div >
+
+        <Button onClick={this.testBackendCall}>Test</Button>
         
         <div style={listStyle}>
           <fieldset style={{'border':'p2'}}>
-            <button onClick={this.onAddVideo}>Add Video</button>
+            <Button onClick={this.onAddVideo}>Add Video</Button>
 
-            <div>
+            <div style={{'marginTop':'10px'}}>
               <SortableList 
                 items={this.state.listItems} 
                 onSortEnd={this.onSortEnd}
