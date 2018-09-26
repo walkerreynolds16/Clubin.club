@@ -91,10 +91,14 @@ class App extends Component {
     })
   }
 
+  // This function is called when the sortable list is sorted
   onSortEnd = ({ oldIndex, newIndex }) => {
     this.setState({
       listItems: arrayMove(this.state.listItems, oldIndex, newIndex),
     });
+
+
+
   };
 
   onReady(event) {
@@ -221,15 +225,6 @@ class App extends Component {
 
   }
 
-  handleKeyPress = (event) => {
-    event.preventDefault()
-    console.log(event.key)
-
-    if (event.key === 'Enter') {
-      this.onAddVideoSearch()
-    }
-
-  }
 
   testBackendCall = () => {
     this.getPlaylistForCurrentUser()
@@ -361,7 +356,8 @@ class App extends Component {
           </Modal.Header>
           <Modal.Body>
             <div style={{ 'overflowY': 'auto' }}>
-              <form>
+            
+              <form onSubmit={(e) => this.onAddVideoSearch(e)}>
                 <input value={this.state.addVideoSearchTerm} onChange={this.handleAddVideoIDChange} />
                 <Button onClick={(e) => { this.onAddVideoSearch(e) }}>Search</Button>
               </form>
