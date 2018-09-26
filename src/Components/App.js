@@ -58,12 +58,7 @@ class App extends Component {
     super(props)
 
     this.state = {
-      listItems: [
-        { id: 'iUzAylE7MBY', title: 'Get SWATTED! - Demo Disk Gameplay' },
-        { id: 'UyMGTYb6pew', title: 'GRAB MY WOOD - Demo Disk Gameplay' },
-        { id: 'jwGEuO3RucA', title: 'HITLER IS ALIVE?!? - Demo Disk Gameplay' },
-        { id: '8EbxFdQFCfk', title: 'WORST RESTAURANT EVER - Demo Disk Gameplay' }
-      ],
+      listItems: [],
       showAddVideoModal: false,
       addVideoSearchTerm: '',
       playerWidth: '',
@@ -74,14 +69,12 @@ class App extends Component {
     }
   }
 
-  updatePage = () => {
-    console.log('updating')
-    this.forceUpdate()
-  }
 
   componentDidMount() {
     this.updateWindowDimensions()
     window.addEventListener('resize', this.updateWindowDimensions);
+
+    this.getPlaylistForCurrentUser()
   }
 
   componentWillUnmount() {
@@ -211,6 +204,21 @@ class App extends Component {
     })
 
     this.forceUpdate()
+
+    this.addVideoToPlaylist(searchRes[index])
+  }
+
+  //This function is used for adding a video to the current backend playlist
+  addVideoToPlaylist = (video) => {
+    var videoId = video['id']
+    var videoTitle = video['title']
+    
+    var url = apiEndpoint + '/addVideoToPlaylist?username=' + this.state.currentUser + '&videoId=' + videoId + '&videoTitle=' + videoTitle
+    Axios.get(url)
+      .then((response) => {
+        console.log(response)
+      })
+
   }
 
   handleKeyPress = (event) => {
@@ -224,7 +232,7 @@ class App extends Component {
   }
 
   testBackendCall = () => {
-
+    this.getPlaylistForCurrentUser()
   }
 
   getVideoTitle = (id) => {
@@ -241,23 +249,41 @@ class App extends Component {
   // Ok this function is asynchronous. 
   // I would recommend to NOT touch this function. It took me forever to get it to work
   setCurrentPlaylist = async (list) => {
-    this.setState({
-      listItems: []
-    })
+    // this.setState({
+    //   listItems: []
+    // })
+
+    // var newPlaylist = []
+    
+    // for (const item of list) {
+    //   var id = item
+    //   var url = 'https://www.googleapis.com/youtube/v3/videos?key=' + youtubeAPIKey + '&id='+ id +'&part=snippet'
+
+    //   await Axios.get(url)
+    //     .then(async (response) => {
+    //       var title = response['data']['items'][0]['snippet']['title']
+    //       var obj = {id: id, title: title}
+
+    //       newPlaylist.push(obj)
+    //     })
+    // }
+
+    // this.setState({
+    //   listItems: newPlaylist
+    // })
+
+    // this.forceUpdate()
 
     var newPlaylist = []
-    
-    for (const item of list) {
-      var id = item
-      var url = 'https://www.googleapis.com/youtube/v3/videos?key=' + youtubeAPIKey + '&id='+ id +'&part=snippet'
 
-      await Axios.get(url)
-        .then(async (response) => {
-          var title = response['data']['items'][0]['snippet']['title']
-          var obj = {id: id, title: title}
+    for(const item of list){
+      var videoId = item['videoId']
+      var videoTitle = item['videoTitle']
 
-          newPlaylist.push(obj)
-        })
+      var obj = {id: videoId, title: videoTitle}
+
+      newPlaylist.push(obj)
+
     }
 
     this.setState({
@@ -265,6 +291,8 @@ class App extends Component {
     })
 
     this.forceUpdate()
+
+
   }
 
   getPlaylistForCurrentUser = () => {
