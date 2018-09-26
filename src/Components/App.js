@@ -1,46 +1,47 @@
 import React, { Component } from 'react';
 import YouTube from 'react-youtube';
-import {SortableContainer, SortableElement, arrayMove} from 'react-sortable-hoc';
+import { SortableContainer, SortableElement, arrayMove } from 'react-sortable-hoc';
 // import Modal from 'react-modal';
 import { TextField, validator } from 'react-textfield';
-import {Button, FormGroup, FormControl, ListGroup, ListGroupItem, Modal} from 'react-bootstrap';
+import { Button, FormGroup, FormControl, ListGroup, ListGroupItem, Modal } from 'react-bootstrap';
 import Axios from 'axios'
 import '../Styles/App.css';
 
 var video = 'iUzAylE7MBY'
 const youtubeAPIKey = 'AIzaSyD7edp0KrX7oft2f-zL2uEnQFhW4Uj5OvE'
+const apiEndpoint = 'http://localhost:5000'
 
 const listStyle = {
-  display:'inline-block',
-  position:'fixed',
-  width:'30%',
-  top:'5px',
-  left:'5px'
+  display: 'inline-block',
+  position: 'fixed',
+  width: '25%',
+  top: '5px',
+  left: '5px'
 }
 
 const playerStyle = {
-  display:'inline',
-  position:'relative',
-  left:'30%',
-  marginLeft:'20px',
-  top:'5px'
+  display: 'inline',
+  position: 'relative',
+  left: '25%',
+  marginLeft: '20px',
+  top: '5px'
 }
 
-const SortableItem = SortableElement(({value}) => {
+const SortableItem = SortableElement(({ value }) => {
   var image = 'http://img.youtube.com/vi/' + value.id + '/0.jpg'
 
   return (
     <div>
-      <li style={{'listStyle':'none', 'display':'flex','alignItems':'center','marginBottom':'15px'}}>
-        <img src={image} style={{'width':'120px','height':'90px'}}/>
-        <h5 style={{'display':'inline-block','fontWeight':'bold', 'marginLeft':'5px'}}>{value.title}</h5>
+      <li style={{ 'listStyle': 'none', 'display': 'flex', 'alignItems': 'center', 'marginBottom': '15px' }}>
+        <img src={image} style={{ 'width': '120px', 'height': '90px' }} />
+        <h5 style={{ 'display': 'inline-block', 'fontWeight': 'bold', 'marginLeft': '5px' }}>{value.title}</h5>
       </li>
     </div>
-    
+
   );
 });
 
-const SortableList = SortableContainer(({items}) => {
+const SortableList = SortableContainer(({ items }) => {
   return (
     <ul>
       {items.map((value, index) => (
@@ -53,21 +54,22 @@ const SortableList = SortableContainer(({items}) => {
 
 class App extends Component {
 
-  constructor(props){
+  constructor(props) {
     super(props)
 
     this.state = {
       listItems: [
-        {id:'iUzAylE7MBY',title:'Get SWATTED! - Demo Disk Gameplay'},
-        {id:'UyMGTYb6pew',title:'GRAB MY WOOD - Demo Disk Gameplay'},
-        {id:'jwGEuO3RucA',title:'HITLER IS ALIVE?!? - Demo Disk Gameplay'},
-        {id:'8EbxFdQFCfk',title:'WORST RESTAURANT EVER - Demo Disk Gameplay'}
+        { id: 'iUzAylE7MBY', title: 'Get SWATTED! - Demo Disk Gameplay' },
+        { id: 'UyMGTYb6pew', title: 'GRAB MY WOOD - Demo Disk Gameplay' },
+        { id: 'jwGEuO3RucA', title: 'HITLER IS ALIVE?!? - Demo Disk Gameplay' },
+        { id: '8EbxFdQFCfk', title: 'WORST RESTAURANT EVER - Demo Disk Gameplay' }
       ],
       showAddVideoModal: false,
       addVideoSearchTerm: '',
       playerWidth: '',
       playerHeight: '',
-      searchList: []
+      searchList: [],
+      currentUser: 'walker'
 
     }
   }
@@ -88,7 +90,7 @@ class App extends Component {
 
   updateWindowDimensions = () => {
     var width = window.innerWidth * .65
-    var height = width * (9/16)
+    var height = width * (9 / 16)
 
     this.setState({
       playerWidth: (width) + 'px',
@@ -96,7 +98,7 @@ class App extends Component {
     })
   }
 
-  onSortEnd = ({oldIndex, newIndex}) => {
+  onSortEnd = ({ oldIndex, newIndex }) => {
     this.setState({
       listItems: arrayMove(this.state.listItems, oldIndex, newIndex),
     });
@@ -108,17 +110,17 @@ class App extends Component {
   }
 
   onPlayerStateChange = (event) => {
-    if(event.data === 0){
+    if (event.data === 0) {
       this.skipCurrentVideo()
     }
   }
 
   skipCurrentVideo = () => {
     console.log('skipping')
-    var topItem = this.state.listItems.splice(0,1)
+    var topItem = this.state.listItems.splice(0, 1)
     var listCopy = this.state.listItems.slice()
 
-    
+
     listCopy.push(topItem[0])
     video = listCopy[0].id
 
@@ -148,22 +150,22 @@ class App extends Component {
     })
   }
 
-  handleAddVideoIDChange= (event) => {
+  handleAddVideoIDChange = (event) => {
     this.setState({
       addVideoSearchTerm: event.target.value
     })
   }
 
   onAddVideoSearch = (e) => {
-    if(e != undefined){
-      e.preventDefault(); 
+    if (e !== undefined) {
+      e.preventDefault();
     }
-    
+
     var q = this.state.addVideoSearchTerm
     var maxResults = 25
     var url = 'https://www.googleapis.com/youtube/v3/search?q=' + q + '&key=' + youtubeAPIKey + '&maxResults=' + maxResults + '&part=snippet'
-    
-    if(q.length >= 1){
+
+    if (q.length >= 1) {
       Axios.get(url)
         .then(response => {
           console.log(response)
@@ -171,16 +173,16 @@ class App extends Component {
           var results = response['data']['items']
           var searchList = []
 
-          for(var i = 0; i < results.length; i++){
+          for (var i = 0; i < results.length; i++) {
             var item = results[i]
 
             var videoId = item['id']['videoId']
             var videoTitle = item['snippet']['title']
 
-            if(videoId !== undefined){
+            if (videoId !== undefined) {
               //add videos to a list to be displayed on the modal
-              searchList.push({id:videoId, title:videoTitle})
-              
+              searchList.push({ id: videoId, title: videoTitle })
+
             }
 
           }
@@ -194,6 +196,8 @@ class App extends Component {
 
   }
 
+  //add new item to the front end playlist
+  //also call backend to update record
   onSearchListItemClicked = (index) => {
     console.log('Index = ' + index)
 
@@ -209,24 +213,78 @@ class App extends Component {
     this.forceUpdate()
   }
 
-  handleKeyPress = (event) =>{
+  handleKeyPress = (event) => {
     event.preventDefault()
     console.log(event.key)
-    
-    if(event.key == 'Enter'){
+
+    if (event.key === 'Enter') {
       this.onAddVideoSearch()
     }
-    
+
   }
 
   testBackendCall = () => {
-    var url = 'http://localhost:5000/hello?name=Walker'
+
+  }
+
+  getVideoTitle = (id) => {
+    var url = 'https://www.googleapis.com/youtube/v3/videos?key=' + youtubeAPIKey + '&id='+ id +'&part=snippet'
+    var title = ''
     Axios.get(url)
-      .then(response => {
+      .then((response) => {
+        return response['data']['items'][0]['snippet']['title']
+      })
+
+    return title
+  }
+
+  // Ok this function is asynchronous. 
+  // I would recommend to NOT touch this function. It took me forever to get it to work
+  setCurrentPlaylist = async (list) => {
+    this.setState({
+      listItems: []
+    })
+
+    var newPlaylist = []
+    
+    for (const item of list) {
+      var id = item
+      var url = 'https://www.googleapis.com/youtube/v3/videos?key=' + youtubeAPIKey + '&id='+ id +'&part=snippet'
+
+      await Axios.get(url)
+        .then(async (response) => {
+          var title = response['data']['items'][0]['snippet']['title']
+          var obj = {id: id, title: title}
+
+          newPlaylist.push(obj)
+        })
+    }
+
+    this.setState({
+      listItems: newPlaylist
+    })
+
+    this.forceUpdate()
+  }
+
+  getPlaylistForCurrentUser = () => {
+    var url = apiEndpoint + '/getPlaylist?username=' + this.state.currentUser
+    Axios.get(url)
+      .then((response) => {
         console.log(response)
+
+        if (response.data.length !== 0) {
+          this.setCurrentPlaylist(response.data)
+
+        } else {
+          console.log('No Playlist for this user')
+        }
+
       })
   }
-  
+
+
+
   render() {
 
     const opts = {
@@ -236,24 +294,24 @@ class App extends Component {
         autoplay: 0,
         controls: 1
       }
-    }; 
+    };
 
     return (
       <div >
 
-        <Button onClick={this.testBackendCall}>Test</Button>
-        
+        <Button onClick={this.getPlaylistForCurrentUser}>Test</Button>
+
         <div style={listStyle}>
-          <fieldset style={{'border':'p2'}}>
+          <fieldset style={{ 'border': 'p2' }}>
             <Button onClick={this.onAddVideo}>Add Video</Button>
 
-            <div style={{'marginTop':'10px'}}>
-              <SortableList 
-                items={this.state.listItems} 
+            <div style={{ 'marginTop': '10px' }}>
+              <SortableList
+                items={this.state.listItems}
                 onSortEnd={this.onSortEnd}
                 distance={5} />
             </div>
-            
+
 
           </fieldset>
         </div>
@@ -263,7 +321,7 @@ class App extends Component {
             videoId={video}
             opts={opts}
             onReady={this.onReady}
-            onStateChange={this.onPlayerStateChange}/>
+            onStateChange={this.onPlayerStateChange} />
 
           <Button bsSize='large' onClick={() => this.skipCurrentVideo()}>></Button>
         </div>
@@ -274,20 +332,20 @@ class App extends Component {
             <Modal.Title>Add Video to List</Modal.Title>
           </Modal.Header>
           <Modal.Body>
-          <div style={{'overflowY':'auto'}}>
+            <div style={{ 'overflowY': 'auto' }}>
               <form>
-                <input value={this.state.addVideoSearchTerm} onChange={this.handleAddVideoIDChange}/>
-                <Button onClick={(e) => {this.onAddVideoSearch(e)}}>Search</Button>
+                <input value={this.state.addVideoSearchTerm} onChange={this.handleAddVideoIDChange} />
+                <Button onClick={(e) => { this.onAddVideoSearch(e) }}>Search</Button>
               </form>
 
               <ListGroup>
                 {this.state.searchList.map((value, index) => {
                   var imageLink = 'http://img.youtube.com/vi/' + value.id + '/0.jpg'
 
-                  return(
-                    <ListGroupItem style={{'position':'relative'}} onClick={() => this.onSearchListItemClicked(index)}>
-                      <img src={imageLink} style={{'width':'120px','height':'90px'}}/>
-                      <h5 style={{'display':'inline-block','fontWeight':'bold', 'marginLeft':'5px', 'wordWrap':'break-all'}}>{value.title}</h5>
+                  return (
+                    <ListGroupItem style={{ 'position': 'relative' }} onClick={() => this.onSearchListItemClicked(index)}>
+                      <img src={imageLink} style={{ 'width': '120px', 'height': '90px' }} />
+                      <h5 style={{ 'display': 'inline-block', 'fontWeight': 'bold', 'marginLeft': '5px', 'wordWrap': 'break-all' }}>{value.title}</h5>
                       {/* <Button bsSize="large" style={{'position':'fixed', 'right':'5px', 'top':'20px'}} onClick={() => this.onSearchListItemClicked(index)}>+</Button> */}
                     </ListGroupItem>
                   )
