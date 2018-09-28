@@ -1,11 +1,11 @@
 import React, { Component } from 'react';
 import YouTube from 'react-youtube';
 import { SortableContainer, SortableElement, arrayMove } from 'react-sortable-hoc';
-// import Modal from 'react-modal';
-import { TextField, validator } from 'react-textfield';
-import { Button, FormGroup, FormControl, ListGroup, ListGroupItem, Modal } from 'react-bootstrap';
+import { Button, ListGroup, ListGroupItem, Modal } from 'react-bootstrap';
+import Slider from 'react-slide-out'
 import Axios from 'axios'
 import '../Styles/App.css';
+import 'react-slide-out/lib/index.css'
 
 var video = 'iUzAylE7MBY'
 const youtubeAPIKey = 'AIzaSyD7edp0KrX7oft2f-zL2uEnQFhW4Uj5OvE'
@@ -33,8 +33,8 @@ const SortableItem = SortableElement(({ value }) => {
   return (
     <div>
       <li style={{ 'listStyle': 'none', 'display': 'flex', 'alignItems': 'center', 'marginBottom': '15px' }}>
-        <img src={image} style={{ 'width': '120px', 'height': '90px' }} />
-        <h5 style={{ 'display': 'inline-block', 'fontWeight': 'bold', 'marginLeft': '5px' }}>{value.title}</h5>
+        <img src={image} style={{ 'width': '60px', 'height': '45px' }} />
+        <h6 style={{ 'display': 'inline-block', 'fontWeight': 'bold', 'marginLeft': '5px' }}>{value.title}</h6>
       </li>
     </div>
 
@@ -43,11 +43,14 @@ const SortableItem = SortableElement(({ value }) => {
 
 const SortableList = SortableContainer(({ items }) => {
   return (
-    <ul>
-      {items.map((value, index) => (
-        <SortableItem key={`item-${index}`} index={index} value={value} />
-      ))}
-    </ul>
+    <div style={{'overflow':'auto', 'height':'600px'}}>
+      <ul>
+        {items.map((value, index) => (
+          <SortableItem key={`item-${index}`} index={index} value={value} />
+        ))}
+      </ul>
+    </div>
+    
   );
 });
 
@@ -64,17 +67,19 @@ class App extends Component {
       playerWidth: '',
       playerHeight: '',
       searchList: [],
-      currentUser: 'walker'
+      currentUser: 'walker',
+      showPlaylistSlideIn: false
 
     }
   }
 
 
-  componentDidMount() {
+  async componentDidMount() {
     this.updateWindowDimensions()
     window.addEventListener('resize', this.updateWindowDimensions);
 
     this.getPlaylistForCurrentUser()
+
   }
 
   componentWillUnmount() {
@@ -93,10 +98,13 @@ class App extends Component {
 
   // This function is called when the sortable list is sorted
   onSortEnd = ({ oldIndex, newIndex }) => {
+    var newListItems =  arrayMove(this.state.listItems, oldIndex, newIndex)
+
     this.setState({
-      listItems: arrayMove(this.state.listItems, oldIndex, newIndex),
+      listItems: newListItems,
     });
 
+    this.setBackEndPlaylist(newListItems)
 
 
   };
@@ -227,7 +235,7 @@ class App extends Component {
 
 
   testBackendCall = () => {
-    this.getPlaylistForCurrentUser()
+    
   }
 
   getVideoTitle = (id) => {
@@ -241,33 +249,9 @@ class App extends Component {
     return title
   }
 
-  // Ok this function is asynchronous. 
-  // I would recommend to NOT touch this function. It took me forever to get it to work
-  setCurrentPlaylist = async (list) => {
-    // this.setState({
-    //   listItems: []
-    // })
-
-    // var newPlaylist = []
-    
-    // for (const item of list) {
-    //   var id = item
-    //   var url = 'https://www.googleapis.com/youtube/v3/videos?key=' + youtubeAPIKey + '&id='+ id +'&part=snippet'
-
-    //   await Axios.get(url)
-    //     .then(async (response) => {
-    //       var title = response['data']['items'][0]['snippet']['title']
-    //       var obj = {id: id, title: title}
-
-    //       newPlaylist.push(obj)
-    //     })
-    // }
-
-    // this.setState({
-    //   listItems: newPlaylist
-    // })
-
-    // this.forceUpdate()
+  //This function is usually called when returning the playlist for a user from the DB
+  //The function goes through each item in the list provided and adds it to current playlist
+  setFrontEndPlaylist = (list) => {
 
     var newPlaylist = []
 
@@ -285,8 +269,29 @@ class App extends Component {
       listItems: newPlaylist
     })
 
+    video = newPlaylist[0]['id']
+
     this.forceUpdate()
 
+
+  }
+
+  //This function is usually called after sorting a playlist
+  //The function takes the current playlist and sends it to the backend to be put in the db
+  setBackEndPlaylist = (newList) => {
+    var data = {
+      username: this.state.currentUser,
+      playlist: newList
+    }
+
+    Axios.defaults.headers.post['Content-Type'] = 'application/json'
+
+    var url = apiEndpoint + '/setPlaylist'
+
+    Axios.post(url, data)
+      .then((response) => {
+        console.log(response)
+      })
 
   }
 
@@ -297,7 +302,7 @@ class App extends Component {
         console.log(response)
 
         if (response.data.length !== 0) {
-          this.setCurrentPlaylist(response.data)
+          this.setFrontEndPlaylist(response.data)
 
         } else {
           console.log('No Playlist for this user')
@@ -307,6 +312,17 @@ class App extends Component {
   }
 
 
+  openPlaylistSlideIn = () => {
+    this.setState({
+      showPlaylistSlideIn: true
+    })
+  }
+
+  closePlaylistSlideIn = () => {
+    this.setState({
+      showPlaylistSlideIn: false
+    })
+  }
 
   render() {
 
@@ -322,7 +338,7 @@ class App extends Component {
     return (
       <div >
 
-        <Button onClick={this.getPlaylistForCurrentUser}>Test</Button>
+        <Button onClick={this.openPlaylistSlideIn}>Test</Button>
 
         <div style={listStyle}>
           <fieldset style={{ 'border': 'p2' }}>
@@ -356,7 +372,7 @@ class App extends Component {
           </Modal.Header>
           <Modal.Body>
             <div style={{ 'overflowY': 'auto' }}>
-            
+
               <form onSubmit={(e) => this.onAddVideoSearch(e)}>
                 <input value={this.state.addVideoSearchTerm} onChange={this.handleAddVideoIDChange} />
                 <Button onClick={(e) => { this.onAddVideoSearch(e) }}>Search</Button>
@@ -383,6 +399,15 @@ class App extends Component {
             <Button onClick={this.onCloseAddVideoModal}>Close</Button>
           </Modal.Footer>
         </Modal>
+
+
+        <Slider
+          title='Playlists'
+          isOpen={this.state.showPlaylistSlideIn}
+          onOutsideClick={this.closePlaylistSlideIn}>
+          
+
+        </Slider>
 
       </div>
     );
