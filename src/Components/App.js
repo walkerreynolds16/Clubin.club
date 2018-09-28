@@ -28,13 +28,13 @@ const playerStyle = {
 }
 
 const SortableItem = SortableElement(({ value }) => {
-  var image = 'http://img.youtube.com/vi/' + value.id + '/0.jpg'
+  var image = 'http://img.youtube.com/vi/' + value.videoId + '/0.jpg'
 
   return (
     <div>
       <li style={{ 'listStyle': 'none', 'display': 'flex', 'alignItems': 'center', 'marginBottom': '15px' }}>
         <img src={image} style={{ 'width': '60px', 'height': '45px' }} />
-        <h6 style={{ 'display': 'inline-block', 'fontWeight': 'bold', 'marginLeft': '5px' }}>{value.title}</h6>
+        <h6 style={{ 'display': 'inline-block', 'fontWeight': 'bold', 'marginLeft': '5px' }}>{value.videoTitle}</h6>
       </li>
     </div>
 
@@ -61,24 +61,27 @@ class App extends Component {
     super(props)
 
     this.state = {
-      listItems: [],
+      currentPlaylist: {playlistTitle: '', playlistVideos: []},
       showAddVideoModal: false,
       addVideoSearchTerm: '',
       playerWidth: '',
       playerHeight: '',
       searchList: [],
       currentUser: 'walker',
-      showPlaylistSlideIn: false
+      showPlaylistSlideIn: false,
+      playlists: [
+        {playlistTitle: 'Memes', playlistVideos: []}
+      ]
 
     }
   }
 
 
-  async componentDidMount() {
+  componentDidMount() {
     this.updateWindowDimensions()
     window.addEventListener('resize', this.updateWindowDimensions);
 
-    this.getPlaylistForCurrentUser()
+    this.getPlaylistsForCurrentUser()
 
   }
 
@@ -98,14 +101,13 @@ class App extends Component {
 
   // This function is called when the sortable list is sorted
   onSortEnd = ({ oldIndex, newIndex }) => {
-    var newListItems =  arrayMove(this.state.listItems, oldIndex, newIndex)
+    var newCurrentPlaylist =  {playlistTitle: this.state.currentPlaylist.playlistTitle , playlistVideos: arrayMove(this.state.currentPlaylist.playlistVideos, oldIndex, newIndex)}
 
     this.setState({
-      listItems: newListItems,
+      currentPlaylist: newCurrentPlaylist,
     });
 
-    this.setBackEndPlaylist(newListItems)
-
+    this.setBackEndPlaylist(newCurrentPlaylist.playlistVideos)
 
   };
 
@@ -122,23 +124,23 @@ class App extends Component {
 
   skipCurrentVideo = () => {
     console.log('skipping')
-    var topItem = this.state.listItems.splice(0, 1)
-    var listCopy = this.state.listItems.slice()
+    var topItem = this.state.currentPlaylist.playlistVideos.splice(0, 1)
+    var listCopy = this.state.currentPlaylist.playlistVideos.slice()
 
 
     listCopy.push(topItem[0])
-    video = listCopy[0].id
+    video = listCopy[0].videoId
+
+    var newPlaylist = {playlistTitle: this.state.currentPlaylist.playlistTitle, playlistVideos: listCopy}
+
+    this.updatePlaylistState(newPlaylist)
+
 
     this.setState({
-      listItems: listCopy
+      currentPlaylist: newPlaylist
     })
 
     this.forceUpdate()
-  }
-
-  onAddVideo = () => {
-    console.log('add new video')
-    this.onShowAddVideoModal()
   }
 
   onShowAddVideoModal = () => {
@@ -186,7 +188,7 @@ class App extends Component {
 
             if (videoId !== undefined) {
               //add videos to a list to be displayed on the modal
-              searchList.push({ id: videoId, title: videoTitle })
+              searchList.push({ videoId: videoId, videoTitle: videoTitle })
 
             }
 
@@ -204,42 +206,75 @@ class App extends Component {
   //add new item to the front end playlist
   //also call backend to update record
   onSearchListItemClicked = (index) => {
-    console.log('Index = ' + index)
 
-    var list = this.state.listItems.slice()
+    //Make a copy of the current playlist's videos
+    var list = this.state.currentPlaylist.playlistVideos.slice()
+    //Make a copy of the video search results
     var searchRes = this.state.searchList.slice()
 
+    //Add the clicked video to the copy of the current playlist's videos
     list.push(searchRes[index])
 
+    //Make a new object for the playlists state
+    var newPlaylist = {playlistTitle: this.state.currentPlaylist.playlistTitle, playlistVideos: list}
+    
+    this.updatePlaylistState(newPlaylist)
+
     this.setState({
-      listItems: list
+      currentPlaylist: newPlaylist
     })
 
     this.forceUpdate()
 
+    //Update backend for new video
     this.addVideoToPlaylist(searchRes[index])
+
+    
+  }
+
+  //This function is used to update the playlists state with an updated playlist
+  //Finds the playlist with the same name as the new playlist and replaces it
+  updatePlaylistState = (newPlaylist) => {
+    //Make a copy of all the playlists
+    var playlistsCopy = this.state.playlists.slice()
+
+    //Find the playlist that was just changed in the copy
+    //Switch the old playlist with the new one
+    for(var i = 0; i < playlistsCopy.length; i++){
+      if(playlistsCopy[i].playlistTitle === newPlaylist.playlistTitle){
+        playlistsCopy[i] = newPlaylist
+      }
+    }
+
+    this.setState({
+      playlists: playlistsCopy
+    })
+
+    this.forceUpdate()
   }
 
   //This function is used for adding a video to the current backend playlist
   addVideoToPlaylist = (video) => {
-    var videoId = video['id']
-    var videoTitle = video['title']
-    
-    var url = apiEndpoint + '/addVideoToPlaylist?username=' + this.state.currentUser + '&videoId=' + videoId + '&videoTitle=' + videoTitle
-    Axios.get(url)
+
+    var data = {
+      username: this.state.currentUser,
+      playlistTitle: this.state.currentPlaylist.playlistTitle,
+      videoId: video['videoId'],
+      videoTitle: video['videoTitle']
+    }
+
+    Axios.defaults.headers.post['Content-Type'] = 'application/json'    
+
+    var url = apiEndpoint + '/addVideoToPlaylist'
+    Axios.post(url, data)
       .then((response) => {
         console.log(response)
       })
 
   }
 
-
-  testBackendCall = () => {
-    
-  }
-
-  getVideoTitle = (id) => {
-    var url = 'https://www.googleapis.com/youtube/v3/videos?key=' + youtubeAPIKey + '&id='+ id +'&part=snippet'
+  getVideoTitle = (videoId) => {
+    var url = 'https://www.googleapis.com/youtube/v3/videos?key=' + youtubeAPIKey + '&id='+ videoId +'&part=snippet'
     var title = ''
     Axios.get(url)
       .then((response) => {
@@ -251,25 +286,28 @@ class App extends Component {
 
   //This function is usually called when returning the playlist for a user from the DB
   //The function goes through each item in the list provided and adds it to current playlist
-  setFrontEndPlaylist = (list) => {
+  setFrontEndPlaylist = (playlists) => {
+    
+    var currentPlaylistVideos = playlists['playlists'][0]['playlistVideos']
+    var videoList = []
 
-    var newPlaylist = []
-
-    for(const item of list){
+    for(const item of currentPlaylistVideos){
       var videoId = item['videoId']
       var videoTitle = item['videoTitle']
 
-      var obj = {id: videoId, title: videoTitle}
+      var obj = {videoId: videoId, videoTitle: videoTitle}
 
-      newPlaylist.push(obj)
+      videoList.push(obj)
 
     }
 
+    var newPlaylist = {playlistTitle: this.state.currentPlaylist.playlistTitle, playlistVideos: videoList}
+
     this.setState({
-      listItems: newPlaylist
+      currentPlaylist: newPlaylist
     })
 
-    video = newPlaylist[0]['id']
+    video = videoList[0]['videoId']
 
     this.forceUpdate()
 
@@ -295,14 +333,19 @@ class App extends Component {
 
   }
 
-  getPlaylistForCurrentUser = () => {
-    var url = apiEndpoint + '/getPlaylist?username=' + this.state.currentUser
+  getPlaylistsForCurrentUser = () => {
+    var url = apiEndpoint + '/getPlaylists?username=' + this.state.currentUser
     Axios.get(url)
       .then((response) => {
         console.log(response)
 
         if (response.data.length !== 0) {
           this.setFrontEndPlaylist(response.data)
+
+          this.setState({
+            playlists: response.data.playlists,
+            currentPlaylist: response.data.playlists[0]
+          })
 
         } else {
           console.log('No Playlist for this user')
@@ -324,6 +367,32 @@ class App extends Component {
     })
   }
 
+  changeCurrentPlaylist = (index) => {
+    var playlistsCopy = this.state.playlists.slice()
+    var newPlaylist = playlistsCopy[index]
+
+    if(newPlaylist.playlistTitle === this.state.currentPlaylist.playlistTitle){
+      alert("The selected playlist is already the current playlist")
+    }else {
+
+      this.setState({
+        currentPlaylist: newPlaylist
+      })
+
+      this.forceUpdate()
+    }
+
+
+  }
+
+  testButton = () => {
+    var url = apiEndpoint + '/getPlaylists?username=' + this.state.currentUser
+    Axios.get(url)
+      .then((response) => {
+        console.log(response)
+      })
+  }
+
   render() {
 
     const opts = {
@@ -338,15 +407,19 @@ class App extends Component {
     return (
       <div >
 
-        <Button onClick={this.openPlaylistSlideIn}>Test</Button>
-
         <div style={listStyle}>
           <fieldset style={{ 'border': 'p2' }}>
-            <Button onClick={this.onAddVideo}>Add Video</Button>
+            <Button onClick={this.onShowAddVideoModal}>Add Video</Button>
+            <Button style={{'marginLeft':'5px'}} onClick={this.openPlaylistSlideIn}>Playlists</Button>
+            <Button style={{'marginLeft':'5px'}} onClick={() => this.skipCurrentVideo()}>Skip Video</Button>
+
+            <Button style={{'marginLeft':'10px'}} onClick={this.openPlaylistSlideIn}>Test</Button>
+
+            
 
             <div style={{ 'marginTop': '10px' }}>
               <SortableList
-                items={this.state.listItems}
+                items={this.state.currentPlaylist.playlistVideos}
                 onSortEnd={this.onSortEnd}
                 distance={5} />
             </div>
@@ -362,7 +435,6 @@ class App extends Component {
             onReady={this.onReady}
             onStateChange={this.onPlayerStateChange} />
 
-          <Button bsSize='large' onClick={() => this.skipCurrentVideo()}>></Button>
         </div>
 
 
@@ -380,12 +452,12 @@ class App extends Component {
 
               <ListGroup>
                 {this.state.searchList.map((value, index) => {
-                  var imageLink = 'http://img.youtube.com/vi/' + value.id + '/0.jpg'
+                  var imageLink = 'http://img.youtube.com/vi/' + value.videoId + '/0.jpg'
 
                   return (
                     <ListGroupItem style={{ 'position': 'relative' }} onClick={() => this.onSearchListItemClicked(index)}>
                       <img src={imageLink} style={{ 'width': '120px', 'height': '90px' }} />
-                      <h5 style={{ 'display': 'inline-block', 'fontWeight': 'bold', 'marginLeft': '5px', 'wordWrap': 'break-all' }}>{value.title}</h5>
+                      <h5 style={{ 'display': 'inline-block', 'fontWeight': 'bold', 'marginLeft': '5px', 'wordWrap': 'break-all' }}>{value.videoTitle}</h5>
                       {/* <Button bsSize="large" style={{'position':'fixed', 'right':'5px', 'top':'20px'}} onClick={() => this.onSearchListItemClicked(index)}>+</Button> */}
                     </ListGroupItem>
                   )
@@ -404,8 +476,28 @@ class App extends Component {
         <Slider
           title='Playlists'
           isOpen={this.state.showPlaylistSlideIn}
-          onOutsideClick={this.closePlaylistSlideIn}>
+          onOutsideClick={this.closePlaylistSlideIn}
+          header={
+            <div style={{'position':'fixed'}}>
+              <Button style={{'right':'5px'}} onClick={this.showAddPlaylistModal}>Add Playlist</Button>
+            </div>
+          }>
           
+          <div>
+            <ListGroup>
+              {this.state.playlists.map((value, index) => {
+                var title = value.playlistTitle
+                var videos = value.playlistVideos
+
+                return (
+                  <ListGroupItem style={{ 'position': 'relative' }} onClick={() => this.changeCurrentPlaylist(index)}>
+                    <h5 style={{ 'display': 'inline-block', 'fontWeight': 'bold', 'marginLeft': '5px', 'wordWrap': 'break-all' }}>{title}</h5>
+                    <h6 style={{'display':'inline-block', 'marginLeft':'2px'}}>({videos.length})</h6>
+                  </ListGroupItem>
+                )
+              })}
+            </ListGroup>
+          </div>
 
         </Slider>
 

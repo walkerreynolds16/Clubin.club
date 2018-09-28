@@ -1,12 +1,21 @@
 from flask import Flask, url_for, request, jsonify, json
 from flask_cors import CORS
 from pymongo import MongoClient
+from bson import ObjectId
+import json
+
+class JSONEncoder(json.JSONEncoder):
+    def default(self, o):
+        if isinstance(o, ObjectId):
+            return str(o)
+        return json.JSONEncoder.default(self, o)
+
 
 app = Flask(__name__)
 CORS(app)
 
-@app.route('/getPlaylist')
-def getPlaylist():
+@app.route('/getPlaylists')
+def getPlaylists():
     client = MongoClient("localhost:27017")
     db = client.PlugDJClone
 
@@ -15,12 +24,20 @@ def getPlaylist():
     playlist = collection.find_one({'username': request.args['username']})
 
     if(playlist != None):
-        return jsonify(playlist['playlist'])
+        return JSONEncoder().encode(playlist)
     else:
-        return jsonify([])
+        return JSONEncoder().encode([])
 
-@app.route('/addVideoToPlaylist')
+
+# TODO change this to use POST instead of GET
+@app.route('/addVideoToPlaylist', methods = ['POST'])
 def addVideoToPlaylist():
+
+    username = request.json['username']
+    playlistTitle = request.json['playlistTitle']
+    videoId = request.json['videoId']
+    videoTitle = request.json['videoTitle']
+    
     # Connect to database and get instance of the DB
     client = MongoClient("localhost:27017")
     db = client.PlugDJClone
@@ -28,10 +45,23 @@ def addVideoToPlaylist():
     # Get instance of the playlist collection
     collection = db['playlists']
 
-    newVideo = {'videoId':request.args['videoId'], 'videoTitle': request.args['videoTitle']}
+    newVideo = {'videoId': videoId, 'videoTitle': videoTitle}
+
+    print(videoTitle)
     
-    # Try to find a document that has the requested username
-    result = collection.update_one({'username': request.args['username']}, {'$push': {'playlist': newVideo}}, upsert=False)
+    # # Try to find a document that has the requested username
+    # result = collection.update_one({'username': username}, {'$push': {'playlists': newVideo}}, upsert=False)
+
+    # {"$and":[{'borough':"Manhattan"},{"grades": {"$elemMatch": {"grade": "A"}}}]}
+    # ({'username': username}, {'playlists.playlistTitle': playlistTitle})
+    result = collection.update_one(
+        {"playlists.playlistTitle": playlistTitle},
+        {'$push': {'playlists.$.playlistVideos': newVideo}},
+         upsert=True)
+
+
+    return JSONEncoder().encode(result.raw_result)    
+
 
 @app.route('/setPlaylist', methods = ['POST'])
 def setPlaylist():
@@ -54,7 +84,7 @@ def setPlaylist():
 
     result = collection.update_one({'username': username}, {'$set': {'playlist': newPlaylist}}, upsert=False)
 
-    return json.dumps(result.raw_result)
+    return JSONEncoder().encode(result.raw_result)
 
     
 
