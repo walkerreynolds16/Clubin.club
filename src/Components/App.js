@@ -70,8 +70,10 @@ class App extends Component {
       currentUser: 'walker',
       showPlaylistSlideIn: false,
       playlists: [
-        {playlistTitle: 'Memes', playlistVideos: []}
-      ]
+        {playlistTitle: '', playlistVideos: []}
+      ],
+      showAddPlaylistModal: false,
+      newPlaylistNameInput: ''
 
     }
   }
@@ -107,9 +109,9 @@ class App extends Component {
       currentPlaylist: newCurrentPlaylist,
     });
 
-    this.setBackEndPlaylist(newCurrentPlaylist.playlistVideos)
+    this.setBackEndPlaylist(newCurrentPlaylist)
 
-  };
+  }
 
   onReady(event) {
     // access to player in all event handlers via event.target
@@ -287,7 +289,8 @@ class App extends Component {
   //This function is usually called when returning the playlist for a user from the DB
   //The function goes through each item in the list provided and adds it to current playlist
   setFrontEndPlaylist = (playlists) => {
-    
+    console.log('frontend')
+    console.log(playlists)
     var currentPlaylistVideos = playlists['playlists'][0]['playlistVideos']
     var videoList = []
 
@@ -317,11 +320,13 @@ class App extends Component {
   //This function is usually called after sorting a playlist
   //The function takes the current playlist and sends it to the backend to be put in the db
   setBackEndPlaylist = (newList) => {
+    
     var data = {
       username: this.state.currentUser,
-      playlist: newList
+      playlistVideos: newList.playlistVideos,
+      playlistTitle: newList.playlistTitle
     }
-
+    console.log(data)
     Axios.defaults.headers.post['Content-Type'] = 'application/json'
 
     var url = apiEndpoint + '/setPlaylist'
@@ -391,6 +396,60 @@ class App extends Component {
       .then((response) => {
         console.log(response)
       })
+  }
+
+  openAddPlaylistModal = () => {
+    this.setState({
+      showAddPlaylistModal: true
+    })
+  }
+
+  closeAddPlaylistModal = () => {
+    this.setState({
+      showAddPlaylistModal: false
+    })
+  }
+
+  handleNewPlaylistNameChange = (event) => {
+    this.setState({
+      newPlaylistNameInput: event.target.value
+    })
+  }
+
+  makeNewPlaylist = (e) => {
+    if (e !== undefined) {
+      e.preventDefault();
+    }
+
+    var playlistCopy = this.state.playlists.slice()
+    var newPlaylist = {playlistTitle: this.state.newPlaylistNameInput, playlistVideos: []}
+
+    var isDuplicatePlaylistName = false
+    for(var i = 0; i < playlistCopy.length; i++){
+      if(this.state.newPlaylistNameInput === playlistCopy[i].playlistTitle){
+        isDuplicatePlaylistName = true
+      }
+    }
+
+    if(!isDuplicatePlaylistName){
+      playlistCopy.push(newPlaylist)
+
+      this.setState({
+        playlists: playlistCopy
+      })
+
+      this.setBackEndPlaylist(newPlaylist)
+
+      this.closeAddPlaylistModal()
+    } else {
+      alert('This playlist name is already used')
+    }
+
+    
+
+    this.setState({
+      playlists: playlistCopy
+    })
   }
 
   render() {
@@ -479,7 +538,7 @@ class App extends Component {
           onOutsideClick={this.closePlaylistSlideIn}
           header={
             <div style={{'position':'fixed'}}>
-              <Button style={{'right':'5px'}} onClick={this.showAddPlaylistModal}>Add Playlist</Button>
+              <Button style={{'right':'5px'}} onClick={this.openAddPlaylistModal}>Add Playlist</Button>
             </div>
           }>
           
@@ -500,6 +559,25 @@ class App extends Component {
           </div>
 
         </Slider>
+
+        <Modal show={this.state.showAddPlaylistModal} onHide={this.closeAddPlaylistModal} bsSize='large'>
+          <Modal.Header closeButton>
+            <Modal.Title>Add New Playlist</Modal.Title>
+          </Modal.Header>
+          <Modal.Body>
+            <div style={{ 'overflowY': 'auto' }}>
+
+              <form onSubmit={(e) => this.makeNewPlaylist(e)}>
+                <input value={this.state.newPlaylistNameInput} onChange={this.handleNewPlaylistNameChange} />
+                <Button onClick={(e) => { this.makeNewPlaylist(e) }}>Add</Button>
+              </form>
+
+            </div>
+          </Modal.Body>
+          <Modal.Footer>
+            <Button onClick={this.closeAddPlaylistModal}>Close</Button>
+          </Modal.Footer>
+        </Modal>
 
       </div>
     );

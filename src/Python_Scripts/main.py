@@ -50,12 +50,8 @@ def addVideoToPlaylist():
     print(videoTitle)
     
     # # Try to find a document that has the requested username
-    # result = collection.update_one({'username': username}, {'$push': {'playlists': newVideo}}, upsert=False)
-
-    # {"$and":[{'borough':"Manhattan"},{"grades": {"$elemMatch": {"grade": "A"}}}]}
-    # ({'username': username}, {'playlists.playlistTitle': playlistTitle})
     result = collection.update_one(
-        {"playlists.playlistTitle": playlistTitle},
+        {'$and': [{'playlists.playlistTitle': playlistTitle}, {'username': username}]},
         {'$push': {'playlists.$.playlistVideos': newVideo}},
          upsert=True)
 
@@ -66,8 +62,10 @@ def addVideoToPlaylist():
 @app.route('/setPlaylist', methods = ['POST'])
 def setPlaylist():
 
-    playlist = request.json['playlist']
+    playlistVideos = request.json['playlistVideos']
+    playlistTitle = request.json['playlistTitle']
     username = request.json['username']
+
 
     # Connect to database and get instance of the DB
     client = MongoClient("localhost:27017")
@@ -76,17 +74,27 @@ def setPlaylist():
     # Get instance of the playlist collection
     collection = db['playlists']
 
-    newPlaylist = []
+    doesPlaylistExist = collection.find_one({'$and': [{'playlists.playlistTitle': playlistTitle}, {'username': username}]})
+    print(doesPlaylistExist)
+    result = None
 
-    for item in playlist:
-        newObj = {'videoId': item['id'], 'videoTitle': item['title']}
-        newPlaylist.append(newObj)
+    if(doesPlaylistExist == None):
+        newPlaylist = {'playlistTitle': playlistTitle, 'playlistVideos': playlistVideos}
+        result = collection.update_one(
+            {'username': username},
+            {'$push': {'playlists': newPlaylist}})
 
-    result = collection.update_one({'username': username}, {'$set': {'playlist': newPlaylist}}, upsert=False)
+    else:
+        result = collection.update_one(
+            {'$and': [{'playlists.playlistTitle': playlistTitle}, {'username': username}]},
+            {'$set': {'playlists.$.playlistVideos': playlistVideos}},
+            upsert=True)
+
+    
 
     return JSONEncoder().encode(result.raw_result)
 
-    
+
 
 
 if __name__ == '__main__':
