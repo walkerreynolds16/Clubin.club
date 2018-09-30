@@ -7,7 +7,7 @@ import Axios from 'axios'
 import '../Styles/App.css';
 import 'react-slide-out/lib/index.css'
 
-var video = 'iUzAylE7MBY'
+var video = ''
 const youtubeAPIKey = 'AIzaSyD7edp0KrX7oft2f-zL2uEnQFhW4Uj5OvE'
 const apiEndpoint = 'http://localhost:5000'
 
@@ -27,26 +27,37 @@ const playerStyle = {
   top: '5px'
 }
 
-const SortableItem = SortableElement(({ value }) => {
+const SortableItem = SortableElement(({value, onClickDeleteCallback, listIndex }) => {
   var image = 'http://img.youtube.com/vi/' + value.videoId + '/0.jpg'
-
+  
   return (
-    <div>
-      <li style={{ 'listStyle': 'none', 'display': 'flex', 'alignItems': 'center', 'marginBottom': '15px' }}>
-        <img src={image} style={{ 'width': '60px', 'height': '45px' }} />
+    <div style={{'marginTop':'8px', 'marginBottom':'8px', 'position':'relative'}}>
+      <li style={{'display': 'flex', 'alignItems': 'center' }}>
+        <img src={image} style={{ 'width': '80px', 'height': '55px' }} />
         <h6 style={{ 'display': 'inline-block', 'fontWeight': 'bold', 'marginLeft': '5px' }}>{value.videoTitle}</h6>
+
+        <Button bsStyle={'small'} 
+                style={{'display':'inline-block', 'position':'absolute', 'right':'5px'}} 
+                onClick={() => onClickDeleteCallback(listIndex)}>
+
+                <svg width="11" height="11" viewBox="0 0 1024 1024">
+                  <path d="M192 1024h640l64-704h-768zM640 128v-128h-256v128h-320v192l64-64h768l64 64v-192h-320zM576 128h-128v-64h128v64z"></path>
+                </svg>
+
+        </Button>
       </li>
     </div>
 
   );
 });
 
-const SortableList = SortableContainer(({ items }) => {
+const SortableList = SortableContainer(({ items, onClickDeleteCallback }) => {
   return (
     <div style={{'overflow':'auto', 'height':'600px'}}>
       <ul>
         {items.map((value, index) => (
-          <SortableItem key={`item-${index}`} index={index} value={value} />
+          
+          <SortableItem key={`item-${index}`} index={index} value={value} onClickDeleteCallback={onClickDeleteCallback} listIndex={index} />
         ))}
       </ul>
     </div>
@@ -326,7 +337,7 @@ class App extends Component {
       playlistVideos: newList.playlistVideos,
       playlistTitle: newList.playlistTitle
     }
-    console.log(data)
+
     Axios.defaults.headers.post['Content-Type'] = 'application/json'
 
     var url = apiEndpoint + '/setPlaylist'
@@ -358,7 +369,6 @@ class App extends Component {
 
       })
   }
-
 
   openPlaylistSlideIn = () => {
     this.setState({
@@ -452,6 +462,61 @@ class App extends Component {
     })
   }
 
+  //This function should only be used for debugging
+  onClickListVideo = (index) => {
+    console.log('callback')
+    console.log('Index = ' + index)
+
+    video = this.state.currentPlaylist.playlistVideos[index].videoId
+
+    this.forceUpdate()
+  }
+
+  onClickDeleteCallback = (index) => {
+    console.log('Index = ' + index)
+
+    // Delete from frontend stuff
+
+    // Delete from current playlist
+    var cpCopy = this.state.currentPlaylist
+    var deletedVideo = cpCopy.playlistVideos.splice(index, 1)[0]
+
+    // Delete from playlist state
+    this.updatePlaylistState(cpCopy)
+
+    this.setState({
+      currentPlaylist: cpCopy
+    })
+
+    // call backend to delete video off playlist
+    // this.deleteVideoFromBackend(deletedVideo, cpCopy.playlistTitle)
+    this.setBackEndPlaylist(cpCopy)
+
+
+  }
+
+  // Apparently, Pymongo can't remove one element at a time so if there was a duplicate video in a playlist, both would be deleted
+  // New idea, delete video from front end, the set backend list to the front end list
+  // I will leave this function for possible future use
+  deleteVideoFromBackend = (deletedVideo, playlistTitle) => {
+    var data = {
+      videoId: deletedVideo.videoId,
+      videoTitle: deletedVideo.videoTitle,
+      playlistTitle: playlistTitle,
+      username: this.state.currentUser
+    }
+
+    Axios.defaults.headers.post['Content-Type'] = 'application/json'
+
+    var url = apiEndpoint + '/deleteVideoInPlaylist'
+
+    Axios.post(url, data)
+      .then((response) => {
+        console.log(response)
+      })
+
+  }
+
   render() {
 
     const opts = {
@@ -480,7 +545,8 @@ class App extends Component {
               <SortableList
                 items={this.state.currentPlaylist.playlistVideos}
                 onSortEnd={this.onSortEnd}
-                distance={5} />
+                distance={5}
+                onClickDeleteCallback={this.onClickDeleteCallback} />
             </div>
 
 

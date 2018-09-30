@@ -29,7 +29,6 @@ def getPlaylists():
         return JSONEncoder().encode([])
 
 
-# TODO change this to use POST instead of GET
 @app.route('/addVideoToPlaylist', methods = ['POST'])
 def addVideoToPlaylist():
 
@@ -95,6 +94,37 @@ def setPlaylist():
     return JSONEncoder().encode(result.raw_result)
 
 
+# As of right now, this function will delete all instances of a video in a playlist
+# This means if there is a duplicate video in a list, both will be deleted
+# Apparently, there is no real way of only deleting one element from an array
+# My new approach is to delete the video on the front end, then set the backend playlist to the front end playlist
+@app.route('/deleteVideoInPlaylist', methods = ['POST'])
+def deleteVideoInPlaylist():
+
+    username = request.json['username']
+    playlistTitle = request.json['playlistTitle']
+    videoId = request.json['videoId']
+    videoTitle = request.json['videoTitle']
+    
+    # Connect to database and get instance of the DB
+    client = MongoClient("localhost:27017")
+    db = client.PlugDJClone
+
+    # Get instance of the playlist collection
+    collection = db['playlists']
+
+    video = {'videoId': videoId, 'videoTitle': videoTitle}
+
+    print(videoTitle)
+    
+    # # Try to find a document that has the requested username
+    result = collection.update_one(
+        {'$and': [{'playlists.playlistTitle': playlistTitle}, {'username': username}]},
+        {'$pull': {'playlists.$.playlistVideos': video}},
+         upsert=False)
+
+
+    return JSONEncoder().encode(result.raw_result)  
 
 
 if __name__ == '__main__':
