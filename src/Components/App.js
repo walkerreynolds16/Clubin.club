@@ -9,10 +9,9 @@ import Axios from 'axios'
 import '../Styles/App.css';
 import 'react-slide-out/lib/index.css'
 
-const uws = require('uws')
-const socketIO = require('socket.io')
+import openSocket from 'socket.io-client';
 
-
+const socket = openSocket(apiEndpoint);
 
 var video = ''
 const youtubeAPIKey = 'AIzaSyD7edp0KrX7oft2f-zL2uEnQFhW4Uj5OvE'
