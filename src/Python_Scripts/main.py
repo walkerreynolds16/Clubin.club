@@ -1,17 +1,15 @@
-from flask import Flask, url_for, request, jsonify, json
+from flask import Flask, url_for, request, jsonify, json, render_template
 from flask_cors import CORS
 from pymongo import MongoClient
 from bson import ObjectId
-import json
+from flask_socketio import SocketIO, send
 
-class JSONEncoder(json.JSONEncoder):
-    def default(self, o):
-        if isinstance(o, ObjectId):
-            return str(o)
-        return json.JSONEncoder.default(self, o)
+import json
 
 
 app = Flask(__name__)
+app.config['SECRET_KEY'] = 'onesouth'
+socketio = SocketIO(app)
 CORS(app)
 
 @app.route('/getPlaylists')
@@ -154,8 +152,19 @@ def login():
             return 'failure'
 
 
+@socketio.on('message')
+def handleMessage(msg):
+    print('Message = ' + msg)
+    send(msg, broadcast=True)
 
+
+
+class JSONEncoder(json.JSONEncoder):
+    def default(self, o):
+        if isinstance(o, ObjectId):
+            return str(o)
+        return json.JSONEncoder.default(self, o)
     
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    socketio.run(app, debug=True)
