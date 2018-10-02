@@ -1,3 +1,29 @@
+This is a project to make a PlugDJ Clone for personal use. PlugDJ is a website that synchronizes video playing among members in lobbies.
+Each lobby member may join the queue to play their video. Each member may have playlists accociated to their accounts that they can play in any lobby.
+Recently, PlugDj changed their UI for the worse and I wanted an alternative application to use with friends. I don't intend on using this clone for commercial use,
+which is a reason why I'm putting this repository on Github. 
+
+As of right now, the Mongo database is not hosted on any server so everything is local. Soon I will have the database running on a public server.
+So in the mean time, you will not be able to store your playlists.
+
+If you would like to run the App
+
+1.) Clone the repo to desired location
+
+2.) Open the command console and navigate to the repo.
+
+3.) Run 'npm install'. This will download all of the node packages needed to run the app
+
+4.) Run 'npm run start'. This will start the front end of the application.
+
+5.) Your default browser should open to the application, but if it doesn't, open for browser and navigate to 'localhost:3000' which is the default location for the app.
+
+As of 10/02/2018, I'm still working on this app and trying to contribute every now and then. If you have questions or improvements, create an issue and I'll look into it.
+
+
+
+**********************************************************************************************
+
 This project was bootstrapped with [Create React App](https://github.com/facebookincubator/create-react-app).
 
 Below you will find some information on how to perform common tasks.<br>

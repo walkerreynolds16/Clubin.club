@@ -1,4 +1,6 @@
 import React, { Component } from 'react';
+import Routes from '../Routes/Routes'
+import Login from '../Components/Login'
 import YouTube from 'react-youtube';
 import { SortableContainer, SortableElement, arrayMove } from 'react-sortable-hoc';
 import { Button, ListGroup, ListGroupItem, Modal } from 'react-bootstrap';
@@ -119,6 +121,11 @@ class App extends Component {
     this.setState({
       currentPlaylist: newCurrentPlaylist,
     });
+
+    if(newIndex === 0){
+      video = newCurrentPlaylist.playlistVideos[0].videoId
+      this.forceUpdate()
+    }
 
     this.setBackEndPlaylist(newCurrentPlaylist)
 
@@ -530,7 +537,7 @@ class App extends Component {
 
     return (
       <div >
-
+        <Routes />
         <div style={listStyle}>
           <fieldset style={{ 'border': 'p2' }}>
             <Button onClick={this.onShowAddVideoModal}>Add Video</Button>

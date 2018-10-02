@@ -126,6 +126,36 @@ def deleteVideoInPlaylist():
 
     return JSONEncoder().encode(result.raw_result)  
 
+@app.route('/login', methods = ['POST'])
+def login():
+    username = request.json['username']
+    password = request.json['password']
+    
+    # Connect to database and get instance of the DB
+    client = MongoClient("localhost:27017")
+    db = client.PlugDJClone
+
+    # Get instance of the playlist collection
+    collection = db['accounts']
+
+    doesUsernameExist = collection.find_one({'username': username})
+
+    # The username does not exist
+    if(doesUsernameExist == None):
+        result = collection.insert_one({'username':username, 'password': password})
+        return 'success'
+
+    else:
+        if(password is doesUsernameExist.password):
+            print("***** Right Password ******")
+            return 'success'
+        else:
+            print("***** Wrong Password ******")
+            return 'failure'
+
+
+
+    
 
 if __name__ == '__main__':
     app.run(debug=True)
