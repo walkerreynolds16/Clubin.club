@@ -10,12 +10,13 @@ import '../Styles/App.css';
 import 'react-slide-out/lib/index.css'
 
 import openSocket from 'socket.io-client';
+const  socket = openSocket.connect('http://127.0.0.1:5000')
 
-const socket = openSocket(apiEndpoint);
+
 
 var video = ''
 const youtubeAPIKey = 'AIzaSyD7edp0KrX7oft2f-zL2uEnQFhW4Uj5OvE'
-const apiEndpoint = 'http://localhost:5000'
+const apiEndpoint = 'http://127.0.0.1:5000'
 
 const listStyle = {
   display: 'inline-block',
@@ -72,7 +73,6 @@ const SortableList = SortableContainer(({ items, onClickDeleteCallback }) => {
 });
 
 
-
 class App extends Component {
 
   constructor(props) {
@@ -91,7 +91,9 @@ class App extends Component {
         {playlistTitle: '', playlistVideos: []}
       ],
       showAddPlaylistModal: false,
-      newPlaylistNameInput: ''
+      newPlaylistNameInput: '',
+      testMessages: [],
+      userPlayingVideo: ''
 
     }
   }
@@ -103,7 +105,32 @@ class App extends Component {
 
     this.getPlaylistsForCurrentUser()
 
+    socket.on('connect', () => this.handleConnect())
+
+    socket.on('message', (msg) => this.handleMessage(msg))
+
+    socket.on('Event_videoFromServer', (data) => this.handleVideoFromServer(data))
+
   }
+
+  handleConnect = () => {
+    socket.send('User has connected')
+    // socket.emit('customEvent', {eventName: 'customEvent', currentPlaylist: this.state.currentPlaylist})
+  }
+
+  handleMessage = (msg) => {
+    console.log(msg)
+    var copy = this.state.testMessages.slice()
+
+    copy.push(msg)
+
+    this.setState({
+      testMessages: copy
+    })
+
+    this.forceUpdate()
+  }
+
 
   componentWillUnmount() {
     window.removeEventListener('resize', this.updateWindowDimensions);
@@ -148,24 +175,30 @@ class App extends Component {
   }
 
   skipCurrentVideo = () => {
-    console.log('skipping')
-    var topItem = this.state.currentPlaylist.playlistVideos.splice(0, 1)
-    var listCopy = this.state.currentPlaylist.playlistVideos.slice()
 
-
-    listCopy.push(topItem[0])
-    video = listCopy[0].videoId
-
-    var newPlaylist = {playlistTitle: this.state.currentPlaylist.playlistTitle, playlistVideos: listCopy}
-
-    this.updatePlaylistState(newPlaylist)
-
-
-    this.setState({
-      currentPlaylist: newPlaylist
-    })
-
-    this.forceUpdate()
+    if(this.state.currentPlaylist.playlistVideos.length > 0){
+      console.log('skipping')
+      var topItem = this.state.currentPlaylist.playlistVideos.splice(0, 1)
+      var listCopy = this.state.currentPlaylist.playlistVideos.slice()
+  
+  
+      listCopy.push(topItem[0])
+      video = listCopy[0].videoId
+  
+      var newPlaylist = {playlistTitle: this.state.currentPlaylist.playlistTitle, playlistVideos: listCopy}
+  
+      this.updatePlaylistState(newPlaylist)
+  
+  
+      this.setState({
+        currentPlaylist: newPlaylist
+      })
+  
+      this.forceUpdate()
+    }else {
+      alert('There are no videos in the current playlist')
+    }
+    
   }
 
   onShowAddVideoModal = () => {
@@ -333,8 +366,13 @@ class App extends Component {
       currentPlaylist: newPlaylist
     })
 
-    video = videoList[0]['videoId']
+    // if(videoList.length > 0){
+    //   video = videoList[0]['videoId']
 
+    // }
+
+
+    //
     this.forceUpdate()
 
 
@@ -529,6 +567,31 @@ class App extends Component {
 
   }
 
+  // This function is called when a use joins the DJ queue
+  // Sends the username to the server
+  onJoinDJ = () => {
+    socket.emit('Event_joinDJ', 
+      {
+       user: this.state.currentUser,
+       nextVideo: this.state.currentPlaylist.playlistVideos[0]
+      }
+    )
+  }
+
+  // This function is called when the server broadcasts a new videoId
+  handleVideoFromServer = (data) => {
+    console.log(data)
+    var videoId = data.nextVideo.videoId
+    var userPlayingVideo = data.user
+
+    video = videoId
+    this.setState({
+      userPlayingVideo: userPlayingVideo
+    })
+
+    this.forceUpdate()
+  }
+
   
 
   render() {
@@ -537,19 +600,31 @@ class App extends Component {
       width: this.state.playerWidth,
       height: this.state.playerHeight,
       playerVars: { // https://developers.google.com/youtube/player_parameters
-        autoplay: 0,
-        controls: 1
+        autoplay: 1,
+        controls: 0
       }
     };
+
+    var playlistSlideInTitle = 'Current Playlist: ' + this.state.currentPlaylist.playlistTitle
 
     return (
       <div >
         <Routes />
         <div style={listStyle}>
           <fieldset style={{ 'border': 'p2' }}>
+
+            {/* {this.state.testMessages.map((value, index) => {
+              var string = index + ' - ' + value
+                return (
+                  <h6>{string}</h6>
+                )
+              })
+            } */}
+
             <Button onClick={this.onShowAddVideoModal}>Add Video</Button>
             <Button style={{'marginLeft':'5px'}} onClick={this.openPlaylistSlideIn}>Playlists</Button>
             <Button style={{'marginLeft':'5px'}} onClick={() => this.skipCurrentVideo()}>Skip Video</Button>
+            <Button style={{'marginLeft':'5px'}} onClick={() => this.onJoinDJ()}>Click to DJ</Button>
 
             <Button style={{'marginLeft':'10px'}} onClick={this.openPlaylistSlideIn}>Test</Button>
 
@@ -613,12 +688,12 @@ class App extends Component {
 
 
         <Slider
-          title='Playlists'
+          title={playlistSlideInTitle}
           isOpen={this.state.showPlaylistSlideIn}
           onOutsideClick={this.closePlaylistSlideIn}
           header={
             <div style={{'position':'fixed'}}>
-              <Button style={{'right':'5px'}} onClick={this.openAddPlaylistModal}>Add Playlist</Button>
+              <Button style={{'right':'5px', 'position':'fixed', 'top':'15px'}} onClick={this.openAddPlaylistModal}>Add Playlist</Button>
             </div>
           }>
           

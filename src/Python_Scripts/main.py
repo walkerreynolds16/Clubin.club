@@ -2,10 +2,12 @@ from flask import Flask, url_for, request, jsonify, json, render_template
 from flask_cors import CORS
 from pymongo import MongoClient
 from bson import ObjectId
-from flask_socketio import SocketIO, send
+from flask_socketio import SocketIO, send, emit
 
 import json
 
+
+videoQueue = []
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'onesouth'
@@ -157,6 +159,18 @@ def handleMessage(msg):
     print('Message = ' + msg)
     send(msg, broadcast=True)
 
+@socketio.on('Event_joinDJ')
+def handleCustomEvent(data):
+    print(json.dumps(data))
+
+    user = data['user']
+    nextVideo = data['nextVideo']
+
+    videoQueue.append({'user': user, 'nextVideo': nextVideo})
+
+    # print(json.dumps(videoQueue.pop))
+
+    emit('Event_videoFromServer', videoQueue.pop(), broadcast=True)
 
 
 class JSONEncoder(json.JSONEncoder):
