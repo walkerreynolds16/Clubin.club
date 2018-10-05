@@ -95,7 +95,8 @@ class App extends Component {
       showAddPlaylistModal: false,
       newPlaylistNameInput: '',
       testMessages: [],
-      userPlayingVideo: ''
+      userPlayingVideo: '',
+      messageBoxValue: ''
 
     }
   }
@@ -112,6 +113,8 @@ class App extends Component {
     socket.on('message', (msg) => this.handleMessage(msg))
 
     socket.on('Event_videoFromServer', (data) => this.handleVideoFromServer(data))
+
+    socket.on('Event_receiveChatMessage', (data) => this.handleReceiveChatMessage(data))
 
   }
 
@@ -598,7 +601,33 @@ class App extends Component {
     this.forceUpdate()
   }
 
-  
+  handleMessageBoxChange = (event) => {
+    this.setState({
+      messageBoxValue: event.target.value
+    })
+  }
+
+  handleSendChatMessage = () => {
+    socket.emit('Event_sendChatMessage', 
+      {
+        user: this.state.currentUser,
+        message: this.state.messageBoxValue
+      }
+    )
+
+    this.setState({
+      messageBoxValue: ''
+    })
+
+    this.forceUpdate()
+  }
+
+  handleReceiveChatMessage = (data) => {
+    var user = data.user
+    var message = data.message
+
+    console.log(user + ': ' + message)
+  }
 
   render() {
  
@@ -620,13 +649,13 @@ class App extends Component {
         <div style={listStyle}>
           <fieldset style={{ 'border': 'p2' }}>
 
-            {this.state.testMessages.map((value, index) => {
+            {/* {this.state.testMessages.map((value, index) => {
               var string = index + ' - ' + value
                 return (
                   <h6>{string}</h6>
                 )
               })
-            }
+            } */}
 
             <Button onClick={this.onShowAddVideoModal}>Add Video</Button>
             <Button style={{'marginLeft':'5px'}} onClick={this.openPlaylistSlideIn}>Playlists</Button>
@@ -659,8 +688,8 @@ class App extends Component {
 
         <div>
           
-            <input type="text" id="messageBox"></input>
-            <Button onClick={(e) => this.sendMessage("" + this.refs.messageBox)}>Send</Button>
+            <input value={this.state.messageBoxValue} onChange={this.handleMessageBoxChange}></input>
+            <Button onClick={this.handleSendChatMessage}>Send</Button>
          
         </div>
 

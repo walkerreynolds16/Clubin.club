@@ -172,6 +172,12 @@ def handleCustomEvent(data):
 
     emit('Event_videoFromServer', videoQueue.pop(), broadcast=True)
 
+@socketio.on('Event_sendChatMessage')
+def handleChatMessage(data):
+    user = data['user']
+    message = data['message']
+
+    emit('Event_receiveChatMessage', {'user': user, 'message': message}, broadcast=True)
 
 class JSONEncoder(json.JSONEncoder):
     def default(self, o):
