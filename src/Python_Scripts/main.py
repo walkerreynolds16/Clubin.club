@@ -4,7 +4,12 @@ from pymongo import MongoClient
 from bson import ObjectId
 from flask_socketio import SocketIO, send, emit
 
+import isodate
 import json
+import requests
+import datetime
+
+youtubeAPIKey = 'AIzaSyD7edp0KrX7oft2f-zL2uEnQFhW4Uj5OvE'
 
 
 videoQueue = []
@@ -180,8 +185,18 @@ def handleCustomEvent(data):
     videoQueue.append({'user': user, 'nextVideo': nextVideo})
 
     # print(json.dumps(videoQueue.pop))
+    video = videoQueue.pop()
+    getVideoDuration(video['nextVideo']['videoId'])
+    emit('Event_videoFromServer', video, broadcast=True)
 
-    emit('Event_videoFromServer', videoQueue.pop(), broadcast=True)
+def getVideoDuration(videoId):
+    url = 'https://www.googleapis.com/youtube/v3/videos?key=' + youtubeAPIKey +'&id=' + str(videoId) + '&part=contentDetails'
+    r = requests.get(url)
+    res = json.loads(r.text)
+    duration = res['items'][0]['contentDetails']['duration']
+
+    duration = isodate.parse_duration(duration).total_seconds()
+    print((duration))
 
 
 class JSONEncoder(json.JSONEncoder):
