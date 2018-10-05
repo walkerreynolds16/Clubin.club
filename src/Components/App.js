@@ -14,6 +14,7 @@ const  socket = openSocket.connect('http://127.0.0.1:5000')
 
 
 
+
 var video = ''
 const youtubeAPIKey = 'AIzaSyD7edp0KrX7oft2f-zL2uEnQFhW4Uj5OvE'
 const apiEndpoint = 'http://127.0.0.1:5000'
@@ -601,7 +602,8 @@ class App extends Component {
       height: this.state.playerHeight,
       playerVars: { // https://developers.google.com/youtube/player_parameters
         autoplay: 1,
-        controls: 0
+        controls: 0,
+        disablekb: 1
       }
     };
 
@@ -613,13 +615,13 @@ class App extends Component {
         <div style={listStyle}>
           <fieldset style={{ 'border': 'p2' }}>
 
-            {/* {this.state.testMessages.map((value, index) => {
+            {this.state.testMessages.map((value, index) => {
               var string = index + ' - ' + value
                 return (
                   <h6>{string}</h6>
                 )
               })
-            } */}
+            }
 
             <Button onClick={this.onShowAddVideoModal}>Add Video</Button>
             <Button style={{'marginLeft':'5px'}} onClick={this.openPlaylistSlideIn}>Playlists</Button>
