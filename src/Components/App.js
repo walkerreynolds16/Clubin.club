@@ -12,8 +12,6 @@ import 'react-slide-out/lib/index.css'
 import openSocket from 'socket.io-client';
 const  socket = openSocket.connect('http://127.0.0.1:5000')
 
-
-
 var video = ''
 const youtubeAPIKey = 'AIzaSyD7edp0KrX7oft2f-zL2uEnQFhW4Uj5OvE'
 const apiEndpoint = 'http://127.0.0.1:5000'
@@ -592,6 +590,11 @@ class App extends Component {
     this.forceUpdate()
   }
 
+  //Enable this for production
+  onPlayerPause = (event) => {
+    // event.target.playVideo()
+  }
+
   
 
   render() {
@@ -601,7 +604,8 @@ class App extends Component {
       height: this.state.playerHeight,
       playerVars: { // https://developers.google.com/youtube/player_parameters
         autoplay: 1,
-        controls: 0
+        controls: 0,
+        disablekb: 1
       }
     };
 
@@ -647,7 +651,8 @@ class App extends Component {
             videoId={video}
             opts={opts}
             onReady={this.onReady}
-            onStateChange={this.onPlayerStateChange} />
+            onStateChange={this.onPlayerStateChange}
+            onPause={this.onPlayerPause} />
 
         </div>
 

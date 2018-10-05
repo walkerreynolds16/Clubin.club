@@ -36,6 +36,10 @@ def addVideoToPlaylist():
     playlistTitle = request.json['playlistTitle']
     videoId = request.json['videoId']
     videoTitle = request.json['videoTitle']
+
+    # If the user that just added a video doesn't have an entry in the playlist db, change the playlist title to default
+    if(playlistTitle is ''):
+        playlistTitle = 'default'
     
     # Connect to database and get instance of the DB
     client = MongoClient("localhost:27017")
@@ -46,7 +50,14 @@ def addVideoToPlaylist():
 
     newVideo = {'videoId': videoId, 'videoTitle': videoTitle}
 
-    print(videoTitle)
+    # print(videoTitle)
+
+    doesUserExist = collection.find_one({'username': username})
+
+    # If the user doesn't exist in the playlists db, make a new entry for them
+    if(not doesUserExist):
+        result = collection.insert_one({'username': username, 'playlists': [{'playlistTitle': playlistTitle, 'playlistVideos': []}]})
+
     
     # # Try to find a document that has the requested username
     result = collection.update_one(
