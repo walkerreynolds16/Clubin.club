@@ -658,10 +658,10 @@ class App extends Component {
         </div>
 
         <div>
-          <form onSubmit={(e) => this.sendMessage(e)}>
+          
             <input type="text" id="messageBox"></input>
-            <Button onClick={(e) => this.sendMessage(this.refs.messageBox)}>Send</Button>
-          </form>
+            <Button onClick={(e) => this.sendMessage("" + this.refs.messageBox)}>Send</Button>
+         
         </div>
 
 
