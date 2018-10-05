@@ -10,6 +10,7 @@ import '../Styles/App.css';
 import 'react-slide-out/lib/index.css'
 
 import openSocket from 'socket.io-client';
+import { constants } from 'zlib';
 const  socket = openSocket.connect('http://127.0.0.1:5000')
 
 
@@ -200,6 +201,10 @@ class App extends Component {
       alert('There are no videos in the current playlist')
     }
     
+  }
+
+  sendMessage = (msg) => {
+    socket.send(msg)
   }
 
   onShowAddVideoModal = () => {
@@ -596,7 +601,7 @@ class App extends Component {
   
 
   render() {
-
+ 
     const opts = {
       width: this.state.playerWidth,
       height: this.state.playerHeight,
@@ -629,7 +634,6 @@ class App extends Component {
             <Button style={{'marginLeft':'5px'}} onClick={() => this.onJoinDJ()}>Click to DJ</Button>
 
             <Button style={{'marginLeft':'10px'}} onClick={this.openPlaylistSlideIn}>Test</Button>
-
             
 
             <div style={{ 'marginTop': '10px' }}>
@@ -651,6 +655,13 @@ class App extends Component {
             onReady={this.onReady}
             onStateChange={this.onPlayerStateChange} />
 
+        </div>
+
+        <div>
+          <form onSubmit={(e) => this.sendMessage(e)}>
+            <input type="text" id="messageBox"></input>
+            <Button onClick={(e) => this.sendMessage(this.refs.messageBox)}>Send</Button>
+          </form>
         </div>
 
 
