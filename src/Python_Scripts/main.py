@@ -198,6 +198,12 @@ def getVideoDuration(videoId):
     duration = isodate.parse_duration(duration).total_seconds()
     print((duration))
 
+@socketio.on('Event_sendChatMessage')
+def handleChatMessage(data):
+    user = data['user']
+    message = data['message']
+
+    emit('Event_receiveChatMessage', {'user': user, 'message': message}, broadcast=True)
 
 class JSONEncoder(json.JSONEncoder):
     def default(self, o):

@@ -10,7 +10,11 @@ import '../Styles/App.css';
 import 'react-slide-out/lib/index.css'
 
 import openSocket from 'socket.io-client';
+import { constants } from 'zlib';
 const  socket = openSocket.connect('http://127.0.0.1:5000')
+
+
+
 
 var video = ''
 const youtubeAPIKey = 'AIzaSyD7edp0KrX7oft2f-zL2uEnQFhW4Uj5OvE'
@@ -91,7 +95,8 @@ class App extends Component {
       showAddPlaylistModal: false,
       newPlaylistNameInput: '',
       testMessages: [],
-      userPlayingVideo: ''
+      userPlayingVideo: '',
+      messageBoxValue: ''
 
     }
   }
@@ -108,6 +113,8 @@ class App extends Component {
     socket.on('message', (msg) => this.handleMessage(msg))
 
     socket.on('Event_videoFromServer', (data) => this.handleVideoFromServer(data))
+
+    socket.on('Event_receiveChatMessage', (data) => this.handleReceiveChatMessage(data))
 
   }
 
@@ -197,6 +204,10 @@ class App extends Component {
       alert('There are no videos in the current playlist')
     }
     
+  }
+
+  sendMessage = (msg) => {
+    socket.send(msg)
   }
 
   onShowAddVideoModal = () => {
@@ -596,9 +607,36 @@ class App extends Component {
   }
 
   
+  handleMessageBoxChange = (event) => {
+    this.setState({
+      messageBoxValue: event.target.value
+    })
+  }
+
+  handleSendChatMessage = () => {
+    socket.emit('Event_sendChatMessage', 
+      {
+        user: this.state.currentUser,
+        message: this.state.messageBoxValue
+      }
+    )
+
+    this.setState({
+      messageBoxValue: ''
+    })
+
+    this.forceUpdate()
+  }
+
+  handleReceiveChatMessage = (data) => {
+    var user = data.user
+    var message = data.message
+
+    console.log(user + ': ' + message)
+  }
 
   render() {
-
+ 
     const opts = {
       width: this.state.playerWidth,
       height: this.state.playerHeight,
@@ -631,7 +669,6 @@ class App extends Component {
             <Button style={{'marginLeft':'5px'}} onClick={() => this.onJoinDJ()}>Click to DJ</Button>
 
             <Button style={{'marginLeft':'10px'}} onClick={this.openPlaylistSlideIn}>Test</Button>
-
             
 
             <div style={{ 'marginTop': '10px' }}>
@@ -654,6 +691,13 @@ class App extends Component {
             onStateChange={this.onPlayerStateChange}
             onPause={this.onPlayerPause} />
 
+        </div>
+
+        <div>
+          
+            <input value={this.state.messageBoxValue} onChange={this.handleMessageBoxChange}></input>
+            <Button onClick={this.handleSendChatMessage}>Send</Button>
+         
         </div>
 
 
