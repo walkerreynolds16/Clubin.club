@@ -116,10 +116,14 @@ class App extends Component {
 
     socket.on('Event_receiveChatMessage', (data) => this.handleReceiveChatMessage(data))
 
+    socket.on('Event_getNextVideoFromUser', (data) => this.handleGetNextVideoFromUser(data))
+
+    socket.on('Event_nextVideo', (data) => this.handleNextVideo(data))
+
   }
 
   handleConnect = () => {
-    socket.send('User has connected')
+    socket.emit('connected', this.state.currentUser)
     // socket.emit('customEvent', {eventName: 'customEvent', currentPlaylist: this.state.currentPlaylist})
   }
 
@@ -135,7 +139,6 @@ class App extends Component {
 
     this.forceUpdate()
   }
-
 
   componentWillUnmount() {
     window.removeEventListener('resize', this.updateWindowDimensions);
@@ -159,12 +162,16 @@ class App extends Component {
       currentPlaylist: newCurrentPlaylist,
     });
 
-    if(newIndex === 0){
-      video = newCurrentPlaylist.playlistVideos[0].videoId
-      this.forceUpdate()
-    }
+    // if(newIndex === 0){
+    //   video = newCurrentPlaylist.playlistVideos[0].videoId
+    //   this.forceUpdate()
+    // }
 
     this.setBackEndPlaylist(newCurrentPlaylist)
+
+    console.log('OnSortEnd')
+    console.log(newCurrentPlaylist)
+    this.setBackendCurrentPlaylist(newCurrentPlaylist)
 
   }
 
@@ -188,7 +195,7 @@ class App extends Component {
   
   
       listCopy.push(topItem[0])
-      video = listCopy[0].videoId
+      // video = listCopy[0].videoId
   
       var newPlaylist = {playlistTitle: this.state.currentPlaylist.playlistTitle, playlistVideos: listCopy}
   
@@ -200,6 +207,11 @@ class App extends Component {
       })
   
       this.forceUpdate()
+
+      console.log('skip current video')
+      console.log(newPlaylist)
+      this.setBackendCurrentPlaylist(newPlaylist)
+
     }else {
       alert('There are no videos in the current playlist')
     }
@@ -296,6 +308,9 @@ class App extends Component {
     //Update backend for new video
     this.addVideoToPlaylist(searchRes[index])
 
+    console.log('onSearchListItemClicked')
+    this.setBackendCurrentPlaylist(newPlaylist)
+
     
   }
 
@@ -356,7 +371,7 @@ class App extends Component {
   setFrontEndPlaylist = (playlists) => {
     console.log('frontend')
     console.log(playlists)
-    var currentPlaylistVideos = playlists['playlists'][0]['playlistVideos']
+    var currentPlaylistVideos = playlists['currentPlaylist']['playlistVideos']
     var videoList = []
 
     for(const item of currentPlaylistVideos){
@@ -369,7 +384,7 @@ class App extends Component {
 
     }
 
-    var newPlaylist = {playlistTitle: this.state.currentPlaylist.playlistTitle, playlistVideos: videoList}
+    var newPlaylist = {playlistTitle: playlists['currentPlaylist']['playlistTitle'], playlistVideos: videoList}
 
     this.setState({
       currentPlaylist: newPlaylist
@@ -383,6 +398,10 @@ class App extends Component {
 
     //
     this.forceUpdate()
+
+    console.log('setFrontEndPlaylist')
+    this.setBackendCurrentPlaylist(newPlaylist)
+
 
 
   }
@@ -412,6 +431,7 @@ class App extends Component {
     var url = apiEndpoint + '/getPlaylists?username=' + this.state.currentUser
     Axios.get(url)
       .then((response) => {
+        console.log('response getPlaylistsForCurrentUser')
         console.log(response)
 
         if (response.data.length !== 0) {
@@ -419,7 +439,7 @@ class App extends Component {
 
           this.setState({
             playlists: response.data.playlists,
-            currentPlaylist: response.data.playlists[0]
+            currentPlaylist: response.data.currentPlaylist
           })
 
         } else {
@@ -454,9 +474,31 @@ class App extends Component {
       })
 
       this.forceUpdate()
+
+      console.log('changeCurrentPlaylist')
+      this.setBackendCurrentPlaylist(newPlaylist)
+
     }
 
 
+  }
+
+  setBackendCurrentPlaylist = (currentPlaylist) => {
+    console.log(currentPlaylist)
+
+    var data = {
+      username: this.state.currentUser,
+      newCurrentPlaylist: currentPlaylist
+    }
+
+    Axios.defaults.headers.post['Content-Type'] = 'application/json'
+
+    var url = apiEndpoint + '/setCurrentPlaylist'
+
+    Axios.post(url, data)
+      .then((response) => {
+        console.log(response)
+      })
   }
 
   testButton = () => {
@@ -551,6 +593,10 @@ class App extends Component {
     // this.deleteVideoFromBackend(deletedVideo, cpCopy.playlistTitle)
     this.setBackEndPlaylist(cpCopy)
 
+    console.log('onClickDeleteCallback')
+    this.setBackendCurrentPlaylist(cpCopy)
+
+
 
   }
 
@@ -633,6 +679,32 @@ class App extends Component {
     var message = data.message
 
     console.log(user + ': ' + message)
+  }
+
+  handleGetNextVideoFromUser = (data) => {
+    console.log('handleGetNextVideoFromUser')
+    console.log(data)
+
+    var nextVideoData = {
+      user: this.state.currentUser,
+      nextVideo: this.state.currentPlaylist.playlistVideos[0]
+    }
+
+    socket.emit('Event_nextVideoFromUser', nextVideoData)
+  }
+
+  handleNextVideo = (data) => {
+
+    var user = data.username
+    var videoId = data.videoId
+    var videoTitle = data.videoTitle
+
+    console.log('handle next video')
+    console.log(data)
+
+    video = videoId
+
+    this.forceUpdate()
   }
 
   render() {

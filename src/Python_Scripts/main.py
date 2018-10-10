@@ -1,4 +1,4 @@
-from flask import Flask, url_for, request, jsonify, json, render_template
+from flask import Flask, request, jsonify, json
 from flask_cors import CORS
 from pymongo import MongoClient
 from bson import ObjectId
@@ -8,11 +8,13 @@ import isodate
 import json
 import requests
 import datetime
+import threading
 
 youtubeAPIKey = 'AIzaSyD7edp0KrX7oft2f-zL2uEnQFhW4Uj5OvE'
+isSomeoneDJing = False
 
-
-videoQueue = []
+clients = []
+djQueue = []
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'onesouth'
@@ -110,10 +112,6 @@ def setPlaylist():
     return JSONEncoder().encode(result.raw_result)
 
 
-# As of right now, this function will delete all instances of a video in a playlist
-# This means if there is a duplicate video in a list, both will be deleted
-# Apparently, there is no real way of only deleting one element from an array
-# My new approach is to delete the video on the front end, then set the backend playlist to the front end playlist
 @app.route('/deleteVideoInPlaylist', methods = ['POST'])
 def deleteVideoInPlaylist():
 
@@ -141,6 +139,32 @@ def deleteVideoInPlaylist():
 
 
     return JSONEncoder().encode(result.raw_result)  
+
+@app.route('/setCurrentPlaylist', methods = ['POST'])
+def setCurrentPlaylist():
+    playlist = request.json['newCurrentPlaylist']
+    username = request.json['username']
+
+    print(playlist)
+
+    # Connect to database and get instance of the DB
+    client = MongoClient("localhost:27017")
+    db = client.PlugDJClone
+
+    # Get instance of the playlist collection
+    collection = db['playlists']
+
+    currentPlaylist = collection.find_one({'username': username})
+
+    if(currentPlaylist != None):
+        res = collection.update_one(
+                {'username': username}, 
+                {'$set': {'currentPlaylist': playlist}})
+
+        return JSONEncoder().encode(res.raw_result)  
+    else:
+        return ('user does not exist')
+
 
 @app.route('/login', methods = ['POST'])
 def login():
@@ -170,24 +194,96 @@ def login():
             return 'failure'
 
 
-@socketio.on('message')
-def handleMessage(msg):
-    print('Message = ' + msg)
-    send(msg, broadcast=True)
+
+@socketio.on('connected')
+def handleMessage(user):
+    clients.append({'user': user, 'clientId': request.sid})
+    send(user, broadcast=True)
+
+
 
 @socketio.on('Event_joinDJ')
-def handleCustomEvent(data):
+def handleJoinDJ(data):
     print(json.dumps(data))
+
+    global isSomeoneDJing
 
     user = data['user']
     nextVideo = data['nextVideo']
 
-    videoQueue.append({'user': user, 'nextVideo': nextVideo})
+    djQueue.append(user)
 
-    # print(json.dumps(videoQueue.pop))
-    video = videoQueue.pop()
-    getVideoDuration(video['nextVideo']['videoId'])
-    emit('Event_videoFromServer', video, broadcast=True)
+    if(isSomeoneDJing == False):
+        nextDJ = djQueue.pop(0)
+        sendNewVideoToClients(nextDJ)
+        isSomeoneDJing = True
+        djQueue.append(nextDJ)
+        
+    
+
+def sendNewVideoToClients(nextUser):
+    # Get next video from next DJ
+    user = None
+    for item in clients:
+        if(item['user'] == nextUser):
+            user = item
+
+    # if(user != None):
+    #     emit('Event_getNextVideoFromUser', 'give me video', room=user['clientId'])
+    # else:
+    #     print('Error with finding next user')
+
+    currentPlaylist = None
+
+    client = MongoClient("localhost:27017")
+    db = client.PlugDJClone
+
+    collection = db['playlists']
+    
+    playlist = collection.find_one({'username': nextUser})['currentPlaylist']
+
+    if(playlist != None):
+        nextVideo = playlist['playlistVideos'].pop(0)
+    else:
+        print('Next User doesn\'t exists. Next User = ' + nextUser)
+
+    data = {'videoId': nextVideo['videoId'], 'videoTitle': nextVideo['videoTitle'], 'username': nextUser}
+
+    print(data)
+
+    with app.test_request_context('/'):
+        socketio.emit('Event_nextVideo', data, broadcast=True)
+
+
+    duration = getVideoDuration(data['videoId'])
+    videoTimer = threading.Timer(duration + 2.0, determineNextVideo)
+    videoTimer.start()
+
+    playlist['playlistVideos'].append(nextVideo)
+
+    collection.update_one({'username': nextUser}, {'$set': {'currentPlaylist': playlist}})
+
+
+
+
+def determineNextVideo():
+    print('timer done ***************')
+    if(len(djQueue) != 0):
+        nextUser = djQueue.pop(0)
+        sendNewVideoToClients(nextUser)
+    else:
+        print('No more DJs in queue')
+
+@socketio.on('Event_nextVideoFromUser')
+def onReceiveNextVideoFromUser(data):
+    user = data['user']
+    nextVideoId = data['nextVideo']['videoId']
+    nextVideoTitle = data['nextVideo']['videoTitle']
+
+    print(user)
+    print(nextVideoId)
+    print(nextVideoTitle)
+
 
 def getVideoDuration(videoId):
     url = 'https://www.googleapis.com/youtube/v3/videos?key=' + youtubeAPIKey +'&id=' + str(videoId) + '&part=contentDetails'
@@ -196,7 +292,7 @@ def getVideoDuration(videoId):
     duration = res['items'][0]['contentDetails']['duration']
 
     duration = isodate.parse_duration(duration).total_seconds()
-    print((duration))
+    return duration
 
 @socketio.on('Event_sendChatMessage')
 def handleChatMessage(data):
