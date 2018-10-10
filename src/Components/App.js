@@ -96,7 +96,8 @@ class App extends Component {
       newPlaylistNameInput: '',
       testMessages: [],
       userPlayingVideo: '',
-      messageBoxValue: ''
+      messageBoxValue: '',
+      isUserDJing: false
 
     }
   }
@@ -112,11 +113,7 @@ class App extends Component {
 
     socket.on('message', (msg) => this.handleMessage(msg))
 
-    socket.on('Event_videoFromServer', (data) => this.handleVideoFromServer(data))
-
     socket.on('Event_receiveChatMessage', (data) => this.handleReceiveChatMessage(data))
-
-    socket.on('Event_getNextVideoFromUser', (data) => this.handleGetNextVideoFromUser(data))
 
     socket.on('Event_nextVideo', (data) => this.handleNextVideo(data))
 
@@ -128,7 +125,7 @@ class App extends Component {
   }
 
   handleMessage = (msg) => {
-    console.log(msg)
+    // console.log(msg)
     var copy = this.state.testMessages.slice()
 
     copy.push(msg)
@@ -169,8 +166,8 @@ class App extends Component {
 
     this.setBackEndPlaylist(newCurrentPlaylist)
 
-    console.log('OnSortEnd')
-    console.log(newCurrentPlaylist)
+    // console.log('OnSortEnd')
+    // console.log(newCurrentPlaylist)
     this.setBackendCurrentPlaylist(newCurrentPlaylist)
 
   }
@@ -182,7 +179,7 @@ class App extends Component {
 
   onPlayerStateChange = (event) => {
     if (event.data === 0) {
-      this.skipCurrentVideo()
+      // this.skipCurrentVideo()
     }
   }
 
@@ -208,8 +205,8 @@ class App extends Component {
   
       this.forceUpdate()
 
-      console.log('skip current video')
-      console.log(newPlaylist)
+      // console.log('skip current video')
+      // console.log(newPlaylist)
       this.setBackendCurrentPlaylist(newPlaylist)
 
     }else {
@@ -254,7 +251,7 @@ class App extends Component {
     if (q.length >= 1) {
       Axios.get(url)
         .then(response => {
-          console.log(response)
+          // console.log(response)
 
           var results = response['data']['items']
           var searchList = []
@@ -308,7 +305,7 @@ class App extends Component {
     //Update backend for new video
     this.addVideoToPlaylist(searchRes[index])
 
-    console.log('onSearchListItemClicked')
+    // console.log('onSearchListItemClicked')
     this.setBackendCurrentPlaylist(newPlaylist)
 
     
@@ -350,7 +347,7 @@ class App extends Component {
     var url = apiEndpoint + '/addVideoToPlaylist'
     Axios.post(url, data)
       .then((response) => {
-        console.log(response)
+        // console.log(response)
       })
 
   }
@@ -369,8 +366,8 @@ class App extends Component {
   //This function is usually called when returning the playlist for a user from the DB
   //The function goes through each item in the list provided and adds it to current playlist
   setFrontEndPlaylist = (playlists) => {
-    console.log('frontend')
-    console.log(playlists)
+    // console.log('frontend')
+    // console.log(playlists)
     var currentPlaylistVideos = playlists['currentPlaylist']['playlistVideos']
     var videoList = []
 
@@ -399,7 +396,7 @@ class App extends Component {
     //
     this.forceUpdate()
 
-    console.log('setFrontEndPlaylist')
+    // console.log('setFrontEndPlaylist')
     this.setBackendCurrentPlaylist(newPlaylist)
 
 
@@ -422,7 +419,7 @@ class App extends Component {
 
     Axios.post(url, data)
       .then((response) => {
-        console.log(response)
+        // console.log(response)
       })
 
   }
@@ -431,8 +428,8 @@ class App extends Component {
     var url = apiEndpoint + '/getPlaylists?username=' + this.state.currentUser
     Axios.get(url)
       .then((response) => {
-        console.log('response getPlaylistsForCurrentUser')
-        console.log(response)
+        // console.log('response getPlaylistsForCurrentUser')
+        // console.log(response)
 
         if (response.data.length !== 0) {
           this.setFrontEndPlaylist(response.data)
@@ -475,7 +472,7 @@ class App extends Component {
 
       this.forceUpdate()
 
-      console.log('changeCurrentPlaylist')
+      // console.log('changeCurrentPlaylist')
       this.setBackendCurrentPlaylist(newPlaylist)
 
     }
@@ -484,7 +481,7 @@ class App extends Component {
   }
 
   setBackendCurrentPlaylist = (currentPlaylist) => {
-    console.log(currentPlaylist)
+    // console.log(currentPlaylist)
 
     var data = {
       username: this.state.currentUser,
@@ -497,7 +494,7 @@ class App extends Component {
 
     Axios.post(url, data)
       .then((response) => {
-        console.log(response)
+        // console.log(response)
       })
   }
 
@@ -505,7 +502,7 @@ class App extends Component {
     var url = apiEndpoint + '/getPlaylists?username=' + this.state.currentUser
     Axios.get(url)
       .then((response) => {
-        console.log(response)
+        // console.log(response)
       })
   }
 
@@ -565,8 +562,8 @@ class App extends Component {
 
   //This function should only be used for debugging
   onClickListVideo = (index) => {
-    console.log('callback')
-    console.log('Index = ' + index)
+    // console.log('callback')
+    // console.log('Index = ' + index)
 
     video = this.state.currentPlaylist.playlistVideos[index].videoId
 
@@ -574,7 +571,7 @@ class App extends Component {
   }
 
   onClickDeleteCallback = (index) => {
-    console.log('Index = ' + index)
+    // console.log('Index = ' + index)
 
     // Delete from frontend stuff
 
@@ -593,7 +590,7 @@ class App extends Component {
     // this.deleteVideoFromBackend(deletedVideo, cpCopy.playlistTitle)
     this.setBackEndPlaylist(cpCopy)
 
-    console.log('onClickDeleteCallback')
+    // console.log('onClickDeleteCallback')
     this.setBackendCurrentPlaylist(cpCopy)
 
 
@@ -617,7 +614,7 @@ class App extends Component {
 
     Axios.post(url, data)
       .then((response) => {
-        console.log(response)
+        // console.log(response)
       })
 
   }
@@ -627,21 +624,12 @@ class App extends Component {
   onJoinDJ = () => {
     socket.emit('Event_joinDJ', 
       {
-       user: this.state.currentUser,
-       nextVideo: this.state.currentPlaylist.playlistVideos[0]
+       user: this.state.currentUser
       }
     )
-  }
 
-  // This function is called when the server broadcasts a new videoId
-  handleVideoFromServer = (data) => {
-    console.log(data)
-    var videoId = data.nextVideo.videoId
-    var userPlayingVideo = data.user
-
-    video = videoId
     this.setState({
-      userPlayingVideo: userPlayingVideo
+      isUserDJing: true
     })
 
     this.forceUpdate()
@@ -652,7 +640,6 @@ class App extends Component {
     // event.target.playVideo()
   }
 
-  
   handleMessageBoxChange = (event) => {
     this.setState({
       messageBoxValue: event.target.value
@@ -681,18 +668,7 @@ class App extends Component {
     console.log(user + ': ' + message)
   }
 
-  handleGetNextVideoFromUser = (data) => {
-    console.log('handleGetNextVideoFromUser')
-    console.log(data)
-
-    var nextVideoData = {
-      user: this.state.currentUser,
-      nextVideo: this.state.currentPlaylist.playlistVideos[0]
-    }
-
-    socket.emit('Event_nextVideoFromUser', nextVideoData)
-  }
-
+  //Called when server sends new video to clients
   handleNextVideo = (data) => {
 
     var user = data.username
@@ -707,6 +683,30 @@ class App extends Component {
     this.forceUpdate()
   }
 
+  onLeaveDJ = () => {
+    socket.emit('Event_leaveDJ', 
+      {
+       user: this.state.currentUser
+      }
+    )
+
+    this.setState({
+      isUserDJing: false
+    })
+
+    this.forceUpdate()
+  }
+
+  onSkipVideo = () =>{
+    socket.emit('Event_skipCurrentVideo', 
+      {
+       user: this.state.currentUser
+      }
+    )
+  }
+
+
+
   render() {
  
     const opts = {
@@ -714,7 +714,7 @@ class App extends Component {
       height: this.state.playerHeight,
       playerVars: { // https://developers.google.com/youtube/player_parameters
         autoplay: 1,
-        controls: 0,
+        controls: 1,
         disablekb: 1
       }
     };
@@ -727,20 +727,19 @@ class App extends Component {
         <div style={listStyle}>
           <fieldset style={{ 'border': 'p2' }}>
 
-            {/* {this.state.testMessages.map((value, index) => {
-              var string = index + ' - ' + value
-                return (
-                  <h6>{string}</h6>
-                )
-              })
-            } */}
-
             <Button onClick={this.onShowAddVideoModal}>Add Video</Button>
             <Button style={{'marginLeft':'5px'}} onClick={this.openPlaylistSlideIn}>Playlists</Button>
-            <Button style={{'marginLeft':'5px'}} onClick={() => this.skipCurrentVideo()}>Skip Video</Button>
-            <Button style={{'marginLeft':'5px'}} onClick={() => this.onJoinDJ()}>Click to DJ</Button>
+            <Button style={{'marginLeft':'5px'}} onClick={() => this.onSkipVideo()}>Skip Video</Button>
 
-            <Button style={{'marginLeft':'10px'}} onClick={this.openPlaylistSlideIn}>Test</Button>
+            {!this.state.isUserDJing && 
+              <Button style={{'marginLeft':'5px'}} onClick={() => this.onJoinDJ()}>Click to DJ</Button>
+            }
+
+            {this.state.isUserDJing && 
+              <Button style={{'marginLeft':'5px'}} onClick={() => this.onLeaveDJ()}>Quit DJing</Button>
+            }
+
+            <Button style={{'marginLeft':'10px'}} onClick={() => this.onLeaveDJ()}>Test</Button>
             
 
             <div style={{ 'marginTop': '10px' }}>

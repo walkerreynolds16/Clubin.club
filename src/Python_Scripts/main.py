@@ -3,6 +3,8 @@ from flask_cors import CORS
 from pymongo import MongoClient
 from bson import ObjectId
 from flask_socketio import SocketIO, send, emit
+import eventlet
+eventlet.monkey_patch()
 
 import isodate
 import json
@@ -21,13 +23,14 @@ app.config['SECRET_KEY'] = 'onesouth'
 socketio = SocketIO(app)
 CORS(app)
 
+
 @app.route('/getPlaylists')
 def getPlaylists():
     client = MongoClient("localhost:27017")
     db = client.PlugDJClone
 
     collection = db['playlists']
-    
+
     playlist = collection.find_one({'username': request.args['username']})
 
     if(playlist != None):
@@ -36,7 +39,7 @@ def getPlaylists():
         return JSONEncoder().encode([])
 
 
-@app.route('/addVideoToPlaylist', methods = ['POST'])
+@app.route('/addVideoToPlaylist', methods=['POST'])
 def addVideoToPlaylist():
 
     username = request.json['username']
@@ -47,7 +50,7 @@ def addVideoToPlaylist():
     # If the user that just added a video doesn't have an entry in the playlist db, change the playlist title to default
     if(playlistTitle is ''):
         playlistTitle = 'default'
-    
+
     # Connect to database and get instance of the DB
     client = MongoClient("localhost:27017")
     db = client.PlugDJClone
@@ -63,26 +66,25 @@ def addVideoToPlaylist():
 
     # If the user doesn't exist in the playlists db, make a new entry for them
     if(not doesUserExist):
-        result = collection.insert_one({'username': username, 'playlists': [{'playlistTitle': playlistTitle, 'playlistVideos': []}]})
+        result = collection.insert_one({'username': username, 'playlists': [
+                                       {'playlistTitle': playlistTitle, 'playlistVideos': []}]})
 
-    
     # # Try to find a document that has the requested username
     result = collection.update_one(
-        {'$and': [{'playlists.playlistTitle': playlistTitle}, {'username': username}]},
+        {'$and': [{'playlists.playlistTitle': playlistTitle},
+                  {'username': username}]},
         {'$push': {'playlists.$.playlistVideos': newVideo}},
-         upsert=True)
+        upsert=True)
+
+    return JSONEncoder().encode(result.raw_result)
 
 
-    return JSONEncoder().encode(result.raw_result)    
-
-
-@app.route('/setPlaylist', methods = ['POST'])
+@app.route('/setPlaylist', methods=['POST'])
 def setPlaylist():
 
     playlistVideos = request.json['playlistVideos']
     playlistTitle = request.json['playlistTitle']
     username = request.json['username']
-
 
     # Connect to database and get instance of the DB
     client = MongoClient("localhost:27017")
@@ -91,35 +93,36 @@ def setPlaylist():
     # Get instance of the playlist collection
     collection = db['playlists']
 
-    doesPlaylistExist = collection.find_one({'$and': [{'playlists.playlistTitle': playlistTitle}, {'username': username}]})
+    doesPlaylistExist = collection.find_one(
+        {'$and': [{'playlists.playlistTitle': playlistTitle}, {'username': username}]})
     print(doesPlaylistExist)
     result = None
 
     if(doesPlaylistExist == None):
-        newPlaylist = {'playlistTitle': playlistTitle, 'playlistVideos': playlistVideos}
+        newPlaylist = {'playlistTitle': playlistTitle,
+                       'playlistVideos': playlistVideos}
         result = collection.update_one(
             {'username': username},
             {'$push': {'playlists': newPlaylist}})
 
     else:
         result = collection.update_one(
-            {'$and': [{'playlists.playlistTitle': playlistTitle}, {'username': username}]},
+            {'$and': [{'playlists.playlistTitle': playlistTitle},
+                      {'username': username}]},
             {'$set': {'playlists.$.playlistVideos': playlistVideos}},
             upsert=True)
-
-    
 
     return JSONEncoder().encode(result.raw_result)
 
 
-@app.route('/deleteVideoInPlaylist', methods = ['POST'])
+@app.route('/deleteVideoInPlaylist', methods=['POST'])
 def deleteVideoInPlaylist():
 
     username = request.json['username']
     playlistTitle = request.json['playlistTitle']
     videoId = request.json['videoId']
     videoTitle = request.json['videoTitle']
-    
+
     # Connect to database and get instance of the DB
     client = MongoClient("localhost:27017")
     db = client.PlugDJClone
@@ -130,17 +133,18 @@ def deleteVideoInPlaylist():
     video = {'videoId': videoId, 'videoTitle': videoTitle}
 
     print(videoTitle)
-    
+
     # # Try to find a document that has the requested username
     result = collection.update_one(
-        {'$and': [{'playlists.playlistTitle': playlistTitle}, {'username': username}]},
+        {'$and': [{'playlists.playlistTitle': playlistTitle},
+                  {'username': username}]},
         {'$pull': {'playlists.$.playlistVideos': video}},
-         upsert=False)
+        upsert=False)
+
+    return JSONEncoder().encode(result.raw_result)
 
 
-    return JSONEncoder().encode(result.raw_result)  
-
-@app.route('/setCurrentPlaylist', methods = ['POST'])
+@app.route('/setCurrentPlaylist', methods=['POST'])
 def setCurrentPlaylist():
     playlist = request.json['newCurrentPlaylist']
     username = request.json['username']
@@ -158,19 +162,19 @@ def setCurrentPlaylist():
 
     if(currentPlaylist != None):
         res = collection.update_one(
-                {'username': username}, 
-                {'$set': {'currentPlaylist': playlist}})
+            {'username': username},
+            {'$set': {'currentPlaylist': playlist}})
 
-        return JSONEncoder().encode(res.raw_result)  
+        return JSONEncoder().encode(res.raw_result)
     else:
         return ('user does not exist')
 
 
-@app.route('/login', methods = ['POST'])
+@app.route('/login', methods=['POST'])
 def login():
     username = request.json['username']
     password = request.json['password']
-    
+
     # Connect to database and get instance of the DB
     client = MongoClient("localhost:27017")
     db = client.PlugDJClone
@@ -182,7 +186,8 @@ def login():
 
     # The username does not exist
     if(doesUsernameExist == None):
-        result = collection.insert_one({'username':username, 'password': password})
+        result = collection.insert_one(
+            {'username': username, 'password': password})
         return 'success'
 
     else:
@@ -195,11 +200,17 @@ def login():
 
 
 
+
+
+
+
+
+
+
 @socketio.on('connected')
-def handleMessage(user):
+def handleConnection(user):
     clients.append({'user': user, 'clientId': request.sid})
     send(user, broadcast=True)
-
 
 
 @socketio.on('Event_joinDJ')
@@ -209,7 +220,6 @@ def handleJoinDJ(data):
     global isSomeoneDJing
 
     user = data['user']
-    nextVideo = data['nextVideo']
 
     djQueue.append(user)
 
@@ -218,8 +228,40 @@ def handleJoinDJ(data):
         sendNewVideoToClients(nextDJ)
         isSomeoneDJing = True
         djQueue.append(nextDJ)
-        
-    
+
+
+@socketio.on('Event_sendChatMessage')
+def handleChatMessage(data):
+    user = data['user']
+    message = data['message']
+
+    emit('Event_receiveChatMessage', {
+         'user': user, 'message': message}, broadcast=True)
+
+
+@socketio.on('Event_leaveDJ')
+def handleLeavingDJ(data):
+    print(json.dumps(data))
+
+    user = data['user']
+    print(user)
+
+    print(djQueue)
+    djQueue.remove(user)
+    print(djQueue)
+
+    global isSomeoneDJing
+
+    if(len(djQueue) == 0):
+        isSomeoneDJing = False
+
+@socketio.on('Event_skipCurrentVideo')
+def handleSkipRequest(data):
+    # for now, i guess just determine the next video
+    # TODO count the amount of skip requests and only skip when the majority of people want to skip
+
+    determineNextVideo()
+
 
 def sendNewVideoToClients(nextUser):
     # Get next video from next DJ
@@ -228,32 +270,42 @@ def sendNewVideoToClients(nextUser):
         if(item['user'] == nextUser):
             user = item
 
-    # if(user != None):
-    #     emit('Event_getNextVideoFromUser', 'give me video', room=user['clientId'])
-    # else:
-    #     print('Error with finding next user')
-
     currentPlaylist = None
 
     client = MongoClient("localhost:27017")
     db = client.PlugDJClone
 
     collection = db['playlists']
-    
+
     playlist = collection.find_one({'username': nextUser})['currentPlaylist']
 
     if(playlist != None):
-        nextVideo = playlist['playlistVideos'].pop(0)
+        if(len(playlist['playlistVideos']) != 0):
+            nextVideo = playlist['playlistVideos'].pop(0)
+        else:
+            print('Next User doesn\'t have videos in their current playlist. Next User = ' + nextUser)
+            determineNextVideo()
+            return
     else:
         print('Next User doesn\'t exists. Next User = ' + nextUser)
+        determineNextVideo()
+        return
+
 
     data = {'videoId': nextVideo['videoId'], 'videoTitle': nextVideo['videoTitle'], 'username': nextUser}
 
-    print(data)
+    print('\n ****************** \n')
 
-    with app.test_request_context('/'):
-        socketio.emit('Event_nextVideo', data, broadcast=True)
+    print("Username = " + str(data['username']))
+    print("Video Id = " + str(data['videoId']))
+    print("Video Title = " + str(data['videoTitle']))
 
+    print('\n ****************** \n')
+
+
+    
+    print('\n emitting to clients \n')
+    socketio.emit('Event_nextVideo', data, broadcast=True)
 
     duration = getVideoDuration(data['videoId'])
     videoTimer = threading.Timer(duration + 2.0, determineNextVideo)
@@ -262,31 +314,22 @@ def sendNewVideoToClients(nextUser):
     playlist['playlistVideos'].append(nextVideo)
 
     collection.update_one({'username': nextUser}, {'$set': {'currentPlaylist': playlist}})
-
-
+    return None
 
 
 def determineNextVideo():
-    print('timer done ***************')
+    # print('timer done ***************')
     if(len(djQueue) != 0):
         nextUser = djQueue.pop(0)
         sendNewVideoToClients(nextUser)
+        djQueue.append(nextUser)
     else:
         print('No more DJs in queue')
 
-@socketio.on('Event_nextVideoFromUser')
-def onReceiveNextVideoFromUser(data):
-    user = data['user']
-    nextVideoId = data['nextVideo']['videoId']
-    nextVideoTitle = data['nextVideo']['videoTitle']
-
-    print(user)
-    print(nextVideoId)
-    print(nextVideoTitle)
-
 
 def getVideoDuration(videoId):
-    url = 'https://www.googleapis.com/youtube/v3/videos?key=' + youtubeAPIKey +'&id=' + str(videoId) + '&part=contentDetails'
+    url = 'https://www.googleapis.com/youtube/v3/videos?key=' + \
+        youtubeAPIKey + '&id=' + str(videoId) + '&part=contentDetails'
     r = requests.get(url)
     res = json.loads(r.text)
     duration = res['items'][0]['contentDetails']['duration']
@@ -294,19 +337,15 @@ def getVideoDuration(videoId):
     duration = isodate.parse_duration(duration).total_seconds()
     return duration
 
-@socketio.on('Event_sendChatMessage')
-def handleChatMessage(data):
-    user = data['user']
-    message = data['message']
 
-    emit('Event_receiveChatMessage', {'user': user, 'message': message}, broadcast=True)
+
 
 class JSONEncoder(json.JSONEncoder):
     def default(self, o):
         if isinstance(o, ObjectId):
             return str(o)
         return json.JSONEncoder.default(self, o)
-    
+
 
 if __name__ == '__main__':
     socketio.run(app, debug=True)
