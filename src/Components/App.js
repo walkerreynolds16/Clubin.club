@@ -833,10 +833,12 @@ class App extends Component {
                   var imageLink = 'http://img.youtube.com/vi/' + value.videoId + '/0.jpg'
 
                   return (
-                    <ListGroupItem style={{ 'position': 'relative' }} onClick={() => this.onSearchListItemClicked(index)}>
-                      <img src={imageLink} style={{ 'width': '120px', 'height': '90px' }} />
-                      <h5 style={{ 'display': 'inline-block', 'fontWeight': 'bold', 'marginLeft': '5px', 'wordWrap': 'break-all' }}>{value.videoTitle}</h5>
-                      <p style={{ 'display': 'inline-block', 'position': 'relative' }}>{value.duration}</p>
+                    <ListGroupItem onClick={() => this.onSearchListItemClicked(index)}>
+                      <div style={{ 'position': 'relative' }}>
+                        <img src={imageLink} style={{ 'width': '120px', 'height': '90px' }} />
+                        <h5 style={{ 'display': 'inline-block', 'fontWeight': 'bold', 'marginLeft': '5px', 'wordWrap': 'break-all' }}>{value.videoTitle}</h5>
+                        <p style={{ 'display': 'inline-block', 'position': 'absolute', 'right':'0px', 'top':'40%' }}>{value.duration}</p>
+                      </div>
                     </ListGroupItem>
                   )
 

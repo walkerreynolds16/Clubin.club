@@ -33,17 +33,16 @@ export default class Home extends Component {
       <div>
         <Router>
           <div>
-            
 
             <Route path='/home' render={
               (props) => this.state.loggedIn ? <App {...props} loginUsername={this.state.username} /> : (<Redirect to="/" />)
-              }
-           />
-            
+            }
+            />
+
 
             <Route exact path='/' render={
-              (props) => this.state.loggedIn ? (<Redirect to="/home"/>) : ( <Login {...props} changeUsername={this.changeUsername} changeLoggedIn={this.changeLoggedIn} />)
-            }/>
+              (props) => this.state.loggedIn ? (<Redirect to="/home" />) : (<Login {...props} changeUsername={this.changeUsername} changeLoggedIn={this.changeLoggedIn} />)
+            } />
 
           </div>
 
