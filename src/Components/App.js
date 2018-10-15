@@ -675,7 +675,12 @@ class App extends Component {
     })
   }
 
-  handleSendChatMessage = () => {
+  handleSendChatMessage = (e) => {
+    if(e !== undefined)
+    {
+      e.preventDefault();
+    }
+    
     socket.emit('Event_sendChatMessage',
       {
         user: this.state.currentUser,
@@ -691,10 +696,12 @@ class App extends Component {
   }
 
   handleReceiveChatMessage = (data) => {
+    
     var user = data.user
     var message = data.message
 
-    console.log(user + ': ' + message)
+    this.state.testMessages.push(user + ": " + message)
+    this.forceUpdate();
   }
 
   //Called when server sends new video to clients
@@ -805,14 +812,22 @@ class App extends Component {
         </div>
 
         <div>
+          {this.state.testMessages.map((value, index) => {
+            return (
+              <h6>{value}</h6>
+            )
+          })}
+        </div>
+
+        <div>
           <h1>{this.state.currentUser}</h1>
         </div>
 
         <div>
-
-          <input value={this.state.messageBoxValue} onChange={this.handleMessageBoxChange}></input>
-          <Button onClick={this.handleSendChatMessage}>Send</Button>
-
+          <form onSubmit={(e) => this.handleSendChatMessage(e)}>
+            <input value={this.state.messageBoxValue} onChange={this.handleMessageBoxChange}></input>
+            <Button onClick={(e) => this.handleSendChatMessage(e)}>Send</Button>
+          </form>
         </div>
 
 
