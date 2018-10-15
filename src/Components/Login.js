@@ -41,6 +41,7 @@ export default class Login extends Component {
     Axios.post(url, data)
         .then((response) => {
             // Login attempt was successful
+            console.log(response)
             if(response.data === 'success'){
 
             }
