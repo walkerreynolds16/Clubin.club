@@ -28,6 +28,8 @@ export default class Login extends Component {
   handleSubmit = event => {
     event.preventDefault();
 
+    this.props.changeUsername(this.state.username)
+
     //call backend
     var data = {
         username: this.state.username,
@@ -41,8 +43,11 @@ export default class Login extends Component {
     Axios.post(url, data)
         .then((response) => {
             // Login attempt was successful
+            console.log(response)
             if(response.data === 'success'){
+              this.props.changeLoggedIn(true)
 
+              this.forceUpdate()
             }
         })
 

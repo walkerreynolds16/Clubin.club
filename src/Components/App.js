@@ -8,13 +8,12 @@ import Slider from 'react-slide-out'
 import Axios from 'axios'
 import '../Styles/App.css';
 import 'react-slide-out/lib/index.css'
+import Moment from 'moment'
+import 'moment-duration-format'
 
 import openSocket from 'socket.io-client';
 import { constants } from 'zlib';
-const  socket = openSocket.connect('http://127.0.0.1:5000')
-
-
-
+const socket = openSocket.connect('http://127.0.0.1:5000')
 
 var video = ''
 const youtubeAPIKey = 'AIzaSyD7edp0KrX7oft2f-zL2uEnQFhW4Uj5OvE'
@@ -36,22 +35,22 @@ const playerStyle = {
   top: '5px'
 }
 
-const SortableItem = SortableElement(({value, onClickDeleteCallback, listIndex }) => {
+const SortableItem = SortableElement(({ value, onClickDeleteCallback, listIndex }) => {
   var image = 'http://img.youtube.com/vi/' + value.videoId + '/0.jpg'
-  
+
   return (
-    <div style={{'marginTop':'8px', 'marginBottom':'8px', 'position':'relative'}}>
-      <li style={{'display': 'flex', 'alignItems': 'center' }}>
+    <div style={{ 'marginTop': '8px', 'marginBottom': '8px', 'position': 'relative' }}>
+      <li style={{ 'display': 'flex', 'alignItems': 'center' }}>
         <img src={image} style={{ 'width': '80px', 'height': '55px' }} />
         <h6 style={{ 'display': 'inline-block', 'fontWeight': 'bold', 'marginLeft': '5px' }}>{value.videoTitle}</h6>
 
-        <Button bsStyle={'small'} 
-                style={{'display':'inline-block', 'position':'absolute', 'right':'5px'}} 
-                onClick={() => onClickDeleteCallback(listIndex)}>
+        <Button bsStyle={'small'}
+          style={{ 'display': 'inline-block', 'position': 'absolute', 'right': '5px' }}
+          onClick={() => onClickDeleteCallback(listIndex)}>
 
-                <svg width="11" height="11" viewBox="0 0 1024 1024">
-                  <path d="M192 1024h640l64-704h-768zM640 128v-128h-256v128h-320v192l64-64h768l64 64v-192h-320zM576 128h-128v-64h128v64z"></path>
-                </svg>
+          <svg width="11" height="11" viewBox="0 0 1024 1024">
+            <path d="M192 1024h640l64-704h-768zM640 128v-128h-256v128h-320v192l64-64h768l64 64v-192h-320zM576 128h-128v-64h128v64z"></path>
+          </svg>
 
         </Button>
       </li>
@@ -62,15 +61,15 @@ const SortableItem = SortableElement(({value, onClickDeleteCallback, listIndex }
 
 const SortableList = SortableContainer(({ items, onClickDeleteCallback }) => {
   return (
-    <div style={{'overflow':'auto', 'height':'600px'}}>
+    <div style={{ 'overflow': 'auto', 'height': '600px' }}>
       <ul>
         {items.map((value, index) => (
-          
+
           <SortableItem key={`item-${index}`} index={index} value={value} onClickDeleteCallback={onClickDeleteCallback} listIndex={index} />
         ))}
       </ul>
     </div>
-    
+
   );
 });
 
@@ -81,23 +80,24 @@ class App extends Component {
     super(props)
 
     this.state = {
-      currentPlaylist: {playlistTitle: '', playlistVideos: []},
+      currentPlaylist: { playlistTitle: '', playlistVideos: [] },
       showAddVideoModal: false,
       addVideoSearchTerm: '',
       playerWidth: '',
       playerHeight: '',
       searchList: [],
-      currentUser: 'walker',
+      currentUser: this.props.loginUsername,
       showPlaylistSlideIn: false,
       playlists: [
-        {playlistTitle: '', playlistVideos: []}
+        { playlistTitle: '', playlistVideos: [] }
       ],
       showAddPlaylistModal: false,
       newPlaylistNameInput: '',
       testMessages: [],
       userPlayingVideo: '',
       messageBoxValue: '',
-      isUserDJing: false
+      isUserDJing: false,
+      testSetUsername: ''
 
     }
   }
@@ -153,7 +153,7 @@ class App extends Component {
 
   // This function is called when the sortable list is sorted
   onSortEnd = ({ oldIndex, newIndex }) => {
-    var newCurrentPlaylist =  {playlistTitle: this.state.currentPlaylist.playlistTitle , playlistVideos: arrayMove(this.state.currentPlaylist.playlistVideos, oldIndex, newIndex)}
+    var newCurrentPlaylist = { playlistTitle: this.state.currentPlaylist.playlistTitle, playlistVideos: arrayMove(this.state.currentPlaylist.playlistVideos, oldIndex, newIndex) }
 
     this.setState({
       currentPlaylist: newCurrentPlaylist,
@@ -185,34 +185,34 @@ class App extends Component {
 
   skipCurrentVideo = () => {
 
-    if(this.state.currentPlaylist.playlistVideos.length > 0){
+    if (this.state.currentPlaylist.playlistVideos.length > 0) {
       console.log('skipping')
       var topItem = this.state.currentPlaylist.playlistVideos.splice(0, 1)
       var listCopy = this.state.currentPlaylist.playlistVideos.slice()
-  
-  
+
+
       listCopy.push(topItem[0])
       // video = listCopy[0].videoId
-  
-      var newPlaylist = {playlistTitle: this.state.currentPlaylist.playlistTitle, playlistVideos: listCopy}
-  
+
+      var newPlaylist = { playlistTitle: this.state.currentPlaylist.playlistTitle, playlistVideos: listCopy }
+
       this.updatePlaylistState(newPlaylist)
-  
-  
+
+
       this.setState({
         currentPlaylist: newPlaylist
       })
-  
+
       this.forceUpdate()
 
       // console.log('skip current video')
       // console.log(newPlaylist)
       this.setBackendCurrentPlaylist(newPlaylist)
 
-    }else {
+    } else {
       alert('There are no videos in the current playlist')
     }
-    
+
   }
 
   sendMessage = (msg) => {
@@ -249,9 +249,11 @@ class App extends Component {
     var url = 'https://www.googleapis.com/youtube/v3/search?q=' + q + '&key=' + youtubeAPIKey + '&maxResults=' + maxResults + '&part=snippet'
 
     if (q.length >= 1) {
+      var idString = ''
+
       Axios.get(url)
         .then(response => {
-          // console.log(response)
+          console.log(response)
 
           var results = response['data']['items']
           var searchList = []
@@ -262,19 +264,46 @@ class App extends Component {
             var videoId = item['id']['videoId']
             var videoTitle = item['snippet']['title']
 
+            idString += videoId + ','
+
             if (videoId !== undefined) {
               //add videos to a list to be displayed on the modal
-              searchList.push({ videoId: videoId, videoTitle: videoTitle })
+              searchList.push({ videoId: videoId, videoTitle: videoTitle, duration: '' })
 
             }
 
           }
 
-          this.setState({
-            searchList: searchList
-          })
+          idString = idString.substring(0, idString.length - 1)
+          var getVideoDurationUrl = 'https://www.googleapis.com/youtube/v3/videos?id=' + idString + '&part=contentDetails&key=' + youtubeAPIKey
+
+          Axios.get(getVideoDurationUrl)
+            .then((response) => {
+              // console.log(response)
+
+              var durationRes = response['data']['items']
+
+              for (var i = 0; i < durationRes.length; i++) {
+                var duration = Moment.duration(durationRes[i]['contentDetails']['duration']).format('h:mm:ss').padStart(4, '0:0')
+
+                searchList[i].duration = duration
+              }
+
+              this.setState({
+                searchList: searchList
+              })
+
+              this.forceUpdate()
+
+
+
+            })
+
+
 
         })
+
+
     }
 
   }
@@ -292,8 +321,8 @@ class App extends Component {
     list.push(searchRes[index])
 
     //Make a new object for the playlists state
-    var newPlaylist = {playlistTitle: this.state.currentPlaylist.playlistTitle, playlistVideos: list}
-    
+    var newPlaylist = { playlistTitle: this.state.currentPlaylist.playlistTitle, playlistVideos: list }
+
     this.updatePlaylistState(newPlaylist)
 
     this.setState({
@@ -308,7 +337,7 @@ class App extends Component {
     // console.log('onSearchListItemClicked')
     this.setBackendCurrentPlaylist(newPlaylist)
 
-    
+
   }
 
   //This function is used to update the playlists state with an updated playlist
@@ -319,8 +348,8 @@ class App extends Component {
 
     //Find the playlist that was just changed in the copy
     //Switch the old playlist with the new one
-    for(var i = 0; i < playlistsCopy.length; i++){
-      if(playlistsCopy[i].playlistTitle === newPlaylist.playlistTitle){
+    for (var i = 0; i < playlistsCopy.length; i++) {
+      if (playlistsCopy[i].playlistTitle === newPlaylist.playlistTitle) {
         playlistsCopy[i] = newPlaylist
       }
     }
@@ -342,7 +371,7 @@ class App extends Component {
       videoTitle: video['videoTitle']
     }
 
-    Axios.defaults.headers.post['Content-Type'] = 'application/json'    
+    Axios.defaults.headers.post['Content-Type'] = 'application/json'
 
     var url = apiEndpoint + '/addVideoToPlaylist'
     Axios.post(url, data)
@@ -353,7 +382,7 @@ class App extends Component {
   }
 
   getVideoTitle = (videoId) => {
-    var url = 'https://www.googleapis.com/youtube/v3/videos?key=' + youtubeAPIKey + '&id='+ videoId +'&part=snippet'
+    var url = 'https://www.googleapis.com/youtube/v3/videos?key=' + youtubeAPIKey + '&id=' + videoId + '&part=snippet'
     var title = ''
     Axios.get(url)
       .then((response) => {
@@ -371,17 +400,17 @@ class App extends Component {
     var currentPlaylistVideos = playlists['currentPlaylist']['playlistVideos']
     var videoList = []
 
-    for(const item of currentPlaylistVideos){
+    for (const item of currentPlaylistVideos) {
       var videoId = item['videoId']
       var videoTitle = item['videoTitle']
 
-      var obj = {videoId: videoId, videoTitle: videoTitle}
+      var obj = { videoId: videoId, videoTitle: videoTitle }
 
       videoList.push(obj)
 
     }
 
-    var newPlaylist = {playlistTitle: playlists['currentPlaylist']['playlistTitle'], playlistVideos: videoList}
+    var newPlaylist = { playlistTitle: playlists['currentPlaylist']['playlistTitle'], playlistVideos: videoList }
 
     this.setState({
       currentPlaylist: newPlaylist
@@ -406,7 +435,7 @@ class App extends Component {
   //This function is usually called after sorting a playlist
   //The function takes the current playlist and sends it to the backend to be put in the db
   setBackEndPlaylist = (newList) => {
-    
+
     var data = {
       username: this.state.currentUser,
       playlistVideos: newList.playlistVideos,
@@ -462,9 +491,9 @@ class App extends Component {
     var playlistsCopy = this.state.playlists.slice()
     var newPlaylist = playlistsCopy[index]
 
-    if(newPlaylist.playlistTitle === this.state.currentPlaylist.playlistTitle){
+    if (newPlaylist.playlistTitle === this.state.currentPlaylist.playlistTitle) {
       alert("The selected playlist is already the current playlist")
-    }else {
+    } else {
 
       this.setState({
         currentPlaylist: newPlaylist
@@ -530,16 +559,16 @@ class App extends Component {
     }
 
     var playlistCopy = this.state.playlists.slice()
-    var newPlaylist = {playlistTitle: this.state.newPlaylistNameInput, playlistVideos: []}
+    var newPlaylist = { playlistTitle: this.state.newPlaylistNameInput, playlistVideos: [] }
 
     var isDuplicatePlaylistName = false
-    for(var i = 0; i < playlistCopy.length; i++){
-      if(this.state.newPlaylistNameInput === playlistCopy[i].playlistTitle){
+    for (var i = 0; i < playlistCopy.length; i++) {
+      if (this.state.newPlaylistNameInput === playlistCopy[i].playlistTitle) {
         isDuplicatePlaylistName = true
       }
     }
 
-    if(!isDuplicatePlaylistName){
+    if (!isDuplicatePlaylistName) {
       playlistCopy.push(newPlaylist)
 
       this.setState({
@@ -553,7 +582,7 @@ class App extends Component {
       alert('This playlist name is already used')
     }
 
-    
+
 
     this.setState({
       playlists: playlistCopy
@@ -622,9 +651,9 @@ class App extends Component {
   // This function is called when a use joins the DJ queue
   // Sends the username to the server
   onJoinDJ = () => {
-    socket.emit('Event_joinDJ', 
+    socket.emit('Event_joinDJ',
       {
-       user: this.state.currentUser
+        user: this.state.currentUser
       }
     )
 
@@ -647,7 +676,7 @@ class App extends Component {
   }
 
   handleSendChatMessage = () => {
-    socket.emit('Event_sendChatMessage', 
+    socket.emit('Event_sendChatMessage',
       {
         user: this.state.currentUser,
         message: this.state.messageBoxValue
@@ -684,9 +713,9 @@ class App extends Component {
   }
 
   onLeaveDJ = () => {
-    socket.emit('Event_leaveDJ', 
+    socket.emit('Event_leaveDJ',
       {
-       user: this.state.currentUser
+        user: this.state.currentUser
       }
     )
 
@@ -697,18 +726,30 @@ class App extends Component {
     this.forceUpdate()
   }
 
-  onSkipVideo = () =>{
-    socket.emit('Event_skipCurrentVideo', 
+  onSkipVideo = () => {
+    socket.emit('Event_skipCurrentVideo',
       {
-       user: this.state.currentUser
+        user: this.state.currentUser
       }
     )
+  }
+
+  setUsername = () => {
+    this.setState({
+      currentUser: this.state.testSetUsername
+    })
+  }
+
+  handleChangeSetUsername = (event) => {
+    this.setState({
+      testSetUsername: event.target.value
+    })
   }
 
 
 
   render() {
- 
+
     const opts = {
       width: this.state.playerWidth,
       height: this.state.playerHeight,
@@ -723,24 +764,23 @@ class App extends Component {
 
     return (
       <div >
-        <Routes />
         <div style={listStyle}>
           <fieldset style={{ 'border': 'p2' }}>
 
             <Button onClick={this.onShowAddVideoModal}>Add Video</Button>
-            <Button style={{'marginLeft':'5px'}} onClick={this.openPlaylistSlideIn}>Playlists</Button>
-            <Button style={{'marginLeft':'5px'}} onClick={() => this.onSkipVideo()}>Skip Video</Button>
+            <Button style={{ 'marginLeft': '5px' }} onClick={this.openPlaylistSlideIn}>Playlists</Button>
+            <Button style={{ 'marginLeft': '5px' }} onClick={() => this.onSkipVideo()}>Skip Video</Button>
 
-            {!this.state.isUserDJing && 
-              <Button style={{'marginLeft':'5px'}} onClick={() => this.onJoinDJ()}>Click to DJ</Button>
+            {!this.state.isUserDJing &&
+              <Button style={{ 'marginLeft': '5px' }} onClick={() => this.onJoinDJ()}>Click to DJ</Button>
             }
 
-            {this.state.isUserDJing && 
-              <Button style={{'marginLeft':'5px'}} onClick={() => this.onLeaveDJ()}>Quit DJing</Button>
+            {this.state.isUserDJing &&
+              <Button style={{ 'marginLeft': '5px' }} onClick={() => this.onLeaveDJ()}>Quit DJing</Button>
             }
 
-            <Button style={{'marginLeft':'10px'}} onClick={() => this.onLeaveDJ()}>Test</Button>
-            
+            <Button style={{ 'marginLeft': '10px' }} onClick={() => this.onLeaveDJ()}>Test</Button>
+
 
             <div style={{ 'marginTop': '10px' }}>
               <SortableList
@@ -765,10 +805,14 @@ class App extends Component {
         </div>
 
         <div>
-          
-            <input value={this.state.messageBoxValue} onChange={this.handleMessageBoxChange}></input>
-            <Button onClick={this.handleSendChatMessage}>Send</Button>
-         
+          <h1>{this.state.currentUser}</h1>
+        </div>
+
+        <div>
+
+          <input value={this.state.messageBoxValue} onChange={this.handleMessageBoxChange}></input>
+          <Button onClick={this.handleSendChatMessage}>Send</Button>
+
         </div>
 
 
@@ -792,7 +836,7 @@ class App extends Component {
                     <ListGroupItem style={{ 'position': 'relative' }} onClick={() => this.onSearchListItemClicked(index)}>
                       <img src={imageLink} style={{ 'width': '120px', 'height': '90px' }} />
                       <h5 style={{ 'display': 'inline-block', 'fontWeight': 'bold', 'marginLeft': '5px', 'wordWrap': 'break-all' }}>{value.videoTitle}</h5>
-                      {/* <Button bsSize="large" style={{'position':'fixed', 'right':'5px', 'top':'20px'}} onClick={() => this.onSearchListItemClicked(index)}>+</Button> */}
+                      <p style={{ 'display': 'inline-block', 'position': 'relative' }}>{value.duration}</p>
                     </ListGroupItem>
                   )
 
@@ -812,23 +856,26 @@ class App extends Component {
           isOpen={this.state.showPlaylistSlideIn}
           onOutsideClick={this.closePlaylistSlideIn}
           header={
-            <div style={{'position':'fixed'}}>
-              <Button style={{'right':'5px', 'position':'fixed', 'top':'15px'}} onClick={this.openAddPlaylistModal}>Add Playlist</Button>
+            <div style={{ 'position': 'fixed' }}>
+              <Button style={{ 'right': '5px', 'position': 'fixed', 'top': '15px' }} onClick={this.openAddPlaylistModal}>Add Playlist</Button>
             </div>
           }>
-          
+
           <div>
             <ListGroup>
               {this.state.playlists.map((value, index) => {
                 var title = value.playlistTitle
                 var videos = value.playlistVideos
 
-                return (
-                  <ListGroupItem style={{ 'position': 'relative' }} onClick={() => this.changeCurrentPlaylist(index)}>
-                    <h5 style={{ 'display': 'inline-block', 'fontWeight': 'bold', 'marginLeft': '5px', 'wordWrap': 'break-all' }}>{title}</h5>
-                    <h6 style={{'display':'inline-block', 'marginLeft':'2px'}}>({videos.length})</h6>
-                  </ListGroupItem>
-                )
+                if (title != '') {
+                  return (
+                    <ListGroupItem style={{ 'position': 'relative' }} onClick={() => this.changeCurrentPlaylist(index)}>
+                      <h5 style={{ 'display': 'inline-block', 'fontWeight': 'bold', 'marginLeft': '5px', 'wordWrap': 'break-all' }}>{title}</h5>
+                      <h6 style={{ 'display': 'inline-block', 'marginLeft': '2px' }}>({videos.length})</h6>
+                    </ListGroupItem>
+                  )
+                }
+
               })}
             </ListGroup>
           </div>
