@@ -11,11 +11,11 @@ import registerServiceWorker from './registerServiceWorker';
 
 ReactDOM.render(
 
-master
-   <Home/>
+    <Router>
+        <Home />
 
+    </Router>
 ,
-
 document.getElementById('root'));
 
 
