@@ -4,11 +4,12 @@
   "private": true,
   "dependencies": {
     "axios": "^0.18.0",
-    "express": "^4.16.3",
+    "jquery": "^3.3.1",
     "moment": "^2.22.2",
     "moment-duration-format": "^2.2.2",
     "react": "^16.4.2",
     "react-bootstrap": "^0.32.3",
+    "react-bootstrap-slider": "^2.1.5",
     "react-dom": "^16.4.2",
     "react-modal": "^3.5.1",
     "react-router-dom": "^4.3.1",

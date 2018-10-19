@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
-import Routes from '../Routes/Routes'
 import Login from '../Components/Login'
+import Playbar from '../Components/Playbar'
 import YouTube from 'react-youtube';
 import { SortableContainer, SortableElement, arrayMove } from 'react-sortable-hoc';
 import { Button, ListGroup, ListGroupItem, Modal } from 'react-bootstrap';
@@ -12,7 +12,7 @@ import Moment from 'moment'
 import 'moment-duration-format'
 
 import openSocket from 'socket.io-client';
-import { constants } from 'zlib';
+import PlayBar from './Playbar';
 const socket = openSocket.connect('http://127.0.0.1:5000')
 
 var video = ''
@@ -44,7 +44,7 @@ const SortableItem = SortableElement(({ value, onClickDeleteCallback, listIndex 
         <img src={image} style={{ 'width': '80px', 'height': '55px' }} />
         <h6 style={{ 'display': 'inline-block', 'fontWeight': 'bold', 'marginLeft': '5px' }}>{value.videoTitle}</h6>
 
-        <Button bsStyle={'small'}
+        <Button
           style={{ 'display': 'inline-block', 'position': 'absolute', 'right': '5px' }}
           onClick={() => onClickDeleteCallback(listIndex)}>
 
@@ -97,7 +97,8 @@ class App extends Component {
       userPlayingVideo: '',
       messageBoxValue: '',
       isUserDJing: false,
-      testSetUsername: ''
+      testSetUsername: '',
+      startTime: 0
 
     }
   }
@@ -117,11 +118,30 @@ class App extends Component {
 
     socket.on('Event_nextVideo', (data) => this.handleNextVideo(data))
 
+    this.handleConnect()
+
   }
 
   handleConnect = () => {
-    socket.emit('connected', this.state.currentUser)
+    //socket.emit('connected', this.state.currentUser)
     // socket.emit('customEvent', {eventName: 'customEvent', currentPlaylist: this.state.currentPlaylist})
+
+    //If a user connects, check if anyone is DJing, if so, get time tag and display video
+    var url = apiEndpoint + '/getCurrentVideo'
+    Axios.get(url)
+    .then((response) => {
+      // console.log(response)
+
+      if(response['data'] !== 'No one playing'){
+        video = response['data']['videoId']
+        this.setState({
+          startTime: parseInt(response['data']['startTime'], 10)
+        })
+
+        this.forceUpdate()
+      }
+      
+    })
   }
 
   handleMessage = (msg) => {
@@ -149,6 +169,8 @@ class App extends Component {
       playerWidth: (width) + 'px',
       playerHeight: (height) + 'px',
     })
+
+    this.handleConnect()
   }
 
   // This function is called when the sortable list is sorted
@@ -711,10 +733,23 @@ class App extends Component {
     var videoId = data.videoId
     var videoTitle = data.videoTitle
 
-    console.log('handle next video')
-    console.log(data)
+    // console.log('handle next video')
+    // console.log(data)
 
     video = videoId
+
+    this.setState({
+      startTime: 0
+    })
+
+    if(user == this.state.currentUser){
+      //sorts the playlist after users video is picked to be played
+      var newCurrentPlaylist = { playlistTitle: this.state.currentPlaylist.playlistTitle, playlistVideos: arrayMove(this.state.currentPlaylist.playlistVideos, 0, this.state.currentPlaylist.playlistVideos.length -1) }
+
+      this.setState({
+        currentPlaylist: newCurrentPlaylist,
+      });
+    }
 
     this.forceUpdate()
   }
@@ -741,17 +776,6 @@ class App extends Component {
     )
   }
 
-  setUsername = () => {
-    this.setState({
-      currentUser: this.state.testSetUsername
-    })
-  }
-
-  handleChangeSetUsername = (event) => {
-    this.setState({
-      testSetUsername: event.target.value
-    })
-  }
 
 
 
@@ -763,7 +787,9 @@ class App extends Component {
       playerVars: { // https://developers.google.com/youtube/player_parameters
         autoplay: 1,
         controls: 1,
-        disablekb: 1
+        disablekb: 1,
+        rel: 0,
+        start: this.state.startTime
       }
     };
 
@@ -848,10 +874,12 @@ class App extends Component {
                   var imageLink = 'http://img.youtube.com/vi/' + value.videoId + '/0.jpg'
 
                   return (
-                    <ListGroupItem style={{ 'position': 'relative' }} onClick={() => this.onSearchListItemClicked(index)}>
-                      <img src={imageLink} style={{ 'width': '120px', 'height': '90px' }} />
-                      <h5 style={{ 'display': 'inline-block', 'fontWeight': 'bold', 'marginLeft': '5px', 'wordWrap': 'break-all' }}>{value.videoTitle}</h5>
-                      <p style={{ 'display': 'inline-block', 'position': 'relative' }}>{value.duration}</p>
+                    <ListGroupItem onClick={() => this.onSearchListItemClicked(index)}>
+                      <div style={{ 'position': 'relative' }}>
+                        <img src={imageLink} style={{ 'width': '120px', 'height': '90px' }} />
+                        <h5 style={{ 'display': 'inline-block', 'fontWeight': 'bold', 'marginLeft': '5px', 'wordWrap': 'break-all' }}>{value.videoTitle}</h5>
+                        <p style={{ 'display': 'inline-block', 'position': 'absolute', 'right':'0px', 'top':'40%' }}>{value.duration}</p>
+                      </div>
                     </ListGroupItem>
                   )
 
@@ -915,6 +943,8 @@ class App extends Component {
             <Button onClick={this.closeAddPlaylistModal}>Close</Button>
           </Modal.Footer>
         </Modal>
+
+        <Playbar />
 
       </div>
     );

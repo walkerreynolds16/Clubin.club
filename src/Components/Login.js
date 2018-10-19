@@ -41,15 +41,16 @@ export default class Login extends Component {
     var url = apiEndpoint + '/login'
 
     Axios.post(url, data)
-        .then((response) => {
-            // Login attempt was successful
-            console.log(response)
-            if(response.data === 'success'){
-              this.props.changeLoggedIn(true)
+      .then((response) => {
+        // Login attempt was successful
+        if(response.data === 'success'){
+          this.props.changeLoggedIn(true)
 
-              this.forceUpdate()
-            }
-        })
+          this.forceUpdate()
+        }else{
+          alert('Your password was wrong, dingus')
+        }
+      })
 
   }
 
