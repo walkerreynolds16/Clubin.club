@@ -40,7 +40,6 @@ const chatStyle = {
   position: 'absolute',
   right: '5%',
   bottom: '50px'
-
 }
 
 const messagesStyle = {
