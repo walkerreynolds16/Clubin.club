@@ -860,7 +860,7 @@ class App extends Component {
           </div>
         </div>
 
-        
+
         <Modal show={this.state.showAddVideoModal} onHide={this.onCloseAddVideoModal} bsSize='large'>
           <Modal.Header closeButton>
             <Modal.Title>Add Video to List</Modal.Title>
