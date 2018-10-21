@@ -27,7 +27,6 @@ export default class Home extends Component {
 
 
   render() {
-    console.log(this.state.loggedIn)
 
     return (
       <div>

@@ -11,11 +11,14 @@ import json
 import requests
 import datetime
 import threading
+import time
 
 youtubeAPIKey = 'AIzaSyD7edp0KrX7oft2f-zL2uEnQFhW4Uj5OvE'
 isSomeoneDJing = False
 
 currentDJ = ''
+currentVideoStartTime = None
+currentVideoId = None
 
 clients = []
 djQueue = []
@@ -201,7 +204,20 @@ def login():
             print("***** Wrong Password ******")
             return 'failure'
 
+@app.route('/getCurrentVideo', methods=['GET'])
+def getCurrentVideoPlaying():
+    global currentVideoStartTime
+    global currentVideoId
 
+    if(currentVideoId != None):
+        currentTime = time.time()
+        timeElapsed = int(currentTime - currentVideoStartTime)
+
+        videoData = {'videoId': currentVideoId, 'startTime': timeElapsed}
+        return json.dumps(videoData)
+    else:
+        # No video is playing
+        return 'No one playing'
 
 
 
@@ -307,6 +323,9 @@ def sendNewVideoToClients(nextUser):
 
     data = {'videoId': nextVideo['videoId'], 'videoTitle': nextVideo['videoTitle'], 'username': nextUser}
 
+    global currentVideoId
+    currentVideoId = data['videoId']
+
     print('\n ****************** \n')
 
     print("Username = " + str(data['username']))
@@ -317,14 +336,17 @@ def sendNewVideoToClients(nextUser):
 
     print('\n ****************** \n')
 
-
     
     print('\n emitting to clients \n')
     socketio.emit('Event_nextVideo', data, broadcast=True)
 
+
+    global currentVideoStartTime
+
     duration = getVideoDuration(data['videoId'])
     videoTimer = threading.Timer(duration + 4.0, determineNextVideo)
     videoTimer.start()
+    currentVideoStartTime = time.time()
 
     playlist['playlistVideos'].append(nextVideo)
 
@@ -335,6 +357,7 @@ def sendNewVideoToClients(nextUser):
 def determineNextVideo():
     # print('timer done ***************')
     global currentDJ
+    global currentVideoId
 
     print('Current DJ in determineVideo = ' + currentDJ)
     if(currentDJ != ''):
@@ -348,6 +371,7 @@ def determineNextVideo():
         sendNewVideoToClients(nextUser)
         djQueue.append(nextUser)
     else:
+        currentVideoId = None
         print('No more DJs in queue')
 
 
