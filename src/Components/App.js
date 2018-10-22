@@ -23,32 +23,35 @@ const apiEndpoint = 'http://127.0.0.1:5000'
 const listStyle = {
   display: 'inline-block',
   position: 'fixed',
-  width: '25%',
-  top: '5px',
-  right: '5px'
+  width: '350px',
+  top: '10px',
+  right: '5px',
+  background: '#808080',
+  border: '2px double #5f5f5f'
 }
 
 const playerStyle = {
   display: 'inline',
   position: 'relative',
-  left: '3%',
-  marginLeft: '10px',
+  left: '0',
+  //marginLeft: '10px',
   top: '5px'
 }
 
 const chatStyle = {
   position: 'absolute',
-  right: '5%',
-  bottom: '50px'
+  right: '5px',
+  bottom: '10px'
 }
 
 const messagesStyle = {
   position: 'relative',
-  border: '5px solid red',
+  //border: '2px double #595f68',
   height: '225px',
   width: '350px',
-  overflow: 'auto'
-
+  overflow: 'auto',
+  background: '#808080',
+  border: '2px double #5f5f5f'
 
 }
 
@@ -798,7 +801,7 @@ class App extends Component {
     var playlistSlideInTitle = 'Current Playlist: ' + this.state.currentPlaylist.playlistTitle
 
     return (
-      <div >
+      <div>
         <div style={listStyle}>
           <fieldset style={{ 'border': 'p2' }}>
 
@@ -839,22 +842,24 @@ class App extends Component {
         </div>
 
         <div style={chatStyle}>
+        
           <div style={messagesStyle}>
             {this.state.testMessages.map((value, index) => {
               return (
-                <h6>{value}</h6>
+                <h6 style={{'color':'white','font-size':'100%'}}>{value}</h6>
               )
             })}
           </div>
 
           <div>
-            <h1>{this.state.currentUser}</h1>
-          </div>
-
-          <div>
             <form onSubmit={(e) => this.handleSendChatMessage(e)}>
-              <input value={this.state.messageBoxValue} onChange={this.handleMessageBoxChange}></input>
+            <div style={{'background':'#737373', 'width':'350px', 'border':'2px double #5f5f5f'}}>
+            <span style={{'font-size':'18px','color':'white'}}>
+              {this.state.currentUser+":"} 
+              </span>
+              <input value={this.state.messageBoxValue} onChange={this.handleMessageBoxChange} style={{'background':'#808080','color':'white', 'width':'246px'}}></input>
               <Button onClick={(e) => this.handleSendChatMessage(e)}>Send</Button>
+              </div>
             </form>
           </div>
         </div>
