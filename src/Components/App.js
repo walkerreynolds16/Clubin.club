@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import Login from '../Components/Login'
-import Playbar from '../Components/Playbar'
+import Playbar from '../Components/Playbar';
 import YouTube from 'react-youtube';
 import { SortableContainer, SortableElement, arrayMove } from 'react-sortable-hoc';
 import { Button, ListGroup, ListGroupItem, Modal } from 'react-bootstrap';
@@ -13,6 +13,7 @@ import 'moment-duration-format'
 
 import openSocket from 'socket.io-client';
 import PlayBar from './Playbar';
+import { SSL_OP_SINGLE_DH_USE } from 'constants';
 const socket = openSocket.connect('http://127.0.0.1:5000')
 
 var video = ''
@@ -22,17 +23,34 @@ const apiEndpoint = 'http://127.0.0.1:5000'
 const listStyle = {
   display: 'inline-block',
   position: 'fixed',
-  width: '25%',
-  top: '5px',
-  left: '5px'
+  width: '350px',
+  top: '10px',
+  right: '5px',
+  background: '#9699a0',
+  border: '2px double #74757E'
 }
 
 const playerStyle = {
   display: 'inline',
   position: 'relative',
-  left: '25%',
-  marginLeft: '20px',
+  left: '0',
   top: '5px'
+}
+
+const chatStyle = {
+  position: 'absolute',
+  right: '5px',
+  bottom: '10px'
+}
+
+const messagesStyle = {
+  position: 'relative',
+  height: '225px',
+  width: '350px',
+  overflow: 'auto',
+  background: '#9699a0',
+  border: '2px double #74757E'
+
 }
 
 const SortableItem = SortableElement(({ value, onClickDeleteCallback, listIndex }) => {
@@ -61,7 +79,7 @@ const SortableItem = SortableElement(({ value, onClickDeleteCallback, listIndex 
 
 const SortableList = SortableContainer(({ items, onClickDeleteCallback }) => {
   return (
-    <div style={{ 'overflow': 'auto', 'height': '600px' }}>
+    <div style={{ 'overflow': 'auto', 'height': '420px' }}>
       <ul>
         {items.map((value, index) => (
 
@@ -72,7 +90,6 @@ const SortableList = SortableContainer(({ items, onClickDeleteCallback }) => {
 
   );
 });
-
 
 class App extends Component {
 
@@ -103,7 +120,6 @@ class App extends Component {
     }
   }
 
-
   componentDidMount() {
     this.updateWindowDimensions()
     window.addEventListener('resize', this.updateWindowDimensions);
@@ -129,19 +145,19 @@ class App extends Component {
     //If a user connects, check if anyone is DJing, if so, get time tag and display video
     var url = apiEndpoint + '/getCurrentVideo'
     Axios.get(url)
-    .then((response) => {
-      // console.log(response)
+      .then((response) => {
+        // console.log(response)
 
-      if(response['data'] !== 'No one playing'){
-        video = response['data']['videoId']
-        this.setState({
-          startTime: parseInt(response['data']['startTime'], 10)
-        })
+        if (response['data'] !== 'No one playing') {
+          video = response['data']['videoId']
+          this.setState({
+            startTime: parseInt(response['data']['startTime'], 10)
+          })
 
-        this.forceUpdate()
-      }
-      
-    })
+          this.forceUpdate()
+        }
+
+      })
   }
 
   handleMessage = (msg) => {
@@ -212,14 +228,12 @@ class App extends Component {
       var topItem = this.state.currentPlaylist.playlistVideos.splice(0, 1)
       var listCopy = this.state.currentPlaylist.playlistVideos.slice()
 
-
       listCopy.push(topItem[0])
       // video = listCopy[0].videoId
 
       var newPlaylist = { playlistTitle: this.state.currentPlaylist.playlistTitle, playlistVideos: listCopy }
 
       this.updatePlaylistState(newPlaylist)
-
 
       this.setState({
         currentPlaylist: newPlaylist
@@ -318,13 +332,10 @@ class App extends Component {
               this.forceUpdate()
 
 
-
             })
 
 
-
         })
-
 
     }
 
@@ -358,7 +369,6 @@ class App extends Component {
 
     // console.log('onSearchListItemClicked')
     this.setBackendCurrentPlaylist(newPlaylist)
-
 
   }
 
@@ -443,13 +453,11 @@ class App extends Component {
 
     // }
 
-
     //
     this.forceUpdate()
 
     // console.log('setFrontEndPlaylist')
     this.setBackendCurrentPlaylist(newPlaylist)
-
 
 
   }
@@ -528,7 +536,6 @@ class App extends Component {
 
     }
 
-
   }
 
   setBackendCurrentPlaylist = (currentPlaylist) => {
@@ -605,7 +612,6 @@ class App extends Component {
     }
 
 
-
     this.setState({
       playlists: playlistCopy
     })
@@ -643,7 +649,6 @@ class App extends Component {
 
     // console.log('onClickDeleteCallback')
     this.setBackendCurrentPlaylist(cpCopy)
-
 
 
   }
@@ -697,7 +702,11 @@ class App extends Component {
     })
   }
 
-  handleSendChatMessage = () => {
+  handleSendChatMessage = (e) => {
+    if (e !== undefined) {
+      e.preventDefault();
+    }
+
     socket.emit('Event_sendChatMessage',
       {
         user: this.state.currentUser,
@@ -713,10 +722,12 @@ class App extends Component {
   }
 
   handleReceiveChatMessage = (data) => {
+
     var user = data.user
     var message = data.message
 
-    console.log(user + ': ' + message)
+    this.state.testMessages.push(user + ": " + message)
+    this.forceUpdate();
   }
 
   //Called when server sends new video to clients
@@ -735,9 +746,9 @@ class App extends Component {
       startTime: 0
     })
 
-    if(user == this.state.currentUser){
+    if (user == this.state.currentUser) {
       //sorts the playlist after users video is picked to be played
-      var newCurrentPlaylist = { playlistTitle: this.state.currentPlaylist.playlistTitle, playlistVideos: arrayMove(this.state.currentPlaylist.playlistVideos, 0, this.state.currentPlaylist.playlistVideos.length -1) }
+      var newCurrentPlaylist = { playlistTitle: this.state.currentPlaylist.playlistTitle, playlistVideos: arrayMove(this.state.currentPlaylist.playlistVideos, 0, this.state.currentPlaylist.playlistVideos.length - 1) }
 
       this.setState({
         currentPlaylist: newCurrentPlaylist,
@@ -771,7 +782,6 @@ class App extends Component {
 
 
 
-
   render() {
 
     const opts = {
@@ -789,24 +799,24 @@ class App extends Component {
     var playlistSlideInTitle = 'Current Playlist: ' + this.state.currentPlaylist.playlistTitle
 
     return (
-      <div >
+      <div>
         <div style={listStyle}>
           <fieldset style={{ 'border': 'p2' }}>
 
-            <Button onClick={this.onShowAddVideoModal}>Add Video</Button>
-            <Button style={{ 'marginLeft': '5px' }} onClick={this.openPlaylistSlideIn}>Playlists</Button>
-            <Button style={{ 'marginLeft': '5px' }} onClick={() => this.onSkipVideo()}>Skip Video</Button>
+            <Button style={{ 'marginTop': '5px', 'marginRight': '10px', 'marginBottom': '5px', 'marginLeft': '40px' }} onClick={this.onShowAddVideoModal}>Add Video</Button>
+            <Button style={{ 'marginRight': '10px', 'marginBottom': '5px' }} onClick={this.openPlaylistSlideIn}>Playlists</Button>
+            <br></br>
+            <Button style={{ 'marginLeft': '40px', 'marginRight': '10px', 'marginBottom': '5px' }} onClick={() => this.onSkipVideo()}>Skip Video</Button>
 
             {!this.state.isUserDJing &&
-              <Button style={{ 'marginLeft': '5px' }} onClick={() => this.onJoinDJ()}>Click to DJ</Button>
+              <Button style={{ 'marginRight': '10px', 'marginBottom': '5px' }} onClick={() => this.onJoinDJ()}>Click to DJ</Button>
             }
 
             {this.state.isUserDJing &&
-              <Button style={{ 'marginLeft': '5px' }} onClick={() => this.onLeaveDJ()}>Quit DJing</Button>
+              <Button style={{ 'marginRight': '10px', 'marginBottom': '5px' }} onClick={() => this.onLeaveDJ()}>Quit DJing</Button>
             }
 
-            <Button style={{ 'marginLeft': '10px' }} onClick={() => this.onLeaveDJ()}>Test</Button>
-
+            {/* <Button style={{ 'marginLeft': '10px' }} onClick={() => this.onLeaveDJ()}>Test</Button> */}
 
             <div style={{ 'marginTop': '10px' }}>
               <SortableList
@@ -815,7 +825,6 @@ class App extends Component {
                 distance={5}
                 onClickDeleteCallback={this.onClickDeleteCallback} />
             </div>
-
 
           </fieldset>
         </div>
@@ -830,15 +839,27 @@ class App extends Component {
 
         </div>
 
-        <div>
-          <h1>{this.state.currentUser}</h1>
-        </div>
+        <div style={chatStyle}>
+        
+          <div style={messagesStyle}>
+            {this.state.testMessages.map((value, index) => {
+              return (
+                <h6 style={{'color':'white','font-size':'100%'}}>{value}</h6>
+              )
+            })}
+          </div>
 
-        <div>
-
-          <input value={this.state.messageBoxValue} onChange={this.handleMessageBoxChange}></input>
-          <Button onClick={this.handleSendChatMessage}>Send</Button>
-
+          <div>
+            <form onSubmit={(e) => this.handleSendChatMessage(e)}>
+            <div style={{'background':'#9699a0', 'width':'350px', 'border':'2px double #74757E'}}>
+            <span style={{'font-size':'18px','color':'white'}}>
+              {this.state.currentUser+":"} 
+              </span>
+              <input value={this.state.messageBoxValue} onChange={this.handleMessageBoxChange} style={{'background':'#9699a0','color':'white'}}></input>
+              <Button onClick={(e) => this.handleSendChatMessage(e)}>Send</Button>
+              </div>
+            </form>
+          </div>
         </div>
 
 
@@ -863,7 +884,7 @@ class App extends Component {
                       <div style={{ 'position': 'relative' }}>
                         <img src={imageLink} style={{ 'width': '120px', 'height': '90px' }} />
                         <h5 style={{ 'display': 'inline-block', 'fontWeight': 'bold', 'marginLeft': '5px', 'wordWrap': 'break-all' }}>{value.videoTitle}</h5>
-                        <p style={{ 'display': 'inline-block', 'position': 'absolute', 'right':'0px', 'top':'40%' }}>{value.duration}</p>
+                        <p style={{ 'display': 'inline-block', 'position': 'absolute', 'right': '0px', 'top': '40%' }}>{value.duration}</p>
                       </div>
                     </ListGroupItem>
                   )
@@ -877,7 +898,6 @@ class App extends Component {
             <Button onClick={this.onCloseAddVideoModal}>Close</Button>
           </Modal.Footer>
         </Modal>
-
 
         <Slider
           title={playlistSlideInTitle}
