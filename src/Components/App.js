@@ -26,15 +26,14 @@ const listStyle = {
   width: '350px',
   top: '10px',
   right: '5px',
-  background: '#808080',
-  border: '2px double #5f5f5f'
+  background: '#9699a0',
+  border: '2px double #74757E'
 }
 
 const playerStyle = {
   display: 'inline',
   position: 'relative',
   left: '0',
-  //marginLeft: '10px',
   top: '5px'
 }
 
@@ -46,12 +45,11 @@ const chatStyle = {
 
 const messagesStyle = {
   position: 'relative',
-  //border: '2px double #595f68',
   height: '225px',
   width: '350px',
   overflow: 'auto',
-  background: '#808080',
-  border: '2px double #5f5f5f'
+  background: '#9699a0',
+  border: '2px double #74757E'
 
 }
 
@@ -853,11 +851,11 @@ class App extends Component {
 
           <div>
             <form onSubmit={(e) => this.handleSendChatMessage(e)}>
-            <div style={{'background':'#737373', 'width':'350px', 'border':'2px double #5f5f5f'}}>
+            <div style={{'background':'#9699a0', 'width':'350px', 'border':'2px double #74757E'}}>
             <span style={{'font-size':'18px','color':'white'}}>
               {this.state.currentUser+":"} 
               </span>
-              <input value={this.state.messageBoxValue} onChange={this.handleMessageBoxChange} style={{'background':'#808080','color':'white', 'width':'246px'}}></input>
+              <input value={this.state.messageBoxValue} onChange={this.handleMessageBoxChange} style={{'background':'#9699a0','color':'white'}}></input>
               <Button onClick={(e) => this.handleSendChatMessage(e)}>Send</Button>
               </div>
             </form>
