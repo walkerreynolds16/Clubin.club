@@ -7,6 +7,8 @@
     "jquery": "^3.3.1",
     "moment": "^2.22.2",
     "moment-duration-format": "^2.2.2",
+    "rc-slider": "^8.6.3",
+    "rc-tooltip": "^3.7.3",
     "react": "^16.4.2",
     "react-bootstrap": "^0.32.3",
     "react-bootstrap-slider": "^2.1.5",

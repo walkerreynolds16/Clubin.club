@@ -2,14 +2,43 @@ import React, { Component } from 'react'
 import App from './App'
 import Login from './Login'
 import { BrowserRouter as Router, Route, Redirect } from "react-router-dom";
-import Slider from 'react-bootstrap-slider'
+import Slider from 'rc-slider'
+import Tooltip from 'rc-tooltip'
+
+import 'rc-slider/assets/index.css';
+import 'rc-tooltip/assets/bootstrap.css';
+
+const createSliderWithTooltip = Slider.createSliderWithTooltip;
+const Handle = Slider.Handle;
+
+const handle = (props) => {
+  const { value, dragging, index, ...restProps } = props;
+  return (
+    <Tooltip
+      prefixCls="rc-slider-tooltip"
+      overlay={value}
+      visible={dragging}
+      placement="top"
+      key={index}
+    >
+      <Handle value={value} {...restProps} />
+    </Tooltip>
+  );
+};
 
 const mainStyle = {
-  width: '100%'
+  width: '70%',
+  height: '60px',
+  borderStyle: 'solid',
+  borderWidth: '5px',
+  position: 'fixed',
+  bottom: '0px'
 }
 
 const volumeSliderStyle = {
-  width: '30%'
+  width: '15%',
+  marginTop: '20px',
+  marginLeft: '25px'
 }
 
 export default class Playbar extends Component {
@@ -17,31 +46,21 @@ export default class Playbar extends Component {
     super(props)
 
     this.state = {
-      volumeSlider: 100,
 
     }
   }
 
-  updateVolumeSlider = (val) => {
-    this.setState({
-      volumeSlider: val
-    })
+  onSliderChange = (value) => {
+    this.props.onSliderChange(value)
   }
-
 
   render() {
 
     return (
       <div style={mainStyle}>
-          <div>
-            <Slider 
-              min={0}
-              max={100}
-              value={this.state.volumeSlider}
-              change={this.updateVolumeSlider}/>
+          <div style={volumeSliderStyle}>
+            <Slider min={0} max={100} defaultValue={100} handle={handle} onChange={this.onSliderChange}/>
           </div>
-
-          <h1>Playbar</h1>
       </div>
     )
   }
