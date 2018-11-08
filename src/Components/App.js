@@ -23,7 +23,7 @@ const apiEndpoint = 'http://127.0.0.1:5000'
 const listStyle = {
   display: 'inline-block',
   position: 'fixed',
-  width: '350px',
+  width: '20%',
   top: '10px',
   right: '5px',
   background: '#9699a0',
@@ -39,6 +39,7 @@ const playerStyle = {
 
 const chatStyle = {
   position: 'absolute',
+  width: '20%',
   right: '5px',
   bottom: '10px'
 }
@@ -46,7 +47,7 @@ const chatStyle = {
 const messagesStyle = {
   position: 'relative',
   height: '225px',
-  width: '350px',
+  width: '100%',
   overflow: 'auto',
   background: '#9699a0',
   border: '2px double #74757E'
@@ -115,7 +116,8 @@ class App extends Component {
       messageBoxValue: '',
       isUserDJing: false,
       testSetUsername: '',
-      startTime: 0
+      startTime: 0,
+      player: null
 
     }
   }
@@ -210,9 +212,11 @@ class App extends Component {
 
   }
 
-  onReady(event) {
+  onReady = (event) => {
     // access to player in all event handlers via event.target
-    event.target.pause
+    this.setState({
+      player: event.target
+    });
   }
 
   onPlayerStateChange = (event) => {
@@ -780,6 +784,38 @@ class App extends Component {
     )
   }
 
+  onVolumeChange = (value) => {
+    console.log(value)
+
+    this.state.player.setVolume(value)
+  }
+
+  onToggleMutePlayer = () => {
+    if(this.state.player.isMuted()){
+      this.state.player.unMute()
+    }else {
+      this.state.player.mute()
+    }
+  }
+
+  getPlayerVolume = () => {
+    if(this.state.player === null || this.state.player.getVolume() === undefined){
+      setTimeout(this.getPlayerVolume, 100)
+    }else {
+      // console.log("player vol = " + this.state.player.getVolume())
+      return this.state.player.getVolume()
+    }
+  }
+
+  getPlayerIsMuted = () => {
+    if(this.state.player === null || this.state.player.isMuted() === undefined){
+      setTimeout(this.getPlayerIsMuted, 100)
+    }else {
+      // console.log("player vol = " + this.state.player.getVolume())
+      return this.state.player.isMuted()
+    }
+  }
+
 
 
   render() {
@@ -789,7 +825,7 @@ class App extends Component {
       height: this.state.playerHeight,
       playerVars: { // https://developers.google.com/youtube/player_parameters
         autoplay: 1,
-        controls: 1,
+        controls: 0,
         disablekb: 1,
         rel: 0,
         start: this.state.startTime
@@ -840,23 +876,23 @@ class App extends Component {
         </div>
 
         <div style={chatStyle}>
-        
+
           <div style={messagesStyle}>
             {this.state.testMessages.map((value, index) => {
               return (
-                <h6 style={{'color':'white','font-size':'100%'}}>{value}</h6>
+                <h6 style={{ 'color': 'white', 'font-size': '100%' }}>{value}</h6>
               )
             })}
           </div>
 
           <div>
             <form onSubmit={(e) => this.handleSendChatMessage(e)}>
-            <div style={{'background':'#9699a0', 'width':'350px', 'border':'2px double #74757E'}}>
-            <span style={{'font-size':'18px','color':'white'}}>
-              {this.state.currentUser+":"} 
-              </span>
-              <input value={this.state.messageBoxValue} onChange={this.handleMessageBoxChange} style={{'background':'#9699a0','color':'white'}}></input>
-              <Button onClick={(e) => this.handleSendChatMessage(e)}>Send</Button>
+              <div style={{ 'background': '#9699a0', 'width': '100%', 'border': '2px double #74757E', 'height':'40px' }}>
+                <span style={{ 'font-size': '18px', 'color': 'white' }}>
+                  {this.state.currentUser + ":"}
+                </span>
+                <input value={this.state.messageBoxValue} onChange={this.handleMessageBoxChange} style={{ 'background': '#9699a0', 'color': 'white' }}></input>
+                <Button style={{'position':'fixed', 'right':'10px'}} onClick={(e) => this.handleSendChatMessage(e)}>Send</Button>
               </div>
             </form>
           </div>
@@ -949,7 +985,7 @@ class App extends Component {
           </Modal.Footer>
         </Modal>
 
-        <Playbar />
+        <Playbar onSliderChange={this.onVolumeChange} onToggleMutePlayer={this.onToggleMutePlayer} getPlayerVolume={this.getPlayerVolume} getPlayerIsMuted={this.getPlayerIsMuted}/>
 
       </div>
     );
