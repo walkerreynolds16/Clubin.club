@@ -116,7 +116,8 @@ class App extends Component {
       messageBoxValue: '',
       isUserDJing: false,
       testSetUsername: '',
-      startTime: 0
+      startTime: 0,
+      player: null
 
     }
   }
@@ -211,9 +212,11 @@ class App extends Component {
 
   }
 
-  onReady(event) {
+  onReady = (event) => {
     // access to player in all event handlers via event.target
-    event.target.pause
+    this.setState({
+      player: event.target
+    });
   }
 
   onPlayerStateChange = (event) => {
@@ -783,6 +786,34 @@ class App extends Component {
 
   onVolumeChange = (value) => {
     console.log(value)
+
+    this.state.player.setVolume(value)
+  }
+
+  onToggleMutePlayer = () => {
+    if(this.state.player.isMuted()){
+      this.state.player.unMute()
+    }else {
+      this.state.player.mute()
+    }
+  }
+
+  getPlayerVolume = () => {
+    if(this.state.player === null || this.state.player.getVolume() === undefined){
+      setTimeout(this.getPlayerVolume, 100)
+    }else {
+      // console.log("player vol = " + this.state.player.getVolume())
+      return this.state.player.getVolume()
+    }
+  }
+
+  getPlayerIsMuted = () => {
+    if(this.state.player === null || this.state.player.isMuted() === undefined){
+      setTimeout(this.getPlayerIsMuted, 100)
+    }else {
+      // console.log("player vol = " + this.state.player.getVolume())
+      return this.state.player.isMuted()
+    }
   }
 
 
@@ -794,7 +825,7 @@ class App extends Component {
       height: this.state.playerHeight,
       playerVars: { // https://developers.google.com/youtube/player_parameters
         autoplay: 1,
-        controls: 1,
+        controls: 0,
         disablekb: 1,
         rel: 0,
         start: this.state.startTime
@@ -954,7 +985,7 @@ class App extends Component {
           </Modal.Footer>
         </Modal>
 
-        <Playbar onSliderChange={this.onVolumeChange}/>
+        <Playbar onSliderChange={this.onVolumeChange} onToggleMutePlayer={this.onToggleMutePlayer} getPlayerVolume={this.getPlayerVolume} getPlayerIsMuted={this.getPlayerIsMuted}/>
 
       </div>
     );
