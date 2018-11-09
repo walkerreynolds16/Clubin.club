@@ -12,13 +12,20 @@ import Moment from 'moment'
 import 'moment-duration-format'
 
 import openSocket from 'socket.io-client';
-import PlayBar from './Playbar';
-import { SSL_OP_SINGLE_DH_USE } from 'constants';
-const socket = openSocket.connect('http://127.0.0.1:5000')
+
+
+
+//API Link
+//https://plug-dj-clone-api.herokuapp.com
+
+// const apiEndpoint = 'http://127.0.0.1:5000'
+const apiEndpoint = 'https://plug-dj-clone-api.herokuapp.com'
+
+const socket = openSocket.connect(apiEndpoint)
+
 
 var video = ''
 const youtubeAPIKey = 'AIzaSyD7edp0KrX7oft2f-zL2uEnQFhW4Uj5OvE'
-const apiEndpoint = 'http://127.0.0.1:5000'
 
 const listStyle = {
   display: 'inline-block',
