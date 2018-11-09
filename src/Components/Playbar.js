@@ -48,14 +48,14 @@ export default class Playbar extends Component {
     super(props)
 
     this.state = {
-      volume: undefined,
+      volume: 10,
       isMuted: undefined
     }
   }
 
   componentDidMount() {    
-    this.waitForVolume()
-    this.waitForIsMuted()
+    // this.waitForVolume()
+    // this.waitForIsMuted()
   }
 
   waitForVolume = () => {
@@ -164,7 +164,6 @@ export default class Playbar extends Component {
 
             </svg>
 
-            {console.log("state volume = " + this.state.volume)}
             {this.state.volume !== undefined &&
               <Slider style={{'marginLeft':'5px'}} min={0} max={100} handle={handle} onChange={this.onSliderChange} defaultValue={this.state.volume}/>
             }

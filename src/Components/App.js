@@ -3,7 +3,7 @@ import Login from '../Components/Login'
 import Playbar from '../Components/Playbar';
 import YouTube from 'react-youtube';
 import { SortableContainer, SortableElement, arrayMove } from 'react-sortable-hoc';
-import { Button, ListGroup, ListGroupItem, Modal } from 'react-bootstrap';
+import { Button, ListGroup, ListGroupItem, Modal, Tooltip, OverlayTrigger } from 'react-bootstrap';
 import Slider from 'react-slide-out'
 import Axios from 'axios'
 import '../Styles/App.css';
@@ -18,8 +18,8 @@ import openSocket from 'socket.io-client';
 //API Link
 //https://plug-dj-clone-api.herokuapp.com
 
-// const apiEndpoint = 'http://127.0.0.1:5000'
-const apiEndpoint = 'https://plug-dj-clone-api.herokuapp.com'
+const apiEndpoint = 'http://127.0.0.1:5000'
+// const apiEndpoint = 'https://plug-dj-clone-api.herokuapp.com'
 
 const socket = openSocket.connect(apiEndpoint)
 
@@ -27,11 +27,21 @@ const socket = openSocket.connect(apiEndpoint)
 var video = ''
 const youtubeAPIKey = 'AIzaSyD7edp0KrX7oft2f-zL2uEnQFhW4Uj5OvE'
 
+const currentPlaylistStyle = {
+  display: 'inline-block',
+  position: 'fixed',
+  width: '21%',
+  top: '5px',
+  right: '5px',
+  background: '#9699a0',
+  border: '2px double #74757E'
+}
+
 const listStyle = {
   display: 'inline-block',
   position: 'fixed',
-  width: '20%',
-  top: '10px',
+  width: '21%',
+  top: '65px',
   right: '5px',
   background: '#9699a0',
   border: '2px double #74757E'
@@ -46,7 +56,7 @@ const playerStyle = {
 
 const chatStyle = {
   position: 'absolute',
-  width: '20%',
+  width: '21%',
   right: '5px',
   bottom: '10px'
 }
@@ -99,6 +109,13 @@ const SortableList = SortableContainer(({ items, onClickDeleteCallback }) => {
   );
 });
 
+const disabledAddVideoButtonTooltip = (
+  <Tooltip id="tooltip">
+    Create a playlist in the playlist menu before adding videos.
+  </Tooltip>
+);
+
+
 class App extends Component {
 
   constructor(props) {
@@ -124,7 +141,8 @@ class App extends Component {
       isUserDJing: false,
       testSetUsername: '',
       startTime: 0,
-      player: null
+      player: null,
+      disableAddVideoButton: false
 
     }
   }
@@ -143,8 +161,22 @@ class App extends Component {
 
     socket.on('Event_nextVideo', (data) => this.handleNextVideo(data))
 
+    socket.on('Event_stopVideo', () => this.handleStopVideo())
+
     this.handleConnect()
 
+  }
+
+  handleStopVideo = () => {
+    if(this.state.player != null){
+      console.log('Stopping Video')
+      this.state.player.stopVideo()
+    }
+    
+  }
+
+  componentDidUpdate() {
+    this.scrollToBottom();
   }
 
   handleConnect = () => {
@@ -227,6 +259,7 @@ class App extends Component {
   }
 
   onPlayerStateChange = (event) => {
+    console.log('state data = ' + event.data)
     if (event.data === 0) {
       // this.skipCurrentVideo()
     }
@@ -510,6 +543,11 @@ class App extends Component {
           })
 
         } else {
+          // Disabling add video button so user can create a playlist
+          this.setState({
+            disableAddVideoButton: true
+          })
+
           console.log('No Playlist for this user')
         }
 
@@ -544,6 +582,10 @@ class App extends Component {
 
       // console.log('changeCurrentPlaylist')
       this.setBackendCurrentPlaylist(newPlaylist)
+
+      this.closePlaylistSlideIn()
+
+      this.forceUpdate()
 
     }
 
@@ -598,9 +640,13 @@ class App extends Component {
       e.preventDefault();
     }
 
+    // Make copy of playlists
     var playlistCopy = this.state.playlists.slice()
+
+    // Create new playlist object
     var newPlaylist = { playlistTitle: this.state.newPlaylistNameInput, playlistVideos: [] }
 
+    // Check if name is already a playlist
     var isDuplicatePlaylistName = false
     for (var i = 0; i < playlistCopy.length; i++) {
       if (this.state.newPlaylistNameInput === playlistCopy[i].playlistTitle) {
@@ -608,14 +654,26 @@ class App extends Component {
       }
     }
 
+    // If the playlist name is not taken
     if (!isDuplicatePlaylistName) {
       playlistCopy.push(newPlaylist)
 
       this.setState({
-        playlists: playlistCopy
+        playlists: playlistCopy,
+        currentPlaylist: newPlaylist
       })
 
+      if(this.state.disableAddVideoButton){
+        this.setState({
+          disableAddVideoButton: false
+        })
+      }else {
+        this.setBackendCurrentPlaylist(newPlaylist)
+      }
+
       this.setBackEndPlaylist(newPlaylist)
+
+      
 
       this.closeAddPlaylistModal()
     } else {
@@ -704,7 +762,7 @@ class App extends Component {
 
   //Enable this for production
   onPlayerPause = (event) => {
-    // event.target.playVideo()
+    event.target.playVideo()
   }
 
   handleMessageBoxChange = (event) => {
@@ -823,6 +881,10 @@ class App extends Component {
     }
   }
 
+  scrollToBottom = () => {
+    this.messagesEnd.scrollIntoView({ behavior: "smooth" });
+  }
+
 
 
   render() {
@@ -843,23 +905,60 @@ class App extends Component {
 
     return (
       <div>
+
+        <div style={currentPlaylistStyle}>
+
+          <fieldset style={{ 'border': 'p2' }}>
+            <h3 style={{'textAlign':'center'}}>{this.state.currentPlaylist.playlistTitle}</h3>
+          </fieldset>
+
+        </div>
+
         <div style={listStyle}>
           <fieldset style={{ 'border': 'p2' }}>
 
-            <Button style={{ 'marginTop': '5px', 'marginRight': '10px', 'marginBottom': '5px', 'marginLeft': '40px' }} onClick={this.onShowAddVideoModal}>Add Video</Button>
-            <Button style={{ 'marginRight': '10px', 'marginBottom': '5px' }} onClick={this.openPlaylistSlideIn}>Playlists</Button>
-            <br></br>
-            <Button style={{ 'marginLeft': '40px', 'marginRight': '10px', 'marginBottom': '5px' }} onClick={() => this.onSkipVideo()}>Skip Video</Button>
+            {this.state.disableAddVideoButton && 
+              <OverlayTrigger placement="left" overlay={disabledAddVideoButtonTooltip} >
+                <div style={{display: 'inline-block', cursor: 'not-allowed'}}>
+                  <Button style={{'margin':'5px' }} 
+                          onClick={this.onShowAddVideoModal} 
+                          disabled>
+                          
+                  Add Video</Button>
+
+                </div>
+                
+              </OverlayTrigger>
+            }
+
+            {!this.state.disableAddVideoButton &&
+              <Button style={{ 'margin':'5px'}} 
+                      onClick={this.onShowAddVideoModal}>
+              
+              Add Video</Button>
+            
+            }
+            
+            
+
+
+
+            <Button style={{'margin':'5px'}} onClick={this.openPlaylistSlideIn}>Playlists</Button>
+            
+            <Button style={{'margin':'5px'}} onClick={() => this.onSkipVideo()}>Skip Video</Button>
 
             {!this.state.isUserDJing &&
-              <Button style={{ 'marginRight': '10px', 'marginBottom': '5px' }} onClick={() => this.onJoinDJ()}>Click to DJ</Button>
+              <Button style={{'margin':'5px'}} onClick={() => this.onJoinDJ()}>Click to DJ</Button>
             }
 
             {this.state.isUserDJing &&
-              <Button style={{ 'marginRight': '10px', 'marginBottom': '5px' }} onClick={() => this.onLeaveDJ()}>Quit DJing</Button>
+              <Button style={{'margin':'5px'}} onClick={() => this.onLeaveDJ()}>Quit DJing</Button>
             }
 
             {/* <Button style={{ 'marginLeft': '10px' }} onClick={() => this.onLeaveDJ()}>Test</Button> */}
+
+
+
 
             <div style={{ 'marginTop': '10px' }}>
               <SortableList
@@ -890,6 +989,10 @@ class App extends Component {
                 <h6 style={{ 'color': 'white', 'font-size': '100%' }}>{value}</h6>
               )
             })}
+
+            <div style={{ float:"left", clear: "both" }}
+                ref={(el) => { this.messagesEnd = el; }}>
+            </div>
           </div>
 
           <div>
@@ -947,9 +1050,19 @@ class App extends Component {
           isOpen={this.state.showPlaylistSlideIn}
           onOutsideClick={this.closePlaylistSlideIn}
           header={
-            <div style={{ 'position': 'fixed' }}>
-              <Button style={{ 'right': '5px', 'position': 'fixed', 'top': '15px' }} onClick={this.openAddPlaylistModal}>Add Playlist</Button>
+            <div style={{ 'position': 'fixed','right': '5px', 'position': 'fixed', 'top': '15px' }}>
+                {this.state.showPlaylistSlideIn &&
+                  <Button style={{  }} onClick={this.openAddPlaylistModal}>Add Playlist</Button>
+                }
             </div>
+          }
+          footer={
+            <div style={{'position':'fixed', 'right':'5px'}}>
+              {this.state.showPlaylistSlideIn &&
+                <Button onClick={this.closePlaylistSlideIn}>Close Slider</Button>
+              }
+            </div> 
+            
           }>
 
           <div>
