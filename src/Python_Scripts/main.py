@@ -1,3 +1,8 @@
+import os
+
+os.environ['EVENTLET_NO_GREENDNS'] = 'yes'
+
+
 from flask import Flask, request, jsonify, json
 from flask_cors import CORS
 from pymongo import MongoClient
@@ -189,6 +194,8 @@ def login():
 
     doesUsernameExist = collection.find_one({'username': username})
     print(JSONEncoder().encode(doesUsernameExist))
+
+    print("logging in...")
 
     # The username does not exist
     if(doesUsernameExist == None):
