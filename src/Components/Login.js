@@ -6,7 +6,7 @@ import "../Styles/Login.css";
 //API Link
 //https://plug-dj-clone-api.herokuapp.com
 
-//  const apiEndpoint = 'http://127.0.0.1:5000'
+// const apiEndpoint = 'http://127.0.0.1:5000'
 const apiEndpoint = 'https://plug-dj-clone-api.herokuapp.com'
 
 export default class Login extends Component {

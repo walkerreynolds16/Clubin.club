@@ -32,7 +32,8 @@ const mainStyle = {
   borderStyle: 'solid',
   borderWidth: '5px',
   position: 'fixed',
-  bottom: '0px'
+  bottom: '0px',
+  display: 'inline'
 }
 
 const volumeSliderStyle = {
@@ -41,6 +42,15 @@ const volumeSliderStyle = {
   marginLeft: '25px',
   display: 'flex',
   alignItems: 'center'
+}
+
+const currentlyPlayingStyle = {
+  display: 'flex',
+  alignItems: 'center',
+  width: '20%',
+  right: '10px',
+  position: 'absolute',
+  fontFamily: 'sans-serif'
 }
 
 export default class Playbar extends Component {
@@ -56,6 +66,7 @@ export default class Playbar extends Component {
   componentDidMount() {    
     // this.waitForVolume()
     // this.waitForIsMuted()
+    
   }
 
   waitForVolume = () => {
@@ -117,7 +128,6 @@ export default class Playbar extends Component {
     return (
       <div style={mainStyle}>
           <div style={volumeSliderStyle}>
-            {/* <img style={{'cursor':'pointer'}} width="25" height="25" src="https://img.icons8.com/ios/50/000000/high-volume-filled.png" onClick={this.onMute}/> */}
 
             <svg width="50" height="50" viewBox="0 0 640 640" style={{'cursor':'pointer'}} onClick={this.onMute}>
                            
@@ -167,7 +177,21 @@ export default class Playbar extends Component {
             {this.state.volume !== undefined &&
               <Slider style={{'marginLeft':'5px'}} min={0} max={100} handle={handle} onChange={this.onSliderChange} defaultValue={this.state.volume}/>
             }
+
+            {console.log(this.props.userPlayingVideo)}
+            <div style={currentlyPlayingStyle}>
+              {this.props.userPlayingVideo === '' && this.props.userPlayingVideo === '' &&
+                <h6>Nobody is Playing</h6>
+              }
+              {this.props.userPlayingVideo !== '' && this.props.userPlayingVideo !== '' &&
+                <h6><strong>{this.props.userPlayingVideo}</strong> is playing <strong>{this.props.currentVideoTitle}</strong></h6>
+              }
+              
+            </div>
           </div>
+
+          
+
       </div>
     )
   }

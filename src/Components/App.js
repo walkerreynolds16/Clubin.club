@@ -3,7 +3,7 @@ import Login from '../Components/Login'
 import Playbar from '../Components/Playbar';
 import YouTube from 'react-youtube';
 import { SortableContainer, SortableElement, arrayMove } from 'react-sortable-hoc';
-import { Button, ListGroup, ListGroupItem, Modal, Tooltip, OverlayTrigger } from 'react-bootstrap';
+import { Button, ListGroup, ListGroupItem, Modal, Tooltip, OverlayTrigger, Tab, Tabs } from 'react-bootstrap';
 import Slider from 'react-slide-out'
 import Axios from 'axios'
 import '../Styles/App.css';
@@ -31,8 +31,8 @@ const currentPlaylistStyle = {
   display: 'inline-block',
   position: 'fixed',
   width: '21%',
-  top: '5px',
-  right: '5px',
+  top: '0px',
+  right: '0px',
   background: '#9699a0',
   border: '2px double #74757E'
 }
@@ -41,8 +41,8 @@ const listStyle = {
   display: 'inline-block',
   position: 'fixed',
   width: '21%',
-  top: '65px',
-  right: '5px',
+  top: '60px',
+  right: '0px',
   background: '#9699a0',
   border: '2px double #74757E'
 }
@@ -51,14 +51,26 @@ const playerStyle = {
   display: 'inline',
   position: 'relative',
   left: '0',
-  top: '5px'
+  top: '0px'
 }
 
-const chatStyle = {
+const tabStyle = {
   position: 'absolute',
   width: '21%',
-  right: '5px',
-  bottom: '10px'
+  right: '0px',
+  bottom: '0px',
+  backgroundColor: '#fff'
+  
+}
+
+const tabWindowStyle = {
+  position: 'relative',
+  height: '225px',
+  width: '100%',
+  overflow: 'auto',
+  background: '#9699a0',
+  borderLeft: '2px double #74757E',
+  borderRight: '2px double #74757E'
 }
 
 const messagesStyle = {
@@ -135,14 +147,18 @@ class App extends Component {
       ],
       showAddPlaylistModal: false,
       newPlaylistNameInput: '',
-      testMessages: [],
+      chatMessages: [],
       userPlayingVideo: '',
+      currentVideoTitle: '',
       messageBoxValue: '',
       isUserDJing: false,
       testSetUsername: '',
       startTime: 0,
       player: null,
-      disableAddVideoButton: false
+      disableAddVideoButton: false,
+      clients: [],
+      DJQueue: [],
+      tabKey: 1
 
     }
   }
@@ -151,9 +167,11 @@ class App extends Component {
     this.updateWindowDimensions()
     window.addEventListener('resize', this.updateWindowDimensions);
 
+    window.addEventListener("beforeunload", (ev) => this.handleWindowClose(ev));
+
     this.getPlaylistsForCurrentUser()
 
-    socket.on('connect', () => this.handleConnect())
+    socket.on('Event_userConnecting', (data) => this.handleUserConnecting(data))
 
     socket.on('message', (msg) => this.handleMessage(msg))
 
@@ -163,15 +181,64 @@ class App extends Component {
 
     socket.on('Event_stopVideo', () => this.handleStopVideo())
 
+    socket.on('Event_DJQueueChanging', (DJs) => this.handleDJQueueChange(DJs))
+    
+    socket.on('Event_userDisconnecting', (data) => this.handleUserDisconnecting(data))
+
     this.handleConnect()
 
   }
 
+  handleDJQueueChange = (DJs) => {
+    // console.log('User joining dj queue')
+    // console.log(DJs)
+
+    this.setState({
+      DJQueue: DJs
+    })
+  }
+
+
+  handleUserDisconnecting = (data) => {
+    // console.log(data.user + " is disconnecting")
+
+    // console.log(data.clients)
+
+    this.setState({
+      clients: data.clients
+    })
+  }
+
+  handleUserConnecting = (data) => {
+    // console.log(data.user + " is connecting")
+
+    // console.log(data.clients)
+
+    this.setState({
+      clients: data.clients
+    })
+
+  }
+
+  handleWindowClose = (ev) => {
+    ev.preventDefault();
+
+    socket.emit('Event_userDisconnected', this.state.currentUser)
+  }
+
   handleStopVideo = () => {
     if(this.state.player != null){
-      console.log('Stopping Video')
+      // console.log('Stopping Video')
+
       this.state.player.stopVideo()
+      video = ''
+      this.forceUpdate()
     }
+
+    this.setState({
+      userPlayingVideo: '',
+      currentVideoTitle: ''
+    })
     
   }
 
@@ -180,9 +247,20 @@ class App extends Component {
   }
 
   handleConnect = () => {
-    //socket.emit('connected', this.state.currentUser)
-    // socket.emit('customEvent', {eventName: 'customEvent', currentPlaylist: this.state.currentPlaylist})
+    socket.emit('Event_userConnected', this.state.currentUser)
 
+    this.getCurrentVideo()
+
+    //Send message to everyone saying that a user has connected
+    socket.emit('Event_sendChatMessage',
+      {
+        user: 'Server',
+        message: this.state.currentUser + ' has connected'
+      }
+    )
+  }
+
+  getCurrentVideo = () => {
     //If a user connects, check if anyone is DJing, if so, get time tag and display video
     var url = apiEndpoint + '/getCurrentVideo'
     Axios.get(url)
@@ -192,7 +270,9 @@ class App extends Component {
         if (response['data'] !== 'No one playing') {
           video = response['data']['videoId']
           this.setState({
-            startTime: parseInt(response['data']['startTime'], 10)
+            startTime: parseInt(response['data']['startTime'], 10),
+            userPlayingVideo: response['data']['currentDJ'],
+            currentVideoTitle: response['data']['currentVideoTitle']
           })
 
           this.forceUpdate()
@@ -203,12 +283,12 @@ class App extends Component {
 
   handleMessage = (msg) => {
     // console.log(msg)
-    var copy = this.state.testMessages.slice()
+    var copy = this.state.chatMessages.slice()
 
     copy.push(msg)
 
     this.setState({
-      testMessages: copy
+      chatMessages: copy
     })
 
     this.forceUpdate()
@@ -227,27 +307,33 @@ class App extends Component {
       playerHeight: (height) + 'px',
     })
 
-    this.handleConnect()
+    this.getCurrentVideo()
+
+
   }
 
   // This function is called when the sortable list is sorted
   onSortEnd = ({ oldIndex, newIndex }) => {
-    var newCurrentPlaylist = { playlistTitle: this.state.currentPlaylist.playlistTitle, playlistVideos: arrayMove(this.state.currentPlaylist.playlistVideos, oldIndex, newIndex) }
+    if(oldIndex !== newIndex){
+      var newCurrentPlaylist = { playlistTitle: this.state.currentPlaylist.playlistTitle, playlistVideos: arrayMove(this.state.currentPlaylist.playlistVideos, oldIndex, newIndex) }
 
-    this.setState({
-      currentPlaylist: newCurrentPlaylist,
-    });
+      this.setState({
+        currentPlaylist: newCurrentPlaylist,
+      });
+  
+      // if(newIndex === 0){
+      //   video = newCurrentPlaylist.playlistVideos[0].videoId
+      //   this.forceUpdate()
+      // }
+  
+      this.setBackEndPlaylist(newCurrentPlaylist)
+  
+      // console.log('OnSortEnd')
+      // console.log(newCurrentPlaylist)
+      this.setBackendCurrentPlaylist(newCurrentPlaylist)
+    }
 
-    // if(newIndex === 0){
-    //   video = newCurrentPlaylist.playlistVideos[0].videoId
-    //   this.forceUpdate()
-    // }
-
-    this.setBackEndPlaylist(newCurrentPlaylist)
-
-    // console.log('OnSortEnd')
-    // console.log(newCurrentPlaylist)
-    this.setBackendCurrentPlaylist(newCurrentPlaylist)
+    
 
   }
 
@@ -256,10 +342,12 @@ class App extends Component {
     this.setState({
       player: event.target
     });
+
+    event.target.setVolume(10)
   }
 
   onPlayerStateChange = (event) => {
-    console.log('state data = ' + event.data)
+    // console.log('state data = ' + event.data)
     if (event.data === 0) {
       // this.skipCurrentVideo()
     }
@@ -795,7 +883,7 @@ class App extends Component {
     var user = data.user
     var message = data.message
 
-    this.state.testMessages.push(user + ": " + message)
+    this.state.chatMessages.push(user + ": " + message)
     this.forceUpdate();
   }
 
@@ -819,10 +907,18 @@ class App extends Component {
       //sorts the playlist after users video is picked to be played
       var newCurrentPlaylist = { playlistTitle: this.state.currentPlaylist.playlistTitle, playlistVideos: arrayMove(this.state.currentPlaylist.playlistVideos, 0, this.state.currentPlaylist.playlistVideos.length - 1) }
 
+      // console.log('userPlayingVideo in new video = ' + user)
+      // console.log('currentVideoTitle in new video = ' + videoTitle)
+
       this.setState({
-        currentPlaylist: newCurrentPlaylist,
+        currentPlaylist: newCurrentPlaylist        
       });
     }
+
+    this.setState({
+      userPlayingVideo: user,
+      currentVideoTitle: videoTitle
+    })
 
     this.forceUpdate()
   }
@@ -850,7 +946,7 @@ class App extends Component {
   }
 
   onVolumeChange = (value) => {
-    console.log(value)
+    // console.log(value)
 
     this.state.player.setVolume(value)
   }
@@ -883,6 +979,12 @@ class App extends Component {
 
   scrollToBottom = () => {
     this.messagesEnd.scrollIntoView({ behavior: "smooth" });
+  }
+
+  handleTabSelect = (key) => {
+    this.setState({
+      tabKey: key
+    })
   }
 
 
@@ -981,32 +1083,95 @@ class App extends Component {
 
         </div>
 
-        <div style={chatStyle}>
 
-          <div style={messagesStyle}>
-            {this.state.testMessages.map((value, index) => {
-              return (
-                <h6 style={{ 'color': 'white', 'font-size': '100%' }}>{value}</h6>
-              )
-            })}
 
-            <div style={{ float:"left", clear: "both" }}
-                ref={(el) => { this.messagesEnd = el; }}>
-            </div>
-          </div>
 
-          <div>
-            <form onSubmit={(e) => this.handleSendChatMessage(e)}>
-              <div style={{ 'background': '#9699a0', 'width': '100%', 'border': '2px double #74757E', 'height':'40px' }}>
-                <span style={{ 'font-size': '18px', 'color': 'white' }}>
-                  {this.state.currentUser + ":"}
-                </span>
-                <input value={this.state.messageBoxValue} onChange={this.handleMessageBoxChange} style={{ 'background': '#9699a0', 'color': 'white' }}></input>
-                <Button style={{'position':'fixed', 'right':'10px'}} onClick={(e) => this.handleSendChatMessage(e)}>Send</Button>
+
+
+
+
+
+
+
+        <div>
+          <Tabs
+            activeKey={this.state.tabKey}
+            onSelect={this.handleTabSelect}
+            style={tabStyle}
+            animation={false}>
+
+            <Tab eventKey={1} title="Chat">
+
+              <div style={tabWindowStyle}>
+                {this.state.chatMessages.map((value, index) => {
+                  return (
+                    <h6 style={{ 'color': 'white', 'font-size': '100%' }}>{value}</h6>
+                  )
+                })}
+
+                <div style={{ float:"left", clear: "both" }}
+                    ref={(el) => { this.messagesEnd = el; }}>
+                </div>
+
+                <form onSubmit={(e) => this.handleSendChatMessage(e)}>
+                  <div style={{ 'background': '#9699a0', 'position':'absolute', 'bottom':'5px', 'left':'5px' }}>
+                    <span style={{ 'font-size': '18px', 'color': 'white' }}>
+                      {this.state.currentUser + ":"}
+                    </span>
+                    <input value={this.state.messageBoxValue} onChange={this.handleMessageBoxChange} style={{ 'background': '#9699a0', 'color': 'white' }}></input>
+                    <Button style={{'position':'fixed', 'right':'10px', 'bottom':'5px'}} onClick={(e) => this.handleSendChatMessage(e)}>Send</Button>
+                  </div>
+                </form>
+
               </div>
-            </form>
-          </div>
+
+              
+
+            </Tab>
+            <Tab eventKey={2} title="Connected Users">
+
+              <div style={messagesStyle}>
+                {this.state.clients.map((value, index) => {
+                  return (
+                    <h6 style={{ 'color': 'white', 'font-size': '100%' }}>{value.user}</h6>
+                  )
+                })}
+
+                <div style={{ float:"left", clear: "both" }}
+                    ref={(el) => { this.messagesEnd = el; }}>
+                </div>
+              </div>
+
+            </Tab>
+            <Tab eventKey={3} title="DJ Queue">
+              
+              <div style={messagesStyle}>
+                {this.state.DJQueue.map((value, index) => {
+                  return (
+                    <h6 style={{ 'color': 'white', 'font-size': '100%' }}>{value}</h6>
+                  )
+                })}
+
+                <div style={{ float:"left", clear: "both" }}
+                    ref={(el) => { this.messagesEnd = el; }}>
+                </div>
+              </div>
+
+            </Tab>
+
+          </Tabs>
         </div>
+        
+
+
+
+
+
+
+
+
+
+
 
 
         <Modal show={this.state.showAddVideoModal} onHide={this.onCloseAddVideoModal} bsSize='large'>
@@ -1105,7 +1270,13 @@ class App extends Component {
           </Modal.Footer>
         </Modal>
 
-        <Playbar onSliderChange={this.onVolumeChange} onToggleMutePlayer={this.onToggleMutePlayer} getPlayerVolume={this.getPlayerVolume} getPlayerIsMuted={this.getPlayerIsMuted}/>
+        <Playbar 
+            onSliderChange={this.onVolumeChange} 
+            onToggleMutePlayer={this.onToggleMutePlayer} 
+            getPlayerVolume={this.getPlayerVolume} 
+            getPlayerIsMuted={this.getPlayerIsMuted}
+            userPlayingVideo={this.state.userPlayingVideo}
+            currentVideoTitle={this.state.currentVideoTitle}/>
 
       </div>
     );
