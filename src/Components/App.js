@@ -21,7 +21,7 @@ import openSocket from 'socket.io-client';
 // const apiEndpoint = 'http://127.0.0.1:5000'
 const apiEndpoint = 'https://plug-dj-clone-api.herokuapp.com'
 
-const socket = openSocket.connect(apiEndpoint)
+const socket = openSocket.connect(apiEndpoint, {transports: ['websocket']})
 
 
 var video = ''
