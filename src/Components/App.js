@@ -18,8 +18,8 @@ import openSocket from 'socket.io-client';
 //API Link
 //https://plug-dj-clone-api.herokuapp.com
 
-// const apiEndpoint = 'http://127.0.0.1:5000'
-const apiEndpoint = 'https://plug-dj-clone-api.herokuapp.com'
+const apiEndpoint = 'http://127.0.0.1:5000'
+// const apiEndpoint = 'https://plug-dj-clone-api.herokuapp.com'
 
 const socket = openSocket.connect(apiEndpoint, {transports: ['websocket']})
 
@@ -55,7 +55,8 @@ const playerStyle = {
 }
 
 const tabStyle = {
-  position: 'absolute',
+  position: 'fixed',
+  height:'35%',
   width: '21%',
   right: '0px',
   bottom: '0px',
@@ -63,19 +64,17 @@ const tabStyle = {
   
 }
 
-const tabWindowStyle = {
-  position: 'relative',
-  height: '225px',
+const chatWindowStyle = {
   width: '100%',
   overflow: 'auto',
   background: '#9699a0',
   borderLeft: '2px double #74757E',
-  borderRight: '2px double #74757E'
+  borderRight: '2px double #74757E',
 }
 
 const messagesStyle = {
   position: 'relative',
-  height: '225px',
+  height:'100%',
   width: '100%',
   overflow: 'auto',
   background: '#9699a0',
@@ -84,7 +83,7 @@ const messagesStyle = {
 }
 
 const SortableItem = SortableElement(({ value, onClickDeleteCallback, listIndex }) => {
-  var image = 'http://img.youtube.com/vi/' + value.videoId + '/0.jpg'
+  var image = 'https://img.youtube.com/vi/' + value.videoId + '/0.jpg'
 
   return (
     <div style={{ 'marginTop': '8px', 'marginBottom': '8px', 'position': 'relative' }}>
@@ -1093,68 +1092,96 @@ class App extends Component {
 
 
 
-        <div>
+        <div >
           <Tabs
             activeKey={this.state.tabKey}
             onSelect={this.handleTabSelect}
-            style={tabStyle}
-            animation={false}>
+            animation={false}
+            style={{'width':'21%', 'right':'0px', 'position':'fixed', 'bottom':'35%', 'backgroundColor':'#fff'}}>
 
-            <Tab eventKey={1} title="Chat">
+            <Tab style={tabStyle} eventKey={1} title="Chat">
 
-              <div style={tabWindowStyle}>
-                {this.state.chatMessages.map((value, index) => {
-                  return (
-                    <h6 style={{ 'color': 'white', 'font-size': '100%' }}>{value}</h6>
-                  )
-                })}
+              <div>
 
-                <div style={{ float:"left", clear: "both" }}
-                    ref={(el) => { this.messagesEnd = el; }}>
+                {/* Messages div */}
+                <div style={{'position':'absolute', 'width':'100%', 'background': '#9699a0', 'height':'87.5%', 'overflowY':'auto'}}>
+
+                  <fieldset>
+                    <div>
+                      {this.state.chatMessages.map((value, index) => {
+                        return (
+                          <h6 style={{ 'color': 'white', 'font-size': '100%', 'marginLeft':'5px'}}>{value}</h6>
+                        )
+                      })}
+
+                      <div style={{ float:"left", clear: "both" }}
+                          ref={(el) => { this.messagesEnd = el; }}>
+                      </div>
+
+                    </div>
+                  </fieldset>
+
                 </div>
 
-                <form onSubmit={(e) => this.handleSendChatMessage(e)}>
-                  <div style={{ 'background': '#9699a0', 'position':'absolute', 'bottom':'5px', 'left':'5px' }}>
-                    <span style={{ 'font-size': '18px', 'color': 'white' }}>
-                      {this.state.currentUser + ":"}
-                    </span>
-                    <input value={this.state.messageBoxValue} onChange={this.handleMessageBoxChange} style={{ 'background': '#9699a0', 'color': 'white' }}></input>
-                    <Button style={{'position':'fixed', 'right':'10px', 'bottom':'5px'}} onClick={(e) => this.handleSendChatMessage(e)}>Send</Button>
-                  </div>
-                </form>
+
+
+
+                  
+                {/* Text box div */}
+                <div style={{'position':'absolute', 'width':'100%', 'background': '#9699a0', 'height':'12%', 'bottom':'0', 'padding':'5px', 'display':'flex'}}>
+
+
+                  <form onSubmit={(e) => this.handleSendChatMessage(e)}>
+                    <div style={{ 'position':'relative', 'left':'5px', 'marginTop':'3px' }}>
+
+                      <span style={{'color': 'white', 'marginRight':'5px', 'marginLeft':'-5px' }}>
+                        {this.state.currentUser + ":"}
+                      </span>
+
+                      <input value={this.state.messageBoxValue} onChange={this.handleMessageBoxChange} style={{ 'background': '#9699a0', 'color': 'white' }}></input>
+                      
+                    </div>
+
+                  </form>
+
+                  <Button style={{'position':'absolute', 'right':'5px', 'top':'2px'}} onClick={(e) => this.handleSendChatMessage(e)}>Send</Button>
+
+
+                </div>
+
 
               </div>
 
-              
+
 
             </Tab>
-            <Tab eventKey={2} title="Connected Users">
+            <Tab eventKey={2} title="Connected Users" style={tabStyle}>
 
               <div style={messagesStyle}>
                 {this.state.clients.map((value, index) => {
                   return (
-                    <h6 style={{ 'color': 'white', 'font-size': '100%' }}>{value.user}</h6>
+                    <h6 style={{ 'color': 'white', 'font-size': '100%', 'marginLeft':'5px'}}>{value.user}</h6>
                   )
                 })}
 
-                <div style={{ float:"left", clear: "both" }}
+                {/* <div style={{ float:"left", clear: "both" }}
                     ref={(el) => { this.messagesEnd = el; }}>
-                </div>
+                </div> */}
               </div>
 
             </Tab>
-            <Tab eventKey={3} title="DJ Queue">
+            <Tab eventKey={3} title="DJ Queue" style={tabStyle}>
               
               <div style={messagesStyle}>
                 {this.state.DJQueue.map((value, index) => {
                   return (
-                    <h6 style={{ 'color': 'white', 'font-size': '100%' }}>{value}</h6>
+                    <h6 style={{ 'color': 'white', 'font-size': '100%', 'marginLeft':'5px'}}>{value}</h6>
                   )
                 })}
 
-                <div style={{ float:"left", clear: "both" }}
+                {/* <div style={{ float:"left", clear: "both" }}
                     ref={(el) => { this.messagesEnd = el; }}>
-                </div>
+                </div> */}
               </div>
 
             </Tab>

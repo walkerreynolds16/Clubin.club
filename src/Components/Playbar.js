@@ -33,7 +33,8 @@ const mainStyle = {
   borderWidth: '5px',
   position: 'fixed',
   bottom: '0px',
-  display: 'inline'
+  display: 'inline',
+  left: '0px'
 }
 
 const volumeSliderStyle = {
@@ -178,7 +179,6 @@ export default class Playbar extends Component {
               <Slider style={{'marginLeft':'5px'}} min={0} max={100} handle={handle} onChange={this.onSliderChange} defaultValue={this.state.volume}/>
             }
 
-            {console.log(this.props.userPlayingVideo)}
             <div style={currentlyPlayingStyle}>
               {this.props.userPlayingVideo === '' && this.props.userPlayingVideo === '' &&
                 <h6>Nobody is Playing</h6>
