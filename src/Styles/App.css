@@ -67,6 +67,10 @@
   cursor: row-resize;
 }
 
+.SlideModal {
+  width: 25% !important
+}
+
 
 
 @keyframes App-logo-spin {

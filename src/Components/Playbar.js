@@ -27,12 +27,13 @@ const handle = (props) => {
 };
 
 const mainStyle = {
-  width: '70%',
   height: '60px',
   borderStyle: 'solid',
   borderWidth: '5px',
   position: 'fixed',
-  bottom: '0px'
+  bottom: '0px',
+  display: 'inline',
+  left: '0px'
 }
 
 const volumeSliderStyle = {
@@ -43,19 +44,29 @@ const volumeSliderStyle = {
   alignItems: 'center'
 }
 
+const currentlyPlayingStyle = {
+  display: 'flex',
+  alignItems: 'center',
+  width: '20%',
+  right: '10px',
+  position: 'absolute',
+  fontFamily: 'sans-serif'
+}
+
 export default class Playbar extends Component {
   constructor(props) {
     super(props)
 
     this.state = {
-      volume: undefined,
+      volume: 10,
       isMuted: undefined
     }
   }
 
   componentDidMount() {    
-    this.waitForVolume()
-    this.waitForIsMuted()
+    // this.waitForVolume()
+    // this.waitForIsMuted()
+    
   }
 
   waitForVolume = () => {
@@ -115,9 +126,8 @@ export default class Playbar extends Component {
   render() {
 
     return (
-      <div style={mainStyle}>
+      <div style={{'width': this.props.playerWidth, 'height': '60px','borderStyle': 'solid', 'borderWidth': '5px','position': 'fixed','bottom': '0px','display': 'inline','left': '0px'}}>
           <div style={volumeSliderStyle}>
-            {/* <img style={{'cursor':'pointer'}} width="25" height="25" src="https://img.icons8.com/ios/50/000000/high-volume-filled.png" onClick={this.onMute}/> */}
 
             <svg width="50" height="50" viewBox="0 0 640 640" style={{'cursor':'pointer'}} onClick={this.onMute}>
                            
@@ -164,11 +174,23 @@ export default class Playbar extends Component {
 
             </svg>
 
-            {console.log("state volume = " + this.state.volume)}
             {this.state.volume !== undefined &&
               <Slider style={{'marginLeft':'5px'}} min={0} max={100} handle={handle} onChange={this.onSliderChange} defaultValue={this.state.volume}/>
             }
+
+            <div style={currentlyPlayingStyle}>
+              {this.props.userPlayingVideo === '' && this.props.userPlayingVideo === '' &&
+                <h6>Nobody is Playing</h6>
+              }
+              {this.props.userPlayingVideo !== '' && this.props.userPlayingVideo !== '' &&
+                <h6><strong>{this.props.userPlayingVideo}</strong> is playing <strong>{this.props.currentVideoTitle}</strong></h6>
+              }
+              
+            </div>
           </div>
+
+          
+
       </div>
     )
   }
