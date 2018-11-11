@@ -157,7 +157,10 @@ class App extends Component {
       disableAddVideoButton: false,
       clients: [],
       DJQueue: [],
-      tabKey: 1
+      tabKey: 1,
+      showImportYoutubeModal: false,
+      importPlaylistId: '',
+      importPlaylistTitle: ''
 
     }
   }
@@ -196,7 +199,6 @@ class App extends Component {
       DJQueue: DJs
     })
   }
-
 
   handleUserDisconnecting = (data) => {
     // console.log(data.user + " is disconnecting")
@@ -992,6 +994,52 @@ class App extends Component {
     })
   }
 
+  openYoutubeImportModal = () => {
+    this.setState({
+      showImportYoutubeModal: true
+    })
+  }
+
+  closeYoutubeImportModal = () => {
+    this.setState({
+      showImportYoutubeModal: false
+    })
+  }
+
+  handleImportPlaylistIdChange = (event) => {
+    this.setState({
+      importPlaylistId: event.target.value
+    })
+  }
+
+  handleImportPlaylistTitleChange = (event) => {
+    this.setState({
+      importPlaylistTitle: event.target.value
+    })
+  }
+
+  importPlaylistFromYoutube = () => {
+    Axios.defaults.headers.post['Content-Type'] = 'application/json'
+
+    var data = {
+      'username': this.state.currentUser,
+      'playlistId': this.state.importPlaylistId,
+      'newPlaylistTitle': this.state.importPlaylistTitle
+    }
+
+    var url = apiEndpoint + '/createPlugDJPlaylistFromYoutubePlaylist'
+
+    Axios.post(url, data)
+      .then((response) => {
+        // console.log(response)
+
+        this.closeYoutubeImportModal()
+
+        this.getPlaylistsForCurrentUser()
+
+        this.closePlaylistSlideIn()
+      })
+  }
 
 
   render() {
@@ -1250,7 +1298,10 @@ class App extends Component {
           header={
             <div style={{ 'position': 'fixed','right': '5px', 'position': 'fixed', 'top': '15px' }}>
                 {this.state.showPlaylistSlideIn &&
-                  <Button style={{  }} onClick={this.openAddPlaylistModal}>Add Playlist</Button>
+                  <div>
+                    <Button style={{  }} onClick={this.openAddPlaylistModal}>Add Playlist</Button>
+                    <Button style={{  }} onClick={this.openYoutubeImportModal}>Import Playlist from YouTube</Button>
+                  </div>
                 }
             </div>
           }
@@ -1300,6 +1351,35 @@ class App extends Component {
           </Modal.Body>
           <Modal.Footer>
             <Button onClick={this.closeAddPlaylistModal}>Close</Button>
+          </Modal.Footer>
+        </Modal>
+
+        <Modal show={this.state.showImportYoutubeModal} onHide={this.closeYoutubeImportModal} bsSize='large'>
+          <Modal.Header closeButton>
+            <Modal.Title>Import Playlist from YouTube</Modal.Title>
+          </Modal.Header>
+          <Modal.Body>
+            <div style={{ 'overflowY': 'auto' }}>
+              <form onSubmit={(e) => this.importPlaylistFromYoutube(e)}>
+                <div >
+                  <h6 style={{'display':'inline-block'}}>Playlist Id: </h6>
+                  <input value={this.state.importPlaylistId} onChange={this.handleImportPlaylistIdChange} style={{'display':'inline-block'}}/>
+                </div>
+                
+                <div >
+                  <h6 style={{'display':'inline-block'}}>New Playlist Title: </h6>
+                  <input value={this.state.importPlaylistTitle} onChange={this.handleImportPlaylistTitleChange} />
+                </div>
+                
+                
+
+                <Button onClick={(e) => { this.importPlaylistFromYoutube(e) }}>Add</Button>
+              </form>
+
+            </div>
+          </Modal.Body>
+          <Modal.Footer>
+            <Button onClick={this.closeYoutubeImportModal}>Close</Button>
           </Modal.Footer>
         </Modal>
 
