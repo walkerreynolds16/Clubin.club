@@ -18,8 +18,8 @@ import openSocket from 'socket.io-client';
 //API Link
 //https://plug-dj-clone-api.herokuapp.com
 
-const apiEndpoint = 'http://127.0.0.1:5000'
-// const apiEndpoint = 'https://plug-dj-clone-api.herokuapp.com'
+// const apiEndpoint = 'http://127.0.0.1:5000'
+const apiEndpoint = 'https://plug-dj-clone-api.herokuapp.com'
 
 const socket = openSocket.connect(apiEndpoint, {transports: ['websocket']})
 
@@ -50,7 +50,7 @@ const listStyle = {
 const playerStyle = {
   display: 'inline',
   position: 'relative',
-  left: '0',
+  left: '0px',
   top: '0px'
 }
 
@@ -346,10 +346,16 @@ class App extends Component {
   }
 
   onPlayerStateChange = (event) => {
-    // console.log('state data = ' + event.data)
+
+    console.log('state data = ' + event.data)
     if (event.data === 0) {
       // this.skipCurrentVideo()
+
+      socket.emit('Event_userFinishedVideo', this.state.currentUser)
     }
+
+
+
   }
 
   skipCurrentVideo = () => {
@@ -420,7 +426,7 @@ class App extends Component {
 
       Axios.get(url)
         .then(response => {
-          console.log(response)
+          // console.log(response)
 
           var results = response['data']['items']
           var searchList = []
@@ -482,7 +488,7 @@ class App extends Component {
     var searchRes = this.state.searchList.slice()
 
     //Add the clicked video to the copy of the current playlist's videos
-    list.push(searchRes[index])
+    list.unshift(searchRes[index])
 
     //Make a new object for the playlists state
     var newPlaylist = { playlistTitle: this.state.currentPlaylist.playlistTitle, playlistVideos: list }
@@ -1303,7 +1309,8 @@ class App extends Component {
             getPlayerVolume={this.getPlayerVolume} 
             getPlayerIsMuted={this.getPlayerIsMuted}
             userPlayingVideo={this.state.userPlayingVideo}
-            currentVideoTitle={this.state.currentVideoTitle}/>
+            currentVideoTitle={this.state.currentVideoTitle}
+            playerWidth={this.state.playerWidth}/>
 
       </div>
     );

@@ -27,7 +27,6 @@ const handle = (props) => {
 };
 
 const mainStyle = {
-  width: '70%',
   height: '60px',
   borderStyle: 'solid',
   borderWidth: '5px',
@@ -127,7 +126,7 @@ export default class Playbar extends Component {
   render() {
 
     return (
-      <div style={mainStyle}>
+      <div style={{'width': this.props.playerWidth, 'height': '60px','borderStyle': 'solid', 'borderWidth': '5px','position': 'fixed','bottom': '0px','display': 'inline','left': '0px'}}>
           <div style={volumeSliderStyle}>
 
             <svg width="50" height="50" viewBox="0 0 640 640" style={{'cursor':'pointer'}} onClick={this.onMute}>
