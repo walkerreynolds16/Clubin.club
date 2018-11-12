@@ -160,12 +160,15 @@ class App extends Component {
       tabKey: 1,
       showImportYoutubeModal: false,
       importPlaylistId: '',
-      importPlaylistTitle: ''
+      importPlaylistTitle: '',
+      currentVersion: ''
 
     }
   }
 
   componentDidMount() {
+    this.getCurrentVersion()
+
     this.updateWindowDimensions()
     window.addEventListener('resize', this.updateWindowDimensions);
 
@@ -1048,6 +1051,18 @@ class App extends Component {
       })
   }
 
+  getCurrentVersion = () => {
+    var url = apiEndpoint + '/getCurrentVersion'
+    Axios.get(url)
+      .then((response) => {
+        console.log(response)
+        this.setState({
+          currentVersion: response['data']['version']
+        })
+
+      })
+  }
+
 
   render() {
 
@@ -1251,7 +1266,9 @@ class App extends Component {
           </Tabs>
         </div>
         
-
+        <div>
+          <h6>Version Number: {this.state.currentVersion}</h6>
+        </div>
 
 
 
