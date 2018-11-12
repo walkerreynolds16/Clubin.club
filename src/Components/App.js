@@ -18,14 +18,16 @@ import openSocket from 'socket.io-client';
 //API Link
 //https://plug-dj-clone-api.herokuapp.com
 
-// const apiEndpoint = 'http://127.0.0.1:5000'
-const apiEndpoint = 'https://plug-dj-clone-api.herokuapp.com'
+const apiEndpoint = 'http://127.0.0.1:5000'
+//const apiEndpoint = 'https://plug-dj-clone-api.herokuapp.com'
 
 const socket = openSocket.connect(apiEndpoint, {transports: ['websocket']})
 
 
 var video = ''
 const youtubeAPIKey = 'AIzaSyD7edp0KrX7oft2f-zL2uEnQFhW4Uj5OvE'
+
+var skipRatio = 0;
 
 const currentPlaylistStyle = {
   display: 'inline-block',
@@ -950,6 +952,11 @@ class App extends Component {
         user: this.state.currentUser
       }
     )
+    socket.emit('Event_sendChatMessage', 
+    {
+      user: "Server",
+      message: this.state.currentUser + " has voted to skip."
+    })
   }
 
   onVolumeChange = (value) => {
