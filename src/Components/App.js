@@ -386,13 +386,6 @@ class App extends Component {
       // console.log(newPlaylist)
       this.setBackendCurrentPlaylist(newPlaylist)
 
-      socket.emit('Event_sendChatMessage',
-      {
-        user: 'Server',
-        message: this.state.currentUser + ' has skipped the song'
-      }
-    )
-
     } else {
       alert('There are no videos in the current playlist')
     }
@@ -952,6 +945,12 @@ class App extends Component {
         user: this.state.currentUser
       }
     )
+    socket.emit('Event_sendChatMessage',
+        {
+          user: 'Server',
+          message: this.state.currentUser + ' has skipped the song'
+        }
+      )
   }
 
   onVolumeChange = (value) => {
