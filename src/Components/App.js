@@ -292,6 +292,8 @@ class App extends Component {
       chatMessages: copy
     })
 
+
+
     this.forceUpdate()
   }
 
@@ -383,6 +385,13 @@ class App extends Component {
       // console.log('skip current video')
       // console.log(newPlaylist)
       this.setBackendCurrentPlaylist(newPlaylist)
+
+      socket.emit('Event_sendChatMessage',
+      {
+        user: 'Server',
+        message: this.state.currentUser + ' has skipped the song'
+      }
+    )
 
     } else {
       alert('There are no videos in the current playlist')
@@ -704,13 +713,6 @@ class App extends Component {
       })
   }
 
-  testButton = () => {
-    var url = apiEndpoint + '/getPlaylists?username=' + this.state.currentUser
-    Axios.get(url)
-      .then((response) => {
-        // console.log(response)
-      })
-  }
 
   openAddPlaylistModal = () => {
     this.setState({
@@ -1033,6 +1035,12 @@ class App extends Component {
       .then((response) => {
         // console.log(response)
 
+        if(this.state.disableAddVideoButton){
+          this.setState({
+            disableAddVideoButton: false
+          })
+        }
+
         this.closeYoutubeImportModal()
 
         this.getPlaylistsForCurrentUser()
@@ -1052,7 +1060,8 @@ class App extends Component {
         controls: 0,
         disablekb: 1,
         rel: 0,
-        start: this.state.startTime
+        start: this.state.startTime,
+        iv_load_policy: 3
       }
     };
 
