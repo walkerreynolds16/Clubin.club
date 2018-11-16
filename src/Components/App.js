@@ -141,9 +141,7 @@ class App extends Component {
       searchList: [],
       currentUser: this.props.loginUsername,
       showPlaylistSlideIn: false,
-      playlists: [
-        { playlistTitle: '', playlistVideos: [] }
-      ],
+      playlists: [],
       showAddPlaylistModal: false,
       newPlaylistNameInput: '',
       chatMessages: [],
@@ -775,7 +773,8 @@ class App extends Component {
 
 
     this.setState({
-      playlists: playlistCopy
+      playlists: playlistCopy,
+      newPlaylistNameInput: ''
     })
   }
 
@@ -1022,7 +1021,11 @@ class App extends Component {
     })
   }
 
-  importPlaylistFromYoutube = () => {
+  importPlaylistFromYoutube = (e) => {
+    if (e !== undefined) {
+      e.preventDefault();
+    }
+
     Axios.defaults.headers.post['Content-Type'] = 'application/json'
 
     var data = {
@@ -1063,6 +1066,82 @@ class App extends Component {
       })
   }
 
+  deletePlaylist = (index) => {
+    console.log(this.state.playlists[index])
+
+    // copy playlists and remove the playlist by index
+    var newPlaylists = this.state.playlists.slice()
+    var removedPlaylist = newPlaylists.splice(index, 1)
+
+    // If the new playlist doesn't have anything in it anymore, disable add video/dj buttons
+    if(newPlaylists.length == 0){
+      this.setState({
+        disableAddVideoButton: true,
+        playlists: [],
+        currentPlaylist: { playlistTitle: '', playlistVideos: [] }
+      })
+
+      this.deletePlaylistDocument()
+
+    }else {
+      this.setAllPlaylists(newPlaylists)
+    }
+
+    // If the removed playlist was the current playlist
+    if(removedPlaylist[0].playlistTitle == this.state.currentPlaylist.playlistTitle){
+      var newCurrentPlaylist = { playlistTitle: '', playlistVideos: [] }
+
+      // if the new playlists have at least 1 playlist in it, make that the new current playlist
+      if(newPlaylists.length > 0){
+        newCurrentPlaylist = newPlaylists[0]
+      }
+
+      this.setState({
+        currentPlaylist: newCurrentPlaylist
+      })
+
+      this.setBackendCurrentPlaylist(newCurrentPlaylist)
+    }
+
+
+    this.setState({
+      playlists: newPlaylists
+    })
+    
+
+    this.forceUpdate()
+  }
+
+  setAllPlaylists = (newPlaylists) => {
+    var data = {
+      username: this.state.currentUser,
+      playlists: newPlaylists
+    }
+
+    Axios.defaults.headers.post['Content-Type'] = 'application/json'
+
+    var url = apiEndpoint + '/setAllPlaylist'
+
+    Axios.post(url, data)
+      .then((response) => {
+        console.log(response)
+      })
+  }
+
+  deletePlaylistDocument = () => {
+    var data = {
+      username: this.state.currentUser
+    }
+
+    Axios.defaults.headers.post['Content-Type'] = 'application/json'
+
+    var url = apiEndpoint + '/deletePlaylistDocument'
+
+    Axios.post(url, data)
+      .then((response) => {
+        console.log(response)
+      })
+  }
 
   render() {
 
@@ -1125,7 +1204,17 @@ class App extends Component {
             
             <Button style={{'margin':'5px'}} onClick={() => this.onSkipVideo()}>Skip Video</Button>
 
-            {!this.state.isUserDJing &&
+            {!this.state.isUserDJing && this.state.disableAddVideoButton && 
+
+              <OverlayTrigger placement="top" overlay={disabledAddVideoButtonTooltip} >
+                <div style={{display: 'inline-block', cursor: 'not-allowed'}}>
+                  <Button style={{'margin':'5px'}} onClick={() => this.onJoinDJ()} disabled>Click to DJ</Button>
+                </div>
+              </OverlayTrigger>
+
+            }
+
+            {!this.state.isUserDJing && !this.state.disableAddVideoButton &&
               <Button style={{'margin':'5px'}} onClick={() => this.onJoinDJ()}>Click to DJ</Button>
             }
 
@@ -1288,7 +1377,7 @@ class App extends Component {
             <div style={{ 'overflowY': 'auto' }}>
 
               <form onSubmit={(e) => this.onAddVideoSearch(e)}>
-                <input value={this.state.addVideoSearchTerm} onChange={this.handleAddVideoIDChange} />
+                <input value={this.state.addVideoSearchTerm} onChange={this.handleAddVideoIDChange} autoFocus/>
                 <Button onClick={(e) => { this.onAddVideoSearch(e) }}>Search</Button>
               </form>
 
@@ -1302,6 +1391,7 @@ class App extends Component {
                         <img src={imageLink} style={{ 'width': '120px', 'height': '90px' }} />
                         <h5 style={{ 'display': 'inline-block', 'fontWeight': 'bold', 'marginLeft': '5px', 'wordWrap': 'break-all' }}>{value.videoTitle}</h5>
                         <p style={{ 'display': 'inline-block', 'position': 'absolute', 'right': '0px', 'top': '40%' }}>{value.duration}</p>
+                        
                       </div>
                     </ListGroupItem>
                   )
@@ -1325,7 +1415,7 @@ class App extends Component {
                 {this.state.showPlaylistSlideIn &&
                   <div>
                     <Button style={{  }} onClick={this.openAddPlaylistModal}>Add Playlist</Button>
-                    <Button style={{  }} onClick={this.openYoutubeImportModal}>Import Playlist from YouTube</Button>
+                    <Button style={{'marginLeft':'5px'}} onClick={this.openYoutubeImportModal}>Import</Button>
                   </div>
                 }
             </div>
@@ -1347,9 +1437,20 @@ class App extends Component {
 
                 if (title != '') {
                   return (
-                    <ListGroupItem style={{ 'position': 'relative' }} onClick={() => this.changeCurrentPlaylist(index)}>
+                    <ListGroupItem style={{ 'position': 'relative', 'display': 'flex', 'alignItems': 'center'  }} onClick={() => this.changeCurrentPlaylist(index)}>
+
                       <h5 style={{ 'display': 'inline-block', 'fontWeight': 'bold', 'marginLeft': '5px', 'wordWrap': 'break-all' }}>{title}</h5>
                       <h6 style={{ 'display': 'inline-block', 'marginLeft': '2px' }}>({videos.length})</h6>
+
+                      <Button
+                        style= {{ 'display': 'inline-block', 'position': 'absolute', 'right': '5px' }}
+                        onClick={(e) => {e.stopPropagation(); this.deletePlaylist(index)}}>
+
+                        <svg width="11" height="11" viewBox="0 0 1024 1024">
+                          <path d="M192 1024h640l64-704h-768zM640 128v-128h-256v128h-320v192l64-64h768l64 64v-192h-320zM576 128h-128v-64h128v64z"></path>
+                        </svg>
+                      </Button>
+
                     </ListGroupItem>
                   )
                 }
@@ -1368,7 +1469,7 @@ class App extends Component {
             <div style={{ 'overflowY': 'auto' }}>
 
               <form onSubmit={(e) => this.makeNewPlaylist(e)}>
-                <input value={this.state.newPlaylistNameInput} onChange={this.handleNewPlaylistNameChange} />
+                <input value={this.state.newPlaylistNameInput} onChange={this.handleNewPlaylistNameChange} autoFocus/>
                 <Button onClick={(e) => { this.makeNewPlaylist(e) }}>Add</Button>
               </form>
 
@@ -1386,19 +1487,16 @@ class App extends Component {
           <Modal.Body>
             <div style={{ 'overflowY': 'auto' }}>
               <form onSubmit={(e) => this.importPlaylistFromYoutube(e)}>
-                <div >
+                
                   <h6 style={{'display':'inline-block'}}>Playlist Id: </h6>
-                  <input value={this.state.importPlaylistId} onChange={this.handleImportPlaylistIdChange} style={{'display':'inline-block'}}/>
-                </div>
-                
-                <div >
-                  <h6 style={{'display':'inline-block'}}>New Playlist Title: </h6>
-                  <input value={this.state.importPlaylistTitle} onChange={this.handleImportPlaylistTitleChange} />
-                </div>
-                
-                
+                  <input value={this.state.importPlaylistId} onChange={this.handleImportPlaylistIdChange} style={{'display':'inline-block'}} autoFocus/>
+                  <br/>
 
-                <Button onClick={(e) => { this.importPlaylistFromYoutube(e) }}>Add</Button>
+                  <h6 style={{'display':'inline-block'}}>New Playlist Title: </h6>
+                  <input value={this.state.importPlaylistTitle} onChange={this.handleImportPlaylistTitleChange}  />
+                  <br/>
+
+                <Button type="submit">Add</Button>
               </form>
 
             </div>

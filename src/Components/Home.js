@@ -3,6 +3,7 @@ import App from './App'
 import Login from './Login'
 import { BrowserRouter as Router, Route, Redirect } from "react-router-dom";
 import Axios from 'axios'
+import packageJson from '../../package.json'
 
 // const apiEndpoint = 'http://127.0.0.1:5000'
 const apiEndpoint = 'https://plug-dj-clone-api.herokuapp.com'
@@ -14,12 +15,13 @@ export default class Home extends Component {
     this.state = {
       loggedIn: false,
       username: '',
-      version: '0.101',
+      version: packageJson.version,
       disableLoginButton: false
     }
   }
 
   componentDidMount(){
+    console.log(this.state.version)
     this.checkVersion()
   }
 

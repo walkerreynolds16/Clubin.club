@@ -3,6 +3,8 @@ import { Button, FormGroup, FormControl, ControlLabel } from "react-bootstrap";
 import Axios from 'axios'
 import "../Styles/Login.css";
 
+import { GoogleLogin } from 'react-google-login';
+
 //API Link
 //https://plug-dj-clone-api.herokuapp.com
 
@@ -15,7 +17,8 @@ export default class Login extends Component {
 
     this.state = {
       username: "",
-      password: ""
+      password: "",
+      googleResponse: null
     };
   }
 
@@ -62,6 +65,10 @@ export default class Login extends Component {
 
   }
 
+  responseGoogle = (response) => {
+    console.log(response)
+  }
+
   render() {
     return (
       
@@ -99,6 +106,14 @@ export default class Login extends Component {
           </form>
         </div>
         }
+
+
+      {/* <GoogleLogin
+        clientId="1037164592642-dlma0aers6dh2fdd1s602kq5qkmktltk.apps.googleusercontent.com"
+        buttonText="Login"
+        onSuccess={this.responseGoogle}
+        onFailure={this.responseGoogle}
+      /> */}
 
         {this.props.disableLoginButton &&
           <div style={{'margin': 'auto', 'width': '50%', 'border': '3px solid white', 'padding': '10px', 'marginTop':'20%', 'color':'white'}}>
