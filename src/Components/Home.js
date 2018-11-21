@@ -15,13 +15,14 @@ export default class Home extends Component {
     this.state = {
       loggedIn: false,
       username: '',
-      version: packageJson.projectVersion,
+      frontEndVersion: packageJson.projectVersion,
+      backEndVersion: '',
       disableLoginButton: false
     }
   }
 
   componentDidMount(){
-    console.log(this.state.version)
+    console.log(this.state.frontEndVersion)
     this.checkVersion()
   }
 
@@ -34,7 +35,11 @@ export default class Home extends Component {
         console.log(response)      
         var currentVersion = response['data']['version']
 
-        if(currentVersion !== this.state.version){
+        this.setState({
+          backEndVersion: currentVersion
+        })
+
+        if(currentVersion !== this.state.frontEndVersion){
           this.setState({
             disableLoginButton: true
           })
@@ -72,7 +77,11 @@ export default class Home extends Component {
 
 
             <Route exact path='/' render={
-              (props) => this.state.loggedIn ? (<Redirect to="/home" />) : (<Login {...props} changeUsername={this.changeUsername} changeLoggedIn={this.changeLoggedIn} disableLoginButton={this.state.disableLoginButton} />)
+              (props) => this.state.loggedIn ? (<Redirect to="/home" />) : (<Login {...props} 
+                                                                                    changeUsername={this.changeUsername} 
+                                                                                    changeLoggedIn={this.changeLoggedIn} 
+                                                                                    disableLoginButton={this.state.disableLoginButton} 
+                                                                                    backEndVersion={this.state.backEndVersion}/>)
             } />
 
           </div>
