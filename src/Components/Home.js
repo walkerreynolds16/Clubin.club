@@ -15,7 +15,7 @@ export default class Home extends Component {
     this.state = {
       loggedIn: false,
       username: '',
-      version: packageJson.version,
+      version: packageJson.projectVersion,
       disableLoginButton: false
     }
   }
