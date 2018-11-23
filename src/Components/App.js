@@ -19,8 +19,8 @@ import openSocket from 'socket.io-client';
 //API Link
 //https://plug-dj-clone-api.herokuapp.com
 
-// const apiEndpoint = 'http://127.0.0.1:5000'
-const apiEndpoint = 'https://plug-dj-clone-api.herokuapp.com'
+const apiEndpoint = 'http://127.0.0.1:5000'
+// const apiEndpoint = 'https://plug-dj-clone-api.herokuapp.com'
 
 const socket = openSocket.connect(apiEndpoint, {transports: ['websocket']})
 
@@ -160,7 +160,14 @@ class App extends Component {
       showImportYoutubeModal: false,
       importPlaylistId: '',
       importPlaylistTitle: '',
-      currentVersion: ''
+      currentVersion: '',
+      wooters: [],
+      mehers: [],
+      grabbers: [],
+      wooted: false,
+      mehed: false,
+      grabbed: false,
+      showGrabMenu: false
 
     }
   }
@@ -174,6 +181,8 @@ class App extends Component {
     window.addEventListener("beforeunload", (ev) => this.handleWindowClose(ev));
 
     this.getPlaylistsForCurrentUser()
+
+    this.getCurrentVideoMetrics()
 
     socket.on('Event_userConnecting', (data) => this.handleUserConnecting(data))
 
@@ -189,8 +198,70 @@ class App extends Component {
     
     socket.on('Event_userDisconnecting', (data) => this.handleUserDisconnecting(data))
 
+    socket.on('Event_wootChanged', (data) => this.handleWootChange(data))
+
+    socket.on('Event_mehChanged', (data) => this.handleMehChange(data))
+
+    socket.on('Event_grabChanged', (data) => this.handleGrabChange(data))
+
+
     this.handleConnect()
 
+  }
+
+  getCurrentVideoMetrics = () => {
+    var url = apiEndpoint + '/getCurrentVideoMetrics'
+    Axios.get(url)
+      .then((response) => {
+        console.log(response)
+        this.setState({
+          wooters: response['data']['wooters'],
+          mehers: response['data']['mehers'],
+          grabbers: response['data']['grabbers']
+        })
+
+        if(response.data.wooters.indexOf(this.state.currentUser) >= 0){
+          this.setState({
+            wooted: true
+          })
+        }else if(response.data.mehers.indexOf(this.state.currentUser) >= 0){
+          this.setState({
+            mehed: true
+          })
+        }else if(response.data.grabbers.indexOf(this.state.currentUser) >= 0){
+          this.setState({
+            grabbed: true
+          })
+        }
+
+      })
+  }
+
+  handleWootChange = (data) => {
+    console.log('Wooters =  ' + data.wooters)
+    console.log('# of woots' + data.wooters.length)
+
+    this.setState({
+      wooters: data.wooters
+    })
+  }
+
+  handleMehChange = (data) => {
+    console.log('Mehers =  ' + data.mehers)
+    console.log('# of mehs' + data.mehers.length)
+
+    this.setState({
+      mehers: data.mehers
+    })
+  }
+
+  handleGrabChange = (data) => {
+    console.log('Grabbers =  ' + data.grabbers)
+    console.log('# of grabs' + data.grabbers.length)
+
+    this.setState({
+      grabbers: data.grabbers
+    })
   }
 
   handleDJQueueChange = (DJs) => {
@@ -240,7 +311,13 @@ class App extends Component {
 
     this.setState({
       userPlayingVideo: '',
-      currentVideoTitle: ''
+      currentVideoTitle: '',
+      wooted: false,
+      mehed: false,
+      grabbed: false,
+      wooters: [],
+      mehers: [],
+      grabbers: []
     })
     
   }
@@ -922,7 +999,13 @@ class App extends Component {
 
     this.setState({
       userPlayingVideo: user,
-      currentVideoTitle: videoTitle
+      currentVideoTitle: videoTitle,
+      wooted: false,
+      mehed: false,
+      grabbed: false,
+      wooters: [],
+      mehers: [],
+      grabbers: []
     })
 
     this.forceUpdate()
@@ -1169,6 +1252,108 @@ class App extends Component {
     this.forceUpdate()
   }
 
+  onClickWoot = () => {
+    
+    if(video !== '' && this.state.userPlayingVideo !== this.state.currentUser){
+      if(this.state.mehed){
+        this.onClickMeh()
+      }
+
+      socket.emit('Event_Woot',
+        {
+          user: this.state.currentUser,
+          wooting: !this.state.wooted
+        }
+      )
+
+      this.setState({
+        wooted: !this.state.wooted
+      })
+
+      this.forceUpdate()
+    }
+
+    
+  }
+
+  onClickMeh = () => {
+
+    if(video !== '' && this.state.userPlayingVideo !== this.state.currentUser){
+      if(this.state.wooted){
+        this.onClickWoot()
+      }
+
+      socket.emit('Event_Meh',
+        {
+          user: this.state.currentUser,
+          mehing: !this.state.mehed
+        }
+      )
+
+      this.setState({
+        mehed: !this.state.mehed
+      })
+
+      this.forceUpdate()
+    }
+  }
+
+  onClickGrab = () => {
+    if(video !== '' && this.state.userPlayingVideo !== this.state.currentUser){
+      
+
+      this.setState({
+        showGrabMenu: true
+      })
+
+      this.forceUpdate()
+    }
+  }
+
+  closeGrabMenu = () => {
+    this.setState({
+      showGrabMenu: false
+    })
+  }
+
+  grabToPlaylist = (index) => {
+    if(!this.state.wooted){
+      this.onClickWoot()
+    }
+
+    socket.emit('Event_Grab',
+      {
+        user: this.state.currentUser
+      }
+    )
+
+    this.setState({
+      grabbed: true
+    })
+
+    var playlists = this.state.playlists.slice()
+    var selectedPlaylist = playlists[index]
+
+    var newVideo = {'videoId': video, 'videoTitle': this.state.currentVideoTitle}
+
+    selectedPlaylist.playlistVideos.push(newVideo)
+
+    this.updatePlaylistState(selectedPlaylist)
+
+    if(this.state.currentPlaylist.playlistTitle === selectedPlaylist.playlistTitle){
+      this.setState({
+        currentPlaylist: selectedPlaylist
+      })
+
+      this.setBackendCurrentPlaylist(selectedPlaylist)
+    }
+    
+    this.setBackEndPlaylist(selectedPlaylist)
+
+    this.forceUpdate()
+    
+  }
+
   render() {
 
     const opts = {
@@ -1386,8 +1571,67 @@ class App extends Component {
         </div>
 
 
+        {/* Woot/Meh/Grab stuff */}
+        <div style={{'width': '13%', 'left': (parseInt(this.state.playerWidth.substring(0,this.state.playerWidth.length - 2)) + 7 + 'px'), 'position':'fixed', 'bottom':'0px', 'borderStyle':'solid', 'borderWidth':'5px', 'height':'60px'}}>
+              
+              <div style={{'display':'flex', 'flexWrap':'nowrap', 'alignItems': 'baseline', 'alignContent':'space-between'}}>
 
+                {/* Woot */}
+                <div style={{'width':'33%', 'margin':'10px'}}>           
+                  <svg viewBox="0 0 640 640" width="40" height="40" style={{'cursor':'pointer'}} onClick={this.onClickWoot}>
+                    {!this.state.wooted &&
+                      <path d="M320 117.45L417.63 214.27L515.26 311.1L412.49 311.1L412.49 522.55L227.51 522.55L227.51 311.1L124.74 311.1L222.36 214.27L320 117.45Z"
+                            style={{'fill':'#fff'}}/>
+                    }
+                    
+                    {this.state.wooted &&
+                      <path d="M320 117.45L417.63 214.27L515.26 311.1L412.49 311.1L412.49 522.55L227.51 522.55L227.51 311.1L124.74 311.1L222.36 214.27L320 117.45Z"
+                            style={{'fill':'#008000'}}/>
+                    }
 
+                  </svg>
+                  <span style={{'position':'absolute', 'bottom':'0px'}}>{this.state.wooters.length}</span>
+                </div>
+
+                {/* Meh */}
+                <div style={{'width':'33%', 'margin':'10px'}}>
+                  <svg viewBox="0 0 640 640" width="40" height="40" style={{'cursor':'pointer'}} onClick={this.onClickMeh}>
+                    {!this.state.mehed &&
+                      <path d="M515.26 328.9L417.63 425.73L320 522.55L222.36 425.73L124.74 328.9L227.51 328.9L227.51 117.45L412.49 117.45L412.49 328.9L515.26 328.9Z"
+                            style={{'fill':'#fff'}}/>
+                    }
+
+                    {this.state.mehed &&
+                      <path d="M515.26 328.9L417.63 425.73L320 522.55L222.36 425.73L124.74 328.9L227.51 328.9L227.51 117.45L412.49 117.45L412.49 328.9L515.26 328.9Z"
+                            style={{'fill':'#ff0000'}}/>
+                    }
+                    
+                  </svg>
+                  <span style={{'position':'absolute', 'bottom':'0px'}}>{this.state.mehers.length}</span>
+                </div >
+
+                {/* Grab */}
+                <div style={{'width':'33%', 'margin':'10px'}}>
+                  <svg viewBox="0 0 640 640" width="40" height="40" style={{'cursor':'pointer'}} onClick={this.onClickGrab}>
+                    {!this.state.grabbed &&
+                      <path d="M389.25 250.79L544.09 272.19L432.05 375.98L458.49 522.55L320 453.35L181.51 522.55L207.96 375.98L95.91 272.19L250.76 250.79L320 117.45L389.25 250.79Z"
+                            style={{'fill':'#fff'}}/>
+                    }
+
+                    {this.state.grabbed &&
+                      <path d="M389.25 250.79L544.09 272.19L432.05 375.98L458.49 522.55L320 453.35L181.51 522.55L207.96 375.98L95.91 272.19L250.76 250.79L320 117.45L389.25 250.79Z"
+                            style={{'fill':'#9400D3'}}/>
+                    }
+                    
+                  </svg>
+                  <span style={{'position':'absolute', 'bottom':'0px'}}>{this.state.grabbers.length}</span>
+                </div>
+
+              </div>
+              
+              
+              
+        </div>
 
 
 
@@ -1554,6 +1798,42 @@ class App extends Component {
             <Button onClick={this.closeYoutubeImportModal}>Close</Button>
           </Modal.Footer>
         </Modal>
+
+
+
+        <Modal show={this.state.showGrabMenu} onHide={this.closeGrabMenu} bsSize='large'>
+          <Modal.Header closeButton>
+            <Modal.Title>Pick a playlist to add the video to</Modal.Title>
+          </Modal.Header>
+          <Modal.Body>
+            <div style={{ 'overflowY': 'auto' }}>
+              <ListGroup>
+                {this.state.playlists.map((value, index) => {
+                  var title = value.playlistTitle
+                  var videos = value.playlistVideos
+
+                  if (title != '') {
+                    return (
+                      <ListGroupItem style={{ 'position': 'relative', 'display': 'flex', 'alignItems': 'center'  }} onClick={() => this.grabToPlaylist(index)}>
+
+                        <h5 style={{ 'display': 'inline-block', 'fontWeight': 'bold', 'marginLeft': '5px', 'wordWrap': 'break-all' }}>{title}</h5>
+                        <h6 style={{ 'display': 'inline-block', 'marginLeft': '2px' }}>({videos.length})</h6>
+
+                      </ListGroupItem>
+                    )
+                  }
+
+                })}
+              </ListGroup>
+
+            </div>
+          </Modal.Body>
+          <Modal.Footer>
+            <Button onClick={this.closeGrabMenu}>Close</Button>
+          </Modal.Footer>
+        </Modal>
+
+
 
         <Playbar 
             onSliderChange={this.onVolumeChange} 
