@@ -10,6 +10,7 @@ import '../Styles/App.css';
 import 'react-slide-out/lib/index.css'
 import Moment from 'moment'
 import 'moment-duration-format'
+import shuffle from 'shuffle-array'
 
 import openSocket from 'socket.io-client';
 
@@ -134,6 +135,8 @@ class App extends Component {
   constructor(props) {
     super(props)
 
+    this.playbarRef = React.createRef()
+
     this.state = {
       currentPlaylist: { playlistTitle: '', playlistVideos: [] },
       showAddVideoModal: false,
@@ -143,9 +146,7 @@ class App extends Component {
       searchList: [],
       currentUser: this.props.loginUsername,
       showPlaylistSlideIn: false,
-      playlists: [
-        { playlistTitle: '', playlistVideos: [] }
-      ],
+      playlists: [],
       showAddPlaylistModal: false,
       newPlaylistNameInput: '',
       chatMessages: [],
@@ -162,18 +163,30 @@ class App extends Component {
       tabKey: 1,
       showImportYoutubeModal: false,
       importPlaylistId: '',
-      importPlaylistTitle: ''
+      importPlaylistTitle: '',
+      currentVersion: '',
+      wooters: [],
+      mehers: [],
+      grabbers: [],
+      wooted: false,
+      mehed: false,
+      grabbed: false,
+      showGrabMenu: false
 
     }
   }
 
   componentDidMount() {
+    this.getCurrentVersion()
+
     this.updateWindowDimensions()
     window.addEventListener('resize', this.updateWindowDimensions);
 
     window.addEventListener("beforeunload", (ev) => this.handleWindowClose(ev));
 
     this.getPlaylistsForCurrentUser()
+
+    this.getCurrentVideoMetrics()
 
     socket.on('Event_userConnecting', (data) => this.handleUserConnecting(data))
 
@@ -189,8 +202,70 @@ class App extends Component {
     
     socket.on('Event_userDisconnecting', (data) => this.handleUserDisconnecting(data))
 
+    socket.on('Event_wootChanged', (data) => this.handleWootChange(data))
+
+    socket.on('Event_mehChanged', (data) => this.handleMehChange(data))
+
+    socket.on('Event_grabChanged', (data) => this.handleGrabChange(data))
+
+
     this.handleConnect()
 
+  }
+
+  getCurrentVideoMetrics = () => {
+    var url = apiEndpoint + '/getCurrentVideoMetrics'
+    Axios.get(url)
+      .then((response) => {
+        console.log(response)
+        this.setState({
+          wooters: response['data']['wooters'],
+          mehers: response['data']['mehers'],
+          grabbers: response['data']['grabbers']
+        })
+
+        if(response.data.wooters.indexOf(this.state.currentUser) >= 0){
+          this.setState({
+            wooted: true
+          })
+        }else if(response.data.mehers.indexOf(this.state.currentUser) >= 0){
+          this.setState({
+            mehed: true
+          })
+        }else if(response.data.grabbers.indexOf(this.state.currentUser) >= 0){
+          this.setState({
+            grabbed: true
+          })
+        }
+
+      })
+  }
+
+  handleWootChange = (data) => {
+    console.log('Wooters =  ' + data.wooters)
+    console.log('# of woots' + data.wooters.length)
+
+    this.setState({
+      wooters: data.wooters
+    })
+  }
+
+  handleMehChange = (data) => {
+    console.log('Mehers =  ' + data.mehers)
+    console.log('# of mehs' + data.mehers.length)
+
+    this.setState({
+      mehers: data.mehers
+    })
+  }
+
+  handleGrabChange = (data) => {
+    console.log('Grabbers =  ' + data.grabbers)
+    console.log('# of grabs' + data.grabbers.length)
+
+    this.setState({
+      grabbers: data.grabbers
+    })
   }
 
   handleDJQueueChange = (DJs) => {
@@ -240,7 +315,13 @@ class App extends Component {
 
     this.setState({
       userPlayingVideo: '',
-      currentVideoTitle: ''
+      currentVideoTitle: '',
+      wooted: false,
+      mehed: false,
+      grabbed: false,
+      wooters: [],
+      mehers: [],
+      grabbers: []
     })
     
   }
@@ -293,6 +374,8 @@ class App extends Component {
     this.setState({
       chatMessages: copy
     })
+
+
 
     this.forceUpdate()
   }
@@ -351,14 +434,18 @@ class App extends Component {
 
   onPlayerStateChange = (event) => {
 
-    console.log('state data = ' + event.data)
-    if (event.data === 0) {
-      // this.skipCurrentVideo()
+    // console.log('state data = ' + event.data)
+    if(event.data === -1){
+      this.playbarRef.current.stopTimer()
 
+    }else if (event.data === 0) {
       socket.emit('Event_userFinishedVideo', this.state.currentUser)
+      this.playbarRef.current.stopTimer()
+
+    }else if(event.data === 1){
+      this.playbarRef.current.startTimer()
+
     }
-
-
 
   }
 
@@ -706,13 +793,6 @@ class App extends Component {
       })
   }
 
-  testButton = () => {
-    var url = apiEndpoint + '/getPlaylists?username=' + this.state.currentUser
-    Axios.get(url)
-      .then((response) => {
-        // console.log(response)
-      })
-  }
 
   openAddPlaylistModal = () => {
     this.setState({
@@ -779,7 +859,8 @@ class App extends Component {
 
 
     this.setState({
-      playlists: playlistCopy
+      playlists: playlistCopy,
+      newPlaylistNameInput: ''
     })
   }
 
@@ -926,7 +1007,13 @@ class App extends Component {
 
     this.setState({
       userPlayingVideo: user,
-      currentVideoTitle: videoTitle
+      currentVideoTitle: videoTitle,
+      wooted: false,
+      mehed: false,
+      grabbed: false,
+      wooters: [],
+      mehers: [],
+      grabbers: []
     })
 
     this.forceUpdate()
@@ -952,11 +1039,20 @@ class App extends Component {
         user: this.state.currentUser
       }
     )
+<<<<<<< HEAD
     socket.emit('Event_sendChatMessage', 
     {
       user: "Server",
       message: this.state.currentUser + " has voted to skip."
     })
+=======
+    socket.emit('Event_sendChatMessage',
+        {
+          user: 'Server',
+          message: this.state.currentUser + ' has skipped the song'
+        }
+      )
+>>>>>>> master
   }
 
   onVolumeChange = (value) => {
@@ -1025,7 +1121,11 @@ class App extends Component {
     })
   }
 
-  importPlaylistFromYoutube = () => {
+  importPlaylistFromYoutube = (e) => {
+    if (e !== undefined) {
+      e.preventDefault();
+    }
+
     Axios.defaults.headers.post['Content-Type'] = 'application/json'
 
     var data = {
@@ -1040,6 +1140,12 @@ class App extends Component {
       .then((response) => {
         // console.log(response)
 
+        if(this.state.disableAddVideoButton){
+          this.setState({
+            disableAddVideoButton: false
+          })
+        }
+
         this.closeYoutubeImportModal()
 
         this.getPlaylistsForCurrentUser()
@@ -1048,6 +1154,224 @@ class App extends Component {
       })
   }
 
+  getCurrentVersion = () => {
+    var url = apiEndpoint + '/getCurrentVersion'
+    Axios.get(url)
+      .then((response) => {
+        console.log(response)
+        this.setState({
+          currentVersion: response['data']['version']
+        })
+
+      })
+  }
+
+  deletePlaylist = (index) => {
+
+    console.log(this.state.playlists[index])
+
+    // copy playlists and remove the playlist by index
+    var newPlaylists = this.state.playlists.slice()
+    var removedPlaylist = newPlaylists.splice(index, 1)
+
+    // If the new playlist doesn't have anything in it anymore, disable add video/dj buttons
+    if(newPlaylists.length == 0){
+      this.setState({
+        disableAddVideoButton: true,
+        playlists: [],
+        currentPlaylist: { playlistTitle: '', playlistVideos: [] }
+      })
+
+      this.deletePlaylistDocument()
+
+    }else {
+      this.setAllPlaylists(newPlaylists)
+    }
+
+    // If the removed playlist was the current playlist
+    if(removedPlaylist[0].playlistTitle == this.state.currentPlaylist.playlistTitle){
+      var newCurrentPlaylist = { playlistTitle: '', playlistVideos: [] }
+
+      // if the new playlists have at least 1 playlist in it, make that the new current playlist
+      if(newPlaylists.length > 0){
+        newCurrentPlaylist = newPlaylists[0]
+      }
+
+      this.setState({
+        currentPlaylist: newCurrentPlaylist
+      })
+
+      this.setBackendCurrentPlaylist(newCurrentPlaylist)
+    }
+
+
+    this.setState({
+      playlists: newPlaylists
+    })
+    
+
+    this.forceUpdate()
+  }
+
+  setAllPlaylists = (newPlaylists) => {
+    var data = {
+      username: this.state.currentUser,
+      playlists: newPlaylists
+    }
+
+    Axios.defaults.headers.post['Content-Type'] = 'application/json'
+
+    var url = apiEndpoint + '/setAllPlaylist'
+
+    Axios.post(url, data)
+      .then((response) => {
+        console.log(response)
+      })
+  }
+
+  deletePlaylistDocument = () => {
+    var data = {
+      username: this.state.currentUser
+    }
+
+    Axios.defaults.headers.post['Content-Type'] = 'application/json'
+
+    var url = apiEndpoint + '/deletePlaylistDocument'
+
+    Axios.post(url, data)
+      .then((response) => {
+        console.log(response)
+      })
+  }
+
+  shufflePlaylist = (index) => {
+    var playlistCopy = this.state.playlists.slice()
+    playlistCopy[index].playlistVideos = shuffle(playlistCopy[index].playlistVideos)
+
+    // shuffle playlist is also the current playlist
+    if(playlistCopy[index].playlistTitle == this.state.currentPlaylist.playlistTitle){
+      this.setState({
+        currentPlaylist: playlistCopy[index]
+      })
+
+      this.setBackendCurrentPlaylist(playlistCopy[index])
+    }
+
+    // console.log(playlistCopy[index].playlistVideos)
+
+    this.setAllPlaylists(playlistCopy)
+
+    this.setState({
+      playlists: playlistCopy
+    })
+
+    this.forceUpdate()
+  }
+
+  onClickWoot = () => {
+    
+    if(video !== '' && this.state.userPlayingVideo !== this.state.currentUser){
+      if(this.state.mehed){
+        this.onClickMeh()
+      }
+
+      socket.emit('Event_Woot',
+        {
+          user: this.state.currentUser,
+          wooting: !this.state.wooted
+        }
+      )
+
+      this.setState({
+        wooted: !this.state.wooted
+      })
+
+      this.forceUpdate()
+    }
+
+    
+  }
+
+  onClickMeh = () => {
+
+    if(video !== '' && this.state.userPlayingVideo !== this.state.currentUser){
+      if(this.state.wooted){
+        this.onClickWoot()
+      }
+
+      socket.emit('Event_Meh',
+        {
+          user: this.state.currentUser,
+          mehing: !this.state.mehed
+        }
+      )
+
+      this.setState({
+        mehed: !this.state.mehed
+      })
+
+      this.forceUpdate()
+    }
+  }
+
+  onClickGrab = () => {
+    if(video !== '' && this.state.userPlayingVideo !== this.state.currentUser){
+      
+
+      this.setState({
+        showGrabMenu: true
+      })
+
+      this.forceUpdate()
+    }
+  }
+
+  closeGrabMenu = () => {
+    this.setState({
+      showGrabMenu: false
+    })
+  }
+
+  grabToPlaylist = (index) => {
+    if(!this.state.wooted){
+      this.onClickWoot()
+    }
+
+    if(!this.state.grabbed){
+      socket.emit('Event_Grab',
+        {
+          user: this.state.currentUser
+        }
+      )
+
+      this.setState({
+        grabbed: true
+      })
+    }
+    
+
+    var playlists = this.state.playlists.slice()
+    var selectedPlaylist = playlists[index]
+
+    var newVideo = {'videoId': video, 'videoTitle': this.state.currentVideoTitle}
+
+    selectedPlaylist.playlistVideos.push(newVideo)
+
+    this.updatePlaylistState(selectedPlaylist)
+
+    if(this.state.currentPlaylist.playlistTitle === selectedPlaylist.playlistTitle){
+      this.setState({
+        currentPlaylist: selectedPlaylist
+      })
+
+      this.setBackendCurrentPlaylist(selectedPlaylist)
+    }
+    
+    this.setBackEndPlaylist(selectedPlaylist)
+
+    this.forceUpdate()
+    
+  }
 
   render() {
 
@@ -1059,7 +1383,8 @@ class App extends Component {
         controls: 0,
         disablekb: 1,
         rel: 0,
-        start: this.state.startTime
+        start: this.state.startTime,
+        iv_load_policy: 3
       }
     };
 
@@ -1109,7 +1434,17 @@ class App extends Component {
             
             <Button style={{'margin':'5px'}} onClick={() => this.onSkipVideo()}>Skip Video</Button>
 
-            {!this.state.isUserDJing &&
+            {!this.state.isUserDJing && this.state.disableAddVideoButton && 
+
+              <OverlayTrigger placement="top" overlay={disabledAddVideoButtonTooltip} >
+                <div style={{display: 'inline-block', cursor: 'not-allowed'}}>
+                  <Button style={{'margin':'5px'}} onClick={() => this.onJoinDJ()} disabled>Click to DJ</Button>
+                </div>
+              </OverlayTrigger>
+
+            }
+
+            {!this.state.isUserDJing && !this.state.disableAddVideoButton &&
               <Button style={{'margin':'5px'}} onClick={() => this.onJoinDJ()}>Click to DJ</Button>
             }
 
@@ -1142,14 +1477,6 @@ class App extends Component {
             onPause={this.onPlayerPause} />
 
         </div>
-
-
-
-
-
-
-
-
 
 
 
@@ -1250,11 +1577,72 @@ class App extends Component {
           </Tabs>
         </div>
         
+        <div>
+          <h6>Version Number: {this.state.currentVersion}</h6>
+        </div>
 
 
+        {/* Woot/Meh/Grab stuff */}
+        <div style={{'width': '13%', 'left': (parseInt(this.state.playerWidth.substring(0,this.state.playerWidth.length - 2)) + 7 + 'px'), 'position':'fixed', 'bottom':'0px', 'borderStyle':'solid', 'borderWidth':'5px', 'height':'60px'}}>
+              
+              <div style={{'display':'flex', 'flexWrap':'nowrap', 'alignItems': 'baseline', 'alignContent':'space-between'}}>
 
+                {/* Woot */}
+                <div style={{'width':'33%', 'margin':'10px'}}>           
+                  <svg viewBox="0 0 640 640" width="40" height="40" style={{'cursor':'pointer'}} onClick={this.onClickWoot}>
+                    {!this.state.wooted &&
+                      <path d="M320 117.45L417.63 214.27L515.26 311.1L412.49 311.1L412.49 522.55L227.51 522.55L227.51 311.1L124.74 311.1L222.36 214.27L320 117.45Z"
+                            style={{'fill':'#fff'}}/>
+                    }
+                    
+                    {this.state.wooted &&
+                      <path d="M320 117.45L417.63 214.27L515.26 311.1L412.49 311.1L412.49 522.55L227.51 522.55L227.51 311.1L124.74 311.1L222.36 214.27L320 117.45Z"
+                            style={{'fill':'#008000'}}/>
+                    }
 
+                  </svg>
+                  <span style={{'position':'absolute', 'bottom':'0px', 'fontWeight':'bold'}}>{this.state.wooters.length}</span>
+                </div>
 
+                {/* Meh */}
+                <div style={{'width':'33%', 'margin':'10px'}}>
+                  <svg viewBox="0 0 640 640" width="40" height="40" style={{'cursor':'pointer'}} onClick={this.onClickMeh}>
+                    {!this.state.mehed &&
+                      <path d="M515.26 328.9L417.63 425.73L320 522.55L222.36 425.73L124.74 328.9L227.51 328.9L227.51 117.45L412.49 117.45L412.49 328.9L515.26 328.9Z"
+                            style={{'fill':'#fff'}}/>
+                    }
+
+                    {this.state.mehed &&
+                      <path d="M515.26 328.9L417.63 425.73L320 522.55L222.36 425.73L124.74 328.9L227.51 328.9L227.51 117.45L412.49 117.45L412.49 328.9L515.26 328.9Z"
+                            style={{'fill':'#ff0000'}}/>
+                    }
+                    
+                  </svg>
+                  <span style={{'position':'absolute', 'bottom':'0px', 'fontWeight':'bold'}}>{this.state.mehers.length}</span>
+                </div >
+
+                {/* Grab */}
+                <div style={{'width':'33%', 'margin':'10px'}}>
+                  <svg viewBox="0 0 640 640" width="40" height="40" style={{'cursor':'pointer'}} onClick={this.onClickGrab}>
+                    {!this.state.grabbed &&
+                      <path d="M389.25 250.79L544.09 272.19L432.05 375.98L458.49 522.55L320 453.35L181.51 522.55L207.96 375.98L95.91 272.19L250.76 250.79L320 117.45L389.25 250.79Z"
+                            style={{'fill':'#fff'}}/>
+                    }
+
+                    {this.state.grabbed &&
+                      <path d="M389.25 250.79L544.09 272.19L432.05 375.98L458.49 522.55L320 453.35L181.51 522.55L207.96 375.98L95.91 272.19L250.76 250.79L320 117.45L389.25 250.79Z"
+                            style={{'fill':'#9400D3'}}/>
+                    }
+                    
+                  </svg>
+                  <span style={{'position':'absolute', 'bottom':'0px', 'fontWeight':'bold'}}>{this.state.grabbers.length}</span>
+                </div>
+
+              </div>
+              
+              
+              
+        </div>
 
 
 
@@ -1270,7 +1658,7 @@ class App extends Component {
             <div style={{ 'overflowY': 'auto' }}>
 
               <form onSubmit={(e) => this.onAddVideoSearch(e)}>
-                <input value={this.state.addVideoSearchTerm} onChange={this.handleAddVideoIDChange} />
+                <input value={this.state.addVideoSearchTerm} onChange={this.handleAddVideoIDChange} autoFocus/>
                 <Button onClick={(e) => { this.onAddVideoSearch(e) }}>Search</Button>
               </form>
 
@@ -1284,6 +1672,7 @@ class App extends Component {
                         <img src={imageLink} style={{ 'width': '120px', 'height': '90px' }} />
                         <h5 style={{ 'display': 'inline-block', 'fontWeight': 'bold', 'marginLeft': '5px', 'wordWrap': 'break-all' }}>{value.videoTitle}</h5>
                         <p style={{ 'display': 'inline-block', 'position': 'absolute', 'right': '0px', 'top': '40%' }}>{value.duration}</p>
+                        
                       </div>
                     </ListGroupItem>
                   )
@@ -1307,7 +1696,7 @@ class App extends Component {
                 {this.state.showPlaylistSlideIn &&
                   <div>
                     <Button style={{  }} onClick={this.openAddPlaylistModal}>Add Playlist</Button>
-                    <Button style={{  }} onClick={this.openYoutubeImportModal}>Import Playlist from YouTube</Button>
+                    <Button style={{'marginLeft':'5px'}} onClick={this.openYoutubeImportModal}>Import</Button>
                   </div>
                 }
             </div>
@@ -1329,9 +1718,43 @@ class App extends Component {
 
                 if (title != '') {
                   return (
-                    <ListGroupItem style={{ 'position': 'relative' }} onClick={() => this.changeCurrentPlaylist(index)}>
+                    <ListGroupItem style={{ 'position': 'relative', 'display': 'flex', 'alignItems': 'center'  }} onClick={() => this.changeCurrentPlaylist(index)}>
+
                       <h5 style={{ 'display': 'inline-block', 'fontWeight': 'bold', 'marginLeft': '5px', 'wordWrap': 'break-all' }}>{title}</h5>
                       <h6 style={{ 'display': 'inline-block', 'marginLeft': '2px' }}>({videos.length})</h6>
+
+                      <Button
+                        style= {{ 'display': 'inline-block', 'position': 'absolute', 'right': '55px' }}
+                        onClick={(e) => {e.stopPropagation(); this.shufflePlaylist(index)}}>
+
+                        <svg width="11" height="11" viewBox="0 0 512 512">
+                          <path d="M409.434,82.96c30.04,25.7,60.08,51.42,89.971,77.29c-29.49,26.511-60.15,51.851-90.101,77.9
+                            c0.07-17.43-0.11-34.851,0.061-52.271c-19,0.03-38-0.109-56.99,0.061c-9.13,0.02-17.72,4.58-23.87,11.16
+                            c-54.55,56.779-109.21,113.46-163.74,170.26c-6.06,6.29-14.51,10.4-23.34,10.32c-34.689,0.22-69.39-0.17-104.069,0.229
+                            c-12.891-0.38-23.95-12.06-23.94-24.89c-0.64-13.91,11.62-25.9,25.28-26.311c27.55-0.26,55.13,0.15,82.68-0.189
+                            c10.05-0.061,18.9-5.92,25.24-13.32c53.72-55.939,107.5-111.83,161.25-167.75c6.04-6.59,14.72-10.65,23.68-10.85
+                            c25.939-0.11,51.89,0.1,77.82-0.101C409.313,117.32,409.174,100.141,409.434,82.96z"/>
+                          <path d="M32.764,134.48c37.5-0.311,75.131,0.03,112.69-0.08c9.68-0.43,19.54,3.2,26.12,10.43
+                            c15.609,16.061,31.05,32.311,46.57,48.46c6.359,6.5,9.85,15.96,7.64,24.98c-2.41,11.04-12.98,19.819-24.36,19.71
+                            c-7.729,0.35-14.85-3.59-20.54-8.48c-10.64-11.34-20.84-23.12-31.649-34.31c-6.19-6.3-15.09-9.41-23.83-9.29
+                            c-27.99-0.12-55.98,0.08-83.971-0.09c-11.14-0.34-23.02-5.601-27.13-16.66C7.974,155.07,17.654,137.19,32.764,134.48z"/>
+                          <path d="M261.554,278.17c9.67-7.729,24.83-6.609,33.36,2.32c11.689,11.98,23.13,24.21,34.83,36.18
+                            c6.08,6.41,14.84,10.07,23.67,9.98c18.66-0.07,37.319,0.08,55.99-0.09c-0.19-17.11-0.07-34.221-0.04-51.33
+                            c30.27,25.64,60.31,51.55,90.3,77.52c-29.95,25.95-60.061,51.71-90.221,77.41c-0.38-17.5,0.04-35.01-0.189-52.51
+                            c-25.97-0.24-51.94-0.021-77.91-0.11c-8.95-0.08-17.57-4.35-23.56-10.91c-16.73-17.27-33.73-34.27-50.29-51.689
+                            C247.904,304.471,250.034,286.36,261.554,278.17z"/>
+                        </svg>
+                      </Button>
+
+                      <Button
+                        style= {{ 'display': 'inline-block', 'position': 'absolute', 'right': '5px' }}
+                        onClick={(e) => {e.stopPropagation(); if (window.confirm('Are you sure you wish to delete this item?')) this.deletePlaylist(index)}}>
+
+                        <svg width="11" height="11" viewBox="0 0 1024 1024">
+                          <path d="M192 1024h640l64-704h-768zM640 128v-128h-256v128h-320v192l64-64h768l64 64v-192h-320zM576 128h-128v-64h128v64z"></path>
+                        </svg>
+                      </Button>
+
                     </ListGroupItem>
                   )
                 }
@@ -1350,7 +1773,7 @@ class App extends Component {
             <div style={{ 'overflowY': 'auto' }}>
 
               <form onSubmit={(e) => this.makeNewPlaylist(e)}>
-                <input value={this.state.newPlaylistNameInput} onChange={this.handleNewPlaylistNameChange} />
+                <input value={this.state.newPlaylistNameInput} onChange={this.handleNewPlaylistNameChange} autoFocus/>
                 <Button onClick={(e) => { this.makeNewPlaylist(e) }}>Add</Button>
               </form>
 
@@ -1368,19 +1791,16 @@ class App extends Component {
           <Modal.Body>
             <div style={{ 'overflowY': 'auto' }}>
               <form onSubmit={(e) => this.importPlaylistFromYoutube(e)}>
-                <div >
+                
                   <h6 style={{'display':'inline-block'}}>Playlist Id: </h6>
-                  <input value={this.state.importPlaylistId} onChange={this.handleImportPlaylistIdChange} style={{'display':'inline-block'}}/>
-                </div>
-                
-                <div >
-                  <h6 style={{'display':'inline-block'}}>New Playlist Title: </h6>
-                  <input value={this.state.importPlaylistTitle} onChange={this.handleImportPlaylistTitleChange} />
-                </div>
-                
-                
+                  <input value={this.state.importPlaylistId} onChange={this.handleImportPlaylistIdChange} style={{'display':'inline-block'}} autoFocus/>
+                  <br/>
 
-                <Button onClick={(e) => { this.importPlaylistFromYoutube(e) }}>Add</Button>
+                  <h6 style={{'display':'inline-block'}}>New Playlist Title: </h6>
+                  <input value={this.state.importPlaylistTitle} onChange={this.handleImportPlaylistTitleChange}  />
+                  <br/>
+
+                <Button type="submit">Add</Button>
               </form>
 
             </div>
@@ -1390,14 +1810,52 @@ class App extends Component {
           </Modal.Footer>
         </Modal>
 
+
+
+        <Modal show={this.state.showGrabMenu} onHide={this.closeGrabMenu} bsSize='large'>
+          <Modal.Header closeButton>
+            <Modal.Title>Pick a playlist to add the video to</Modal.Title>
+          </Modal.Header>
+          <Modal.Body>
+            <div style={{ 'overflowY': 'auto' }}>
+              <ListGroup>
+                {this.state.playlists.map((value, index) => {
+                  var title = value.playlistTitle
+                  var videos = value.playlistVideos
+
+                  if (title != '') {
+                    return (
+                      <ListGroupItem style={{ 'position': 'relative', 'display': 'flex', 'alignItems': 'center'  }} onClick={() => this.grabToPlaylist(index)}>
+
+                        <h5 style={{ 'display': 'inline-block', 'fontWeight': 'bold', 'marginLeft': '5px', 'wordWrap': 'break-all' }}>{title}</h5>
+                        <h6 style={{ 'display': 'inline-block', 'marginLeft': '2px' }}>({videos.length})</h6>
+
+                      </ListGroupItem>
+                    )
+                  }
+
+                })}
+              </ListGroup>
+
+            </div>
+          </Modal.Body>
+          <Modal.Footer>
+            <Button onClick={this.closeGrabMenu}>Close</Button>
+          </Modal.Footer>
+        </Modal>
+
+
+
         <Playbar 
+            ref={this.playbarRef}
             onSliderChange={this.onVolumeChange} 
             onToggleMutePlayer={this.onToggleMutePlayer} 
             getPlayerVolume={this.getPlayerVolume} 
             getPlayerIsMuted={this.getPlayerIsMuted}
             userPlayingVideo={this.state.userPlayingVideo}
             currentVideoTitle={this.state.currentVideoTitle}
-            playerWidth={this.state.playerWidth}/>
+            playerWidth={this.state.playerWidth}
+            player={this.state.player}/>
 
       </div>
     );

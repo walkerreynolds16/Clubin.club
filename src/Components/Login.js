@@ -2,6 +2,8 @@ import React, { Component } from "react";
 import { Button, FormGroup, FormControl, ControlLabel } from "react-bootstrap";
 import Axios from 'axios'
 import "../Styles/Login.css";
+import packageJson from '../../package.json'
+import { GoogleLogin } from 'react-google-login';
 
 //API Link
 //https://plug-dj-clone-api.herokuapp.com
@@ -15,12 +17,15 @@ export default class Login extends Component {
 
     this.state = {
       username: "",
-      password: ""
+      password: "",
+      googleResponse: null
     };
   }
 
+  
+
   validateForm() {
-    return this.state.username.length > 0 && this.state.password.length > 0;
+    return this.state.username.length > 0 && this.state.password.length > 0 && !this.props.disableLoginButton;
   }
 
   handleChange = event => {
@@ -51,6 +56,8 @@ export default class Login extends Component {
           this.props.changeLoggedIn(true)
 
           this.forceUpdate()
+        }else if(response.data === 'fuck you'){
+          alert('Fuck you, stop trying to ruin my database')
         }else{
           alert('Your password was wrong, dingus')
         }
@@ -58,36 +65,70 @@ export default class Login extends Component {
 
   }
 
+  responseGoogle = (response) => {
+    console.log(response)
+  }
+
   render() {
     return (
-      <div className="Login">
-        <form onSubmit={this.handleSubmit}>
-          <FormGroup controlId="username" bsSize="large">
-            <ControlLabel>Username</ControlLabel>
-            <FormControl
-              autoFocus
-              type="text"
-              value={this.state.username}
-              onChange={this.handleChange}
-            />
-          </FormGroup>
-          <FormGroup controlId="password" bsSize="large">
-            <ControlLabel>Password</ControlLabel>
-            <FormControl
-              value={this.state.password}
-              onChange={this.handleChange}
-              type="password"
-            />
-          </FormGroup>
-          <Button
-            block
-            bsSize="large"
-            disabled={!this.validateForm()}
-            type="submit"
-          >
-            Login
-          </Button>
-        </form>
+      
+      
+
+      <div>
+        <div style={{'position':'fixed', 'left':'5px', 'top':'5px'}}>
+          Backend Version: {this.props.backEndVersion}
+        </div>
+        <div style={{'position':'fixed', 'left':'5px', 'top':'25px'}}>
+          Frontend Version: {packageJson.projectVersion}
+        </div>
+
+
+        {!this.props.disableLoginButton && 
+          <div className="Login">
+          <form onSubmit={this.handleSubmit}>
+            <FormGroup controlId="username" bsSize="large">
+              <ControlLabel>Username</ControlLabel>
+              <FormControl
+                autoFocus
+                type="text"
+                value={this.state.username}
+                onChange={this.handleChange}
+              />
+            </FormGroup>
+            <FormGroup controlId="password" bsSize="large">
+              <ControlLabel>Password</ControlLabel>
+              <FormControl
+                value={this.state.password}
+                onChange={this.handleChange}
+                type="password"
+              />
+            </FormGroup>
+            <Button
+              block
+              bsSize="large"
+              disabled={!this.validateForm()}
+              type="submit">
+
+              Login
+            </Button>
+          </form>
+        </div>
+        }
+
+
+      {/* <GoogleLogin
+        clientId="1037164592642-dlma0aers6dh2fdd1s602kq5qkmktltk.apps.googleusercontent.com"
+        buttonText="Login"
+        onSuccess={this.responseGoogle}
+        onFailure={this.responseGoogle}
+      /> */}
+
+        {this.props.disableLoginButton &&
+          <div style={{'margin': 'auto', 'width': '50%', 'border': '3px solid white', 'padding': '10px', 'marginTop':'20%', 'color':'white'}}>
+            <h1>You do not have the latest version of the website, please hard refresh(ctrl + shift + R). If this does not work, close your browser and reopen.</h1>
+          </div>
+        }
+        
       </div>
     );
   }

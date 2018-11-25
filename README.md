@@ -3,10 +3,9 @@ Each lobby member may join the queue to play their video. Each member may have p
 Recently, PlugDj changed their UI for the worse and I wanted an alternative application to use with friends. I don't intend on using this clone for commercial use,
 which is a reason why I'm putting this repository on Github. 
 
-As of right now, the Mongo database is not hosted on any server so everything is local. Soon I will have the database running on a public server.
-So in the mean time, you will not be able to store your playlists.
-
 If you would like to run the App
+
+0.) Make sure you have Node.js installed
 
 1.) Clone the repo to desired location
 
@@ -18,8 +17,7 @@ If you would like to run the App
 
 5.) Your default browser should open to the application, but if it doesn't, open for browser and navigate to 'localhost:3000' which is the default location for the app.
 
-As of 10/02/2018, I'm still working on this app and trying to contribute every now and then. If you have questions or improvements, create an issue and I'll look into it.
-
+As of 11/11/2018, I have deployed this app to a production environment which is viewable at https://plug-dj-clone-frontend.herokuapp.com. I will acquiring a domain soon so this URL is only temporary.  
 
 
 **********************************************************************************************
