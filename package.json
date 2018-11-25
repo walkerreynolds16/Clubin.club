@@ -1,13 +1,15 @@
 {
   "name": "app",
   "version": "0.1.0",
-  "projectVersion": "0.200",
+  "projectVersion": "0.300",
   "private": true,
   "dependencies": {
     "axios": "^0.18.0",
+    "color-convert": "^1.9.3",
     "jquery": "^3.3.1",
     "moment": "^2.22.2",
     "moment-duration-format": "^2.2.2",
+    "rc-progress": "^2.2.6",
     "rc-slider": "^8.6.3",
     "rc-tooltip": "^3.7.3",
     "react": "^16.4.2",

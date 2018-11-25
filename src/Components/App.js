@@ -133,6 +133,8 @@ class App extends Component {
   constructor(props) {
     super(props)
 
+    this.playbarRef = React.createRef()
+
     this.state = {
       currentPlaylist: { playlistTitle: '', playlistVideos: [] },
       showAddVideoModal: false,
@@ -431,13 +433,17 @@ class App extends Component {
   onPlayerStateChange = (event) => {
 
     // console.log('state data = ' + event.data)
-    if (event.data === 0) {
-      // this.skipCurrentVideo()
+    if(event.data === -1){
+      this.playbarRef.current.stopTimer()
 
+    }else if (event.data === 0) {
       socket.emit('Event_userFinishedVideo', this.state.currentUser)
+      this.playbarRef.current.stopTimer()
+
+    }else if(event.data === 1){
+      this.playbarRef.current.startTimer()
+
     }
-
-
 
   }
 
@@ -1321,15 +1327,18 @@ class App extends Component {
       this.onClickWoot()
     }
 
-    socket.emit('Event_Grab',
-      {
-        user: this.state.currentUser
-      }
-    )
+    if(!this.state.grabbed){
+      socket.emit('Event_Grab',
+        {
+          user: this.state.currentUser
+        }
+      )
 
-    this.setState({
-      grabbed: true
-    })
+      this.setState({
+        grabbed: true
+      })
+    }
+    
 
     var playlists = this.state.playlists.slice()
     var selectedPlaylist = playlists[index]
@@ -1461,14 +1470,6 @@ class App extends Component {
 
 
 
-
-
-
-
-
-
-
-
         <div >
           <Tabs
             activeKey={this.state.tabKey}
@@ -1590,7 +1591,7 @@ class App extends Component {
                     }
 
                   </svg>
-                  <span style={{'position':'absolute', 'bottom':'0px'}}>{this.state.wooters.length}</span>
+                  <span style={{'position':'absolute', 'bottom':'0px', 'fontWeight':'bold'}}>{this.state.wooters.length}</span>
                 </div>
 
                 {/* Meh */}
@@ -1607,7 +1608,7 @@ class App extends Component {
                     }
                     
                   </svg>
-                  <span style={{'position':'absolute', 'bottom':'0px'}}>{this.state.mehers.length}</span>
+                  <span style={{'position':'absolute', 'bottom':'0px', 'fontWeight':'bold'}}>{this.state.mehers.length}</span>
                 </div >
 
                 {/* Grab */}
@@ -1624,7 +1625,7 @@ class App extends Component {
                     }
                     
                   </svg>
-                  <span style={{'position':'absolute', 'bottom':'0px'}}>{this.state.grabbers.length}</span>
+                  <span style={{'position':'absolute', 'bottom':'0px', 'fontWeight':'bold'}}>{this.state.grabbers.length}</span>
                 </div>
 
               </div>
@@ -1836,13 +1837,15 @@ class App extends Component {
 
 
         <Playbar 
+            ref={this.playbarRef}
             onSliderChange={this.onVolumeChange} 
             onToggleMutePlayer={this.onToggleMutePlayer} 
             getPlayerVolume={this.getPlayerVolume} 
             getPlayerIsMuted={this.getPlayerIsMuted}
             userPlayingVideo={this.state.userPlayingVideo}
             currentVideoTitle={this.state.currentVideoTitle}
-            playerWidth={this.state.playerWidth}/>
+            playerWidth={this.state.playerWidth}
+            player={this.state.player}/>
 
       </div>
     );
