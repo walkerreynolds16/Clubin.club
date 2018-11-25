@@ -19,7 +19,7 @@ import openSocket from 'socket.io-client';
 //API Link
 //https://plug-dj-clone-api.herokuapp.com
 
- const apiEndpoint = 'http://127.0.0.1:5000'
+const apiEndpoint = 'http://127.0.0.1:5000'
 //const apiEndpoint = 'https://plug-dj-clone-api.herokuapp.com'
 
 const socket = openSocket.connect(apiEndpoint, {transports: ['websocket']})
@@ -83,7 +83,7 @@ const messagesStyle = {
 
 }
 
-const SortableItem = SortableElement(({ value, onClickDeleteCallback, listIndex }) => {
+const SortableItem = SortableElement(({ value, onClickDeleteCallback, onClickMoveToBottom, listIndex }) => {
   var image = 'https://img.youtube.com/vi/' + value.videoId + '/0.jpg'
 
   return (
@@ -91,6 +91,8 @@ const SortableItem = SortableElement(({ value, onClickDeleteCallback, listIndex 
       <li style={{ 'display': 'flex', 'alignItems': 'center' }}>
         <img src={image} style={{ 'width': '80px', 'height': '55px' }} />
         <h6 style={{ 'display': 'inline-block', 'fontWeight': 'bold', 'marginLeft': '5px' }}>{value.videoTitle}</h6>
+
+        <Button onClick={() => onClickMoveToBottom(listIndex)}>-></Button>
 
         <Button
           style={{ 'display': 'inline-block', 'position': 'absolute', 'right': '5px' }}
@@ -107,13 +109,13 @@ const SortableItem = SortableElement(({ value, onClickDeleteCallback, listIndex 
   );
 });
 
-const SortableList = SortableContainer(({ items, onClickDeleteCallback }) => {
+const SortableList = SortableContainer(({ items, onClickDeleteCallback, onClickMoveToBottom }) => {
   return (
     <div style={{ 'overflow': 'auto', 'height': '420px' }}>
       <ul>
         {items.map((value, index) => (
 
-          <SortableItem key={`item-${index}`} index={index} value={value} onClickDeleteCallback={onClickDeleteCallback} listIndex={index} />
+          <SortableItem key={`item-${index}`} index={index} value={value} onClickDeleteCallback={onClickDeleteCallback} onClickMoveToBottom={onClickMoveToBottom} listIndex={index} />
         ))}
       </ul>
     </div>
@@ -173,6 +175,7 @@ class App extends Component {
 
     }
   }
+
 
   componentDidMount() {
     this.getCurrentVersion()
@@ -872,6 +875,26 @@ class App extends Component {
     this.forceUpdate()
   }
 
+  onClickMoveToBottom =(index) => {
+
+      var cpCopy = this.state.currentPlaylist
+      var videoToMove = cpCopy.playlistVideos.splice(index,1)[0]
+
+      cpCopy.playlistVideos.push(videoToMove);
+
+      this.updatePlaylistState(cpCopy)
+
+    this.setState({
+      currentPlaylist: cpCopy
+    })
+
+    this.setBackEndPlaylist(cpCopy)
+
+    // console.log('onClickDeleteCallback')
+    this.setBackendCurrentPlaylist(cpCopy)
+
+  }
+
   onClickDeleteCallback = (index) => {
     // console.log('Index = ' + index)
 
@@ -1414,8 +1437,7 @@ class App extends Component {
               
               Add Video</Button>
             
-            }
-            
+            }          
             
 
 
@@ -1452,7 +1474,8 @@ class App extends Component {
                 items={this.state.currentPlaylist.playlistVideos}
                 onSortEnd={this.onSortEnd}
                 distance={5}
-                onClickDeleteCallback={this.onClickDeleteCallback} />
+                onClickDeleteCallback={this.onClickDeleteCallback}
+                onClickMoveToBottom={this.onClickMoveToBottom} />
             </div>
 
           </fieldset>
