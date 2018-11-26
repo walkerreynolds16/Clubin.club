@@ -14,8 +14,8 @@ import shuffle from 'shuffle-array'
 
 import openSocket from 'socket.io-client';
 
-// const apiEndpoint = 'http://127.0.0.1:5000'
-const apiEndpoint = 'https://plug-dj-clone-api.herokuapp.com'
+const apiEndpoint = 'http://127.0.0.1:5000'
+//const apiEndpoint = 'https://plug-dj-clone-api.herokuapp.com'
 
 const socket = openSocket.connect(apiEndpoint, {transports: ['websocket']})
 
@@ -161,6 +161,7 @@ class App extends Component {
       userPlayingVideo: '',
       currentVideoTitle: '',
       messageBoxValue: '',
+      playlistSearchBoxValue: '',
       isUserDJing: false,
       testSetUsername: '',
       startTime: 0,
@@ -1395,6 +1396,23 @@ class App extends Component {
     
   }
 
+  searchPlaylist = (data) =>{
+    for(var i = 0; i < this.state.currentPlaylist.playlistVideos.length; i++)
+    {
+      var currentVid = this.state.currentPlaylist.playlistVideos[i]
+      if(data == currentVid.title)
+      {
+        this.setState({playlistSearchBoxValue: "found"})
+      }
+    }
+  }
+
+  handleSearchBoxChange = (event) => {
+    this.setState({
+      playlistSearchBoxValue: event.target.value
+    })
+  }
+
   render() {
 
     const opts = {
@@ -1473,12 +1491,19 @@ class App extends Component {
               <Button style={{'margin':'5px'}} onClick={() => this.onLeaveDJ()}>Quit DJing</Button>
             }
 
-            {/* <Button style={{ 'marginLeft': '10px' }} onClick={() => this.onLeaveDJ()}>Test</Button> */}
 
 
-
+            
 
             <div style={{ 'marginTop': '10px', 'height':'90%', 'position':'absolute', 'width':'100%'}}>
+
+            <form onSubmit={(e) => this.searchPlaylist(e)}>
+              <input value = {this.state.playlistSearchBoxValue} onChange={this.handleSearchBoxChange} style={{ 'background': '#6f7175', 'color': 'white', 'width':'30%' }}></input>
+
+            </form>
+
+            {<Button onClick={(e) => this.searchPlaylist(e)}>Search</Button> }
+
               <SortableList
                 items={this.state.currentPlaylist.playlistVideos}
                 onSortEnd={this.onSortEnd}
@@ -1548,7 +1573,7 @@ class App extends Component {
                         {this.state.currentUser + ":"}
                       </span>
 
-                      <input value={this.state.messageBoxValue} onChange={this.handleMessageBoxChange} style={{ 'background': '#9699a0', 'color': 'white', 'width':'70%' }}></input>
+                      <input value={this.state.messageBoxValue} onChange={this.handleMessageBoxChange} style={{ 'background': '#6f7175', 'color': 'white', 'width':'70%' }}></input>
                       
                     </div>
 
