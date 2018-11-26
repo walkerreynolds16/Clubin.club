@@ -19,8 +19,8 @@ import openSocket from 'socket.io-client';
 //API Link
 //https://plug-dj-clone-api.herokuapp.com
 
-const apiEndpoint = 'http://127.0.0.1:5000'
-//const apiEndpoint = 'https://plug-dj-clone-api.herokuapp.com'
+// const apiEndpoint = 'http://127.0.0.1:5000'
+const apiEndpoint = 'https://plug-dj-clone-api.herokuapp.com'
 
 const socket = openSocket.connect(apiEndpoint, {transports: ['websocket']})
 
@@ -31,21 +31,23 @@ const youtubeAPIKey = 'AIzaSyD7edp0KrX7oft2f-zL2uEnQFhW4Uj5OvE'
 const currentPlaylistStyle = {
   display: 'inline-block',
   position: 'fixed',
-  width: '21%',
+  width: '35%',
   top: '0px',
   right: '0px',
   background: '#9699a0',
-  border: '2px double #74757E'
+  border: '2px double #74757E',
+  height: '7%'
 }
 
 const listStyle = {
   display: 'inline-block',
   position: 'fixed',
-  width: '21%',
+  width: '35%',
   top: '60px',
   right: '0px',
   background: '#9699a0',
-  border: '2px double #74757E'
+  border: '2px double #74757E',
+  height: '65%'
 }
 
 const playerStyle = {
@@ -57,8 +59,8 @@ const playerStyle = {
 
 const tabStyle = {
   position: 'fixed',
-  height:'35%',
-  width: '21%',
+  height:'25%',
+  width: '35%',
   right: '0px',
   bottom: '0px',
   backgroundColor: '#fff'
@@ -122,7 +124,7 @@ const SortableItem = SortableElement(({ value, onClickDeleteCallback, onClickMov
 
 const SortableList = SortableContainer(({ items, onClickDeleteCallback, onClickMoveToBottom }) => {
   return (
-    <div style={{ 'overflow': 'auto', 'height': '420px' }}>
+    <div style={{ 'overflow': 'auto', 'position':'absolute', 'height':'100%', 'width':'100%' }}>
       <ul>
         {items.map((value, index) => (
 
@@ -1481,7 +1483,7 @@ class App extends Component {
 
 
 
-            <div style={{ 'marginTop': '10px' }}>
+            <div style={{ 'marginTop': '10px', 'height':'90%', 'position':'absolute', 'width':'100%'}}>
               <SortableList
                 items={this.state.currentPlaylist.playlistVideos}
                 onSortEnd={this.onSortEnd}
@@ -1510,14 +1512,14 @@ class App extends Component {
             activeKey={this.state.tabKey}
             onSelect={this.handleTabSelect}
             animation={false}
-            style={{'width':'21%', 'right':'0px', 'position':'fixed', 'bottom':'35%', 'backgroundColor':'#fff'}}>
+            style={{'width':'35%', 'right':'0px', 'position':'fixed', 'bottom':'25%', 'backgroundColor':'#fff'}}>
 
             <Tab style={tabStyle} eventKey={1} title="Chat">
 
               <div>
 
                 {/* Messages div */}
-                <div style={{'position':'absolute', 'width':'100%', 'background': '#9699a0', 'height':'87.5%', 'overflowY':'auto'}}>
+                <div style={{'position':'absolute', 'width':'100%', 'background': '#9699a0', 'height':'83.5%', 'overflowY':'auto'}}>
 
                   <fieldset>
                     <div>
@@ -1541,17 +1543,17 @@ class App extends Component {
 
                   
                 {/* Text box div */}
-                <div style={{'position':'absolute', 'width':'100%', 'background': '#9699a0', 'height':'12%', 'bottom':'0', 'padding':'5px', 'display':'flex'}}>
+                <div style={{'position':'absolute', 'width':'100%', 'background': '#9699a0', 'height':'16%', 'bottom':'0', 'padding':'5px', 'display':'flex'}}>
 
 
                   <form onSubmit={(e) => this.handleSendChatMessage(e)}>
-                    <div style={{ 'position':'relative', 'left':'5px', 'marginTop':'3px' }}>
+                    <div style={{ 'position':'relative', 'left':'5px', 'marginTop':'3px', 'width':'100%', 'position':'absolute' }}>
 
                       <span style={{'color': 'white', 'marginRight':'5px', 'marginLeft':'-5px' }}>
                         {this.state.currentUser + ":"}
                       </span>
 
-                      <input value={this.state.messageBoxValue} onChange={this.handleMessageBoxChange} style={{ 'background': '#9699a0', 'color': 'white' }}></input>
+                      <input value={this.state.messageBoxValue} onChange={this.handleMessageBoxChange} style={{ 'background': '#9699a0', 'color': 'white', 'width':'70%' }}></input>
                       
                     </div>
 
@@ -1608,7 +1610,8 @@ class App extends Component {
 
 
         {/* Woot/Meh/Grab stuff */}
-        <div style={{'width': '13%', 'left': (parseInt(this.state.playerWidth.substring(0,this.state.playerWidth.length - 2)) + 7 + 'px'), 'position':'fixed', 'bottom':'0px', 'borderStyle':'solid', 'borderWidth':'5px', 'height':'60px'}}>
+        {/* <div style={{'width': '13%', 'left': (parseInt(this.state.playerWidth.substring(0,this.state.playerWidth.length - 2)) + 7 + 'px'), 'position':'fixed', 'bottom':'0px', 'borderStyle':'solid', 'borderWidth':'5px', 'height':'60px'}}> */}
+        <div style={{'width': '13%', 'left': '0px', 'position':'fixed', 'bottom':'61px', 'borderStyle':'solid', 'borderWidth':'5px', 'height':'60px'}}>
               
               <div style={{'display':'flex', 'flexWrap':'nowrap', 'alignItems': 'baseline', 'alignContent':'space-between'}}>
 
