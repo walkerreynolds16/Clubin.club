@@ -31,21 +31,23 @@ const youtubeAPIKey = 'AIzaSyD7edp0KrX7oft2f-zL2uEnQFhW4Uj5OvE'
 const currentPlaylistStyle = {
   display: 'inline-block',
   position: 'fixed',
-  width: '21%',
+  width: '35%',
   top: '0px',
   right: '0px',
   background: '#9699a0',
-  border: '2px double #74757E'
+  border: '2px double #74757E',
+  height: '7%'
 }
 
 const listStyle = {
   display: 'inline-block',
   position: 'fixed',
-  width: '21%',
+  width: '35%',
   top: '60px',
   right: '0px',
   background: '#9699a0',
-  border: '2px double #74757E'
+  border: '2px double #74757E',
+  height: '65%'
 }
 
 const playerStyle = {
@@ -57,8 +59,8 @@ const playerStyle = {
 
 const tabStyle = {
   position: 'fixed',
-  height:'35%',
-  width: '21%',
+  height:'25%',
+  width: '35%',
   right: '0px',
   bottom: '0px',
   backgroundColor: '#fff'
@@ -83,7 +85,7 @@ const messagesStyle = {
 
 }
 
-const SortableItem = SortableElement(({ value, onClickDeleteCallback, listIndex }) => {
+const SortableItem = SortableElement(({ value, onClickDeleteCallback, onClickMoveToBottom, listIndex }) => {
   var image = 'https://img.youtube.com/vi/' + value.videoId + '/0.jpg'
 
   return (
@@ -91,6 +93,19 @@ const SortableItem = SortableElement(({ value, onClickDeleteCallback, listIndex 
       <li style={{ 'display': 'flex', 'alignItems': 'center' }}>
         <img src={image} style={{ 'width': '80px', 'height': '55px' }} />
         <h6 style={{ 'display': 'inline-block', 'fontWeight': 'bold', 'marginLeft': '5px' }}>{value.videoTitle}</h6>
+
+        {/*Move to Bottom Button*/}
+        <Button
+        style={{ 'display': 'inline-block', 'position': 'absolute', 'right': '45px' }} 
+        onClick={() => onClickMoveToBottom(listIndex)}>
+        
+        <svg width="11" height="11" viewBox="150 150 1536 1536">
+        <path d="M1523 992q0 13-10 23l-466 466q-10 10-23 10t-23-10l-466-466q-10-10-10-23t10-23l50-50q10-10 23-10t23 10l393 393 393-393q10-10 23-10t23 
+        10l50 50q10 10 10 23zm0-384q0 13-10 23l-466 466q-10 10-23 10t-23-10l-466-466q-10-10-10-23t10-23l50-50q10-10 23-10t23
+         10l393 393 393-393q10-10 23-10t23 10l50 50q10 10 10 23z"></path>
+        </svg>
+
+        </Button>
 
         <Button
           style={{ 'display': 'inline-block', 'position': 'absolute', 'right': '5px' }}
@@ -107,13 +122,13 @@ const SortableItem = SortableElement(({ value, onClickDeleteCallback, listIndex 
   );
 });
 
-const SortableList = SortableContainer(({ items, onClickDeleteCallback }) => {
+const SortableList = SortableContainer(({ items, onClickDeleteCallback, onClickMoveToBottom }) => {
   return (
-    <div style={{ 'overflow': 'auto', 'height': '420px' }}>
+    <div style={{ 'overflow': 'auto', 'position':'absolute', 'height':'100%', 'width':'100%' }}>
       <ul>
         {items.map((value, index) => (
 
-          <SortableItem key={`item-${index}`} index={index} value={value} onClickDeleteCallback={onClickDeleteCallback} listIndex={index} />
+          <SortableItem key={`item-${index}`} index={index} value={value} onClickDeleteCallback={onClickDeleteCallback} onClickMoveToBottom={onClickMoveToBottom} listIndex={index} />
         ))}
       </ul>
     </div>
@@ -173,6 +188,7 @@ class App extends Component {
 
     }
   }
+
 
   componentDidMount() {
     this.getCurrentVersion()
@@ -872,6 +888,26 @@ class App extends Component {
     this.forceUpdate()
   }
 
+  onClickMoveToBottom =(index) => {
+
+      var cpCopy = this.state.currentPlaylist
+      var videoToMove = cpCopy.playlistVideos.splice(index,1)[0]
+
+      cpCopy.playlistVideos.push(videoToMove);
+
+      this.updatePlaylistState(cpCopy)
+
+    this.setState({
+      currentPlaylist: cpCopy
+    })
+
+    this.setBackEndPlaylist(cpCopy)
+
+    // console.log('onClickDeleteCallback')
+    this.setBackendCurrentPlaylist(cpCopy)
+
+  }
+
   onClickDeleteCallback = (index) => {
     // console.log('Index = ' + index)
 
@@ -970,8 +1006,9 @@ class App extends Component {
 
     var user = data.user
     var message = data.message
+    var time = data.time
 
-    this.state.chatMessages.push(user + ": " + message)
+    this.state.chatMessages.push("["+time+"] "+user + ": " + message)
     this.forceUpdate();
   }
 
@@ -1414,8 +1451,7 @@ class App extends Component {
               
               Add Video</Button>
             
-            }
-            
+            }          
             
 
 
@@ -1447,12 +1483,13 @@ class App extends Component {
 
 
 
-            <div style={{ 'marginTop': '10px' }}>
+            <div style={{ 'marginTop': '10px', 'height':'90%', 'position':'absolute', 'width':'100%'}}>
               <SortableList
                 items={this.state.currentPlaylist.playlistVideos}
                 onSortEnd={this.onSortEnd}
                 distance={5}
-                onClickDeleteCallback={this.onClickDeleteCallback} />
+                onClickDeleteCallback={this.onClickDeleteCallback}
+                onClickMoveToBottom={this.onClickMoveToBottom} />
             </div>
 
           </fieldset>
@@ -1475,14 +1512,14 @@ class App extends Component {
             activeKey={this.state.tabKey}
             onSelect={this.handleTabSelect}
             animation={false}
-            style={{'width':'21%', 'right':'0px', 'position':'fixed', 'bottom':'35%', 'backgroundColor':'#fff'}}>
+            style={{'width':'35%', 'right':'0px', 'position':'fixed', 'bottom':'25%', 'backgroundColor':'#fff'}}>
 
             <Tab style={tabStyle} eventKey={1} title="Chat">
 
               <div>
 
                 {/* Messages div */}
-                <div style={{'position':'absolute', 'width':'100%', 'background': '#9699a0', 'height':'87.5%', 'overflowY':'auto'}}>
+                <div style={{'position':'absolute', 'width':'100%', 'background': '#9699a0', 'height':'83.5%', 'overflowY':'auto'}}>
 
                   <fieldset>
                     <div>
@@ -1506,17 +1543,17 @@ class App extends Component {
 
                   
                 {/* Text box div */}
-                <div style={{'position':'absolute', 'width':'100%', 'background': '#9699a0', 'height':'12%', 'bottom':'0', 'padding':'5px', 'display':'flex'}}>
+                <div style={{'position':'absolute', 'width':'100%', 'background': '#9699a0', 'height':'16%', 'bottom':'0', 'padding':'5px', 'display':'flex'}}>
 
 
                   <form onSubmit={(e) => this.handleSendChatMessage(e)}>
-                    <div style={{ 'position':'relative', 'left':'5px', 'marginTop':'3px' }}>
+                    <div style={{ 'position':'relative', 'left':'5px', 'marginTop':'3px', 'width':'100%', 'position':'absolute' }}>
 
                       <span style={{'color': 'white', 'marginRight':'5px', 'marginLeft':'-5px' }}>
                         {this.state.currentUser + ":"}
                       </span>
 
-                      <input value={this.state.messageBoxValue} onChange={this.handleMessageBoxChange} style={{ 'background': '#9699a0', 'color': 'white' }}></input>
+                      <input value={this.state.messageBoxValue} onChange={this.handleMessageBoxChange} style={{ 'background': '#9699a0', 'color': 'white', 'width':'70%' }}></input>
                       
                     </div>
 
@@ -1573,7 +1610,8 @@ class App extends Component {
 
 
         {/* Woot/Meh/Grab stuff */}
-        <div style={{'width': '13%', 'left': (parseInt(this.state.playerWidth.substring(0,this.state.playerWidth.length - 2)) + 7 + 'px'), 'position':'fixed', 'bottom':'0px', 'borderStyle':'solid', 'borderWidth':'5px', 'height':'60px'}}>
+        {/* <div style={{'width': '13%', 'left': (parseInt(this.state.playerWidth.substring(0,this.state.playerWidth.length - 2)) + 7 + 'px'), 'position':'fixed', 'bottom':'0px', 'borderStyle':'solid', 'borderWidth':'5px', 'height':'60px'}}> */}
+        <div style={{'width': '13%', 'left': '0px', 'position':'fixed', 'bottom':'61px', 'borderStyle':'solid', 'borderWidth':'5px', 'height':'60px'}}>
               
               <div style={{'display':'flex', 'flexWrap':'nowrap', 'alignItems': 'baseline', 'alignContent':'space-between'}}>
 
