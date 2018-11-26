@@ -1396,15 +1396,27 @@ class App extends Component {
     
   }
 
-  searchPlaylist = (data) =>{
+  searchPlaylist = (e) =>{
+
+    if(e !== undefined)
+    {
+      e.preventDefault();
+    }
+
     for(var i = 0; i < this.state.currentPlaylist.playlistVideos.length; i++)
     {
       var currentVid = this.state.currentPlaylist.playlistVideos[i]
-      if(data == currentVid.title)
+      var vidTitle = currentVid['videoTitle']
+
+      if(vidTitle.toLowerCase().indexOf(this.state.playlistSearchBoxValue) !== -1)
       {
-        this.setState({playlistSearchBoxValue: "found"})
+        /**Change this once selection is made */
+        this.setState({playlistSearchBoxValue: vidTitle + " " + this.state.playlistSearchBoxValue})
+        break;
       }
     }
+
+    this.forceUpdate();
   }
 
   handleSearchBoxChange = (event) => {
