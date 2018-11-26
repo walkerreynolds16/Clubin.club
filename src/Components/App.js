@@ -14,8 +14,8 @@ import shuffle from 'shuffle-array'
 
 import openSocket from 'socket.io-client';
 
-// const apiEndpoint = 'http://127.0.0.1:5000'
-const apiEndpoint = 'https://plug-dj-clone-api.herokuapp.com'
+const apiEndpoint = 'http://127.0.0.1:5000'
+// const apiEndpoint = 'https://plug-dj-clone-api.herokuapp.com'
 
 const socket = openSocket.connect(apiEndpoint, {transports: ['websocket']})
 
@@ -1580,7 +1580,7 @@ class App extends Component {
               </div>
 
             </Tab>
-            <Tab eventKey={3} title="DJ Queue" style={tabStyle}>
+            <Tab eventKey={3} title={"DJ Queue (" + this.state.DJQueue.length + ")"} style={tabStyle}>
               
               <div style={messagesStyle}>
                 {this.state.DJQueue.map((value, index) => {
@@ -1606,7 +1606,7 @@ class App extends Component {
 
         {/* Woot/Meh/Grab stuff */}
         {/* <div style={{'width': '13%', 'left': (parseInt(this.state.playerWidth.substring(0,this.state.playerWidth.length - 2)) + 7 + 'px'), 'position':'fixed', 'bottom':'0px', 'borderStyle':'solid', 'borderWidth':'5px', 'height':'60px'}}> */}
-        <div style={{'width': '13%', 'left': '0px', 'position':'fixed', 'bottom':'61px', 'borderStyle':'solid', 'borderWidth':'5px', 'height':'60px'}}>
+        <div style={{'width': '13%', 'right': '35%', 'position':'fixed', 'bottom':'61px', 'borderStyle':'solid', 'borderWidth':'5px', 'height':'60px'}}>
               
               <div style={{'display':'flex', 'flexWrap':'nowrap', 'alignItems': 'baseline', 'alignContent':'space-between'}}>
 

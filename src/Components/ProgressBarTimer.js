@@ -51,8 +51,12 @@ export default class ProgressBarTimer extends Component {
         var progressPercentage = 100 - ((remaining/duration) * 100)
         // console.log(progressPercentage)
 
-        var formattedRemaining = (new Date(remaining * 1000)).toUTCString().match(/(\d\d:\d\d:\d\d)/)[0]
-        console.log(formattedRemaining)
+        var rem = (new Date(remaining * 1000)).toUTCString().match(/(\d\d:\d\d:\d\d)/)
+        var formattedRemaining = '00:00'
+
+        if(rem !== null){
+          formattedRemaining = rem[0]
+        }
 
         this.setState({
           progressPercentage: progressPercentage,
