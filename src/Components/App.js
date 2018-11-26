@@ -1,5 +1,4 @@
 import React, { Component } from 'react';
-import Login from '../Components/Login'
 import Playbar from '../Components/Playbar';
 import YouTube from 'react-youtube';
 import { SortableContainer, SortableElement, arrayMove } from 'react-sortable-hoc';
@@ -420,6 +419,9 @@ class App extends Component {
       //   video = newCurrentPlaylist.playlistVideos[0].videoId
       //   this.forceUpdate()
       // }
+
+      this.updatePlaylistState(newCurrentPlaylist)
+
   
       this.setBackEndPlaylist(newCurrentPlaylist)
   
