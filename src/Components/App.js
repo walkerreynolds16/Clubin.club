@@ -1004,8 +1004,9 @@ class App extends Component {
 
     var user = data.user
     var message = data.message
+    var time = data.time
 
-    this.state.chatMessages.push(user + ": " + message)
+    this.state.chatMessages.push("["+time+"] "+user + ": " + message)
     this.forceUpdate();
   }
 
