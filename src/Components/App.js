@@ -14,11 +14,6 @@ import shuffle from 'shuffle-array'
 
 import openSocket from 'socket.io-client';
 
-
-
-//API Link
-//https://plug-dj-clone-api.herokuapp.com
-
 // const apiEndpoint = 'http://127.0.0.1:5000'
 const apiEndpoint = 'https://plug-dj-clone-api.herokuapp.com'
 
@@ -1429,7 +1424,7 @@ class App extends Component {
         </div>
 
         <div style={listStyle}>
-          <fieldset style={{ 'border': 'p2' }}>
+          <fieldset style={{ 'border': 'p2', 'textAlign':'center' }}>
 
             {this.state.disableAddVideoButton && 
               <OverlayTrigger placement="left" overlay={disabledAddVideoButtonTooltip} >
@@ -1570,7 +1565,7 @@ class App extends Component {
 
 
             </Tab>
-            <Tab eventKey={2} title="Connected Users" style={tabStyle}>
+            <Tab eventKey={2} title={"Connected Users (" + this.state.clients.length + ")"} style={tabStyle}>
 
               <div style={messagesStyle}>
                 {this.state.clients.map((value, index) => {
