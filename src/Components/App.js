@@ -14,8 +14,8 @@ import shuffle from 'shuffle-array'
 
 import openSocket from 'socket.io-client';
 
-const apiEndpoint = 'http://127.0.0.1:5000'
-// const apiEndpoint = 'https://plug-dj-clone-api.herokuapp.com'
+// const apiEndpoint = 'http://127.0.0.1:5000'
+const apiEndpoint = 'https://plug-dj-clone-api.herokuapp.com'
 
 const socket = openSocket.connect(apiEndpoint, {transports: ['websocket']})
 
