@@ -1,6 +1,8 @@
 import React, { Component } from 'react'
 import {Line} from 'rc-progress'
 import CC from 'color-convert'
+import Moment from 'moment'
+import 'moment-duration-format'
 
 
 export default class ProgressBarTimer extends Component {
@@ -11,7 +13,8 @@ export default class ProgressBarTimer extends Component {
         timerOn: false,
         waitInterval: 100,
         progressPercentage: 0,
-        progressColor: '#000000'
+        progressColor: '#000000',
+        formattedRemaining: '00:00:00'
     }
   }
 
@@ -48,8 +51,12 @@ export default class ProgressBarTimer extends Component {
         var progressPercentage = 100 - ((remaining/duration) * 100)
         // console.log(progressPercentage)
 
+        var formattedRemaining = (new Date(remaining * 1000)).toUTCString().match(/(\d\d:\d\d:\d\d)/)[0]
+        console.log(formattedRemaining)
+
         this.setState({
-          progressPercentage: progressPercentage
+          progressPercentage: progressPercentage,
+          formattedRemaining: formattedRemaining
         })
 
         this.forceUpdate()
@@ -85,6 +92,7 @@ export default class ProgressBarTimer extends Component {
     return (
       <div style={{'width':'57%', 'position':'absolute', 'left':'20%'}}>
         <Line percent={this.state.progressPercentage} strokeWidth=".5" strokeColor={this.state.progressColor} />
+        <span>{this.state.formattedRemaining}</span>
       </div>
     )
   }
