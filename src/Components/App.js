@@ -92,7 +92,18 @@ const SortableItem = SortableElement(({ value, onClickDeleteCallback, onClickMov
         <img src={image} style={{ 'width': '80px', 'height': '55px' }} />
         <h6 style={{ 'display': 'inline-block', 'fontWeight': 'bold', 'marginLeft': '5px' }}>{value.videoTitle}</h6>
 
-        <Button onClick={() => onClickMoveToBottom(listIndex)}>-></Button>
+        {/*Move to Bottom Button*/}
+        <Button
+        style={{ 'display': 'inline-block', 'position': 'absolute', 'right': '45px' }} 
+        onClick={() => onClickMoveToBottom(listIndex)}>
+        
+        <svg width="11" height="11" viewBox="150 150 1536 1536">
+        <path d="M1523 992q0 13-10 23l-466 466q-10 10-23 10t-23-10l-466-466q-10-10-10-23t10-23l50-50q10-10 23-10t23 10l393 393 393-393q10-10 23-10t23 
+        10l50 50q10 10 10 23zm0-384q0 13-10 23l-466 466q-10 10-23 10t-23-10l-466-466q-10-10-10-23t10-23l50-50q10-10 23-10t23
+         10l393 393 393-393q10-10 23-10t23 10l50 50q10 10 10 23z"></path>
+        </svg>
+
+        </Button>
 
         <Button
           style={{ 'display': 'inline-block', 'position': 'absolute', 'right': '5px' }}
