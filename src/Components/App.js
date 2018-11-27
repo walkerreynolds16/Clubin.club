@@ -217,8 +217,20 @@ class App extends Component {
     socket.on('Event_grabChanged', (data) => this.handleGrabChange(data))
 
 
+    this.startKeepBackendAlive()
+
     this.handleConnect()
 
+
+
+  }
+
+  startKeepBackendAlive = () => {
+    var intervalTime = (60 * 10) * 1000
+
+    this.getCurrentVersion()
+
+    this.setTimeout(this.startKeepBackendAlive, intervalTime)
   }
 
   getCurrentVideoMetrics = () => {
