@@ -230,7 +230,7 @@ class App extends Component {
 
     this.getCurrentVersion()
 
-    this.setTimeout(this.startKeepBackendAlive, intervalTime)
+    setTimeout(this.startKeepBackendAlive, intervalTime)
   }
 
   getCurrentVideoMetrics = () => {
