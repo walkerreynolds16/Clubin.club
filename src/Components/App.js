@@ -155,6 +155,7 @@ class App extends Component {
       currentUser: this.props.loginUsername,
       showPlaylistSlideIn: false,
       playlists: [],
+      searchedVideos: [],
       showAddPlaylistModal: false,
       newPlaylistNameInput: '',
       chatMessages: [],
@@ -1410,11 +1411,14 @@ class App extends Component {
 
       if(vidTitle.toLowerCase().indexOf(this.state.playlistSearchBoxValue) !== -1)
       {
-        /**Change this once selection is made */
-        this.setState({playlistSearchBoxValue: vidTitle + " " + this.state.playlistSearchBoxValue})
-        break;
+        /*This array holds the list of videos that have been found with the substring we get
+        from above*/
+        this.state.searchedVideos.push(currentVid)
       }
     }
+
+    //var currentVideos = this.state.currentPlaylist.playlistVideos
+    this.state.currentPlaylist.currentPlaylistVideos = this.state.searchedVideos
 
     this.forceUpdate();
   }
