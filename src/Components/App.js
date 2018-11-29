@@ -1044,6 +1044,8 @@ class App extends Component {
       // console.log('userPlayingVideo in new video = ' + user)
       // console.log('currentVideoTitle in new video = ' + videoTitle)
 
+      this.updatePlaylistState(newCurrentPlaylist)
+
       this.setState({
         currentPlaylist: newCurrentPlaylist        
       });
