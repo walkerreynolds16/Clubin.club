@@ -1,5 +1,4 @@
 import React, { Component } from 'react';
-import Login from '../Components/Login'
 import Playbar from '../Components/Playbar';
 import YouTube from 'react-youtube';
 import { SortableContainer, SortableElement, arrayMove } from 'react-sortable-hoc';
@@ -220,8 +219,20 @@ class App extends Component {
     socket.on('Event_grabChanged', (data) => this.handleGrabChange(data))
 
 
+    this.startKeepBackendAlive()
+
     this.handleConnect()
 
+
+
+  }
+
+  startKeepBackendAlive = () => {
+    var intervalTime = (60 * 10) * 1000
+
+    this.getCurrentVersion()
+
+    setTimeout(this.startKeepBackendAlive, intervalTime)
   }
 
   getCurrentVideoMetrics = () => {
@@ -422,6 +433,9 @@ class App extends Component {
       //   video = newCurrentPlaylist.playlistVideos[0].videoId
       //   this.forceUpdate()
       // }
+
+      this.updatePlaylistState(newCurrentPlaylist)
+
   
       this.setBackEndPlaylist(newCurrentPlaylist)
   
@@ -1411,7 +1425,7 @@ class App extends Component {
       var currentVid = this.state.currentPlaylist.playlistVideos[i]
       var vidTitle = currentVid['videoTitle']
 
-      if(vidTitle.toLowerCase().indexOf(this.state.playlistSearchBoxValue) !== -1)
+      if(vidTitle.toLowerCase().indexOf(this.state.playlistSearchBoxValue.toLowerCase) !== -1)
       {
         /*This array holds the list of videos that have been found with the substring we get
         from above*/
