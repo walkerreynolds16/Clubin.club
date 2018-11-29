@@ -1583,8 +1583,48 @@ class App extends Component {
 
               <div style={messagesStyle}>
                 {this.state.clients.map((value, index) => {
+                  var username = value.user
+                  var hasWooted = this.state.wooters.includes(username)
+                  var hasMehed = this.state.mehers.includes(username)
+                  var hasGrabbed = this.state.grabbers.includes(username)
+
                   return (
-                    <h6 style={{ 'color': 'white', 'font-size': '100%', 'marginLeft':'5px'}}>{value.user}</h6>
+                    <div>
+                      {hasGrabbed && 
+                        <div style={{'display':'flex', 'alignItems':'center'}}>
+                          <h6 style={{ 'color': 'white', 'font-size': '100%', 'marginLeft':'5px', 'marginTop':'0px', 'marginBottom':'0px'}}>{value.user}</h6>
+                          <svg viewBox="0 0 640 640" width="20" height="20" style={{'marginLeft':'5px'}}>
+                            <path d="M389.25 250.79L544.09 272.19L432.05 375.98L458.49 522.55L320 453.35L181.51 522.55L207.96 375.98L95.91 272.19L250.76 250.79L320 117.45L389.25 250.79Z"
+                                  style={{'fill':'#9400D3'}}/>
+                          </svg>
+                        </div>
+                      }
+
+                      {hasMehed && 
+                        <div style={{'display':'flex', 'alignItems':'center'}}>
+                          <h6 style={{ 'color': 'white', 'font-size': '100%', 'marginLeft':'5px', 'marginTop':'0px', 'marginBottom':'0px'}}>{value.user}</h6>
+                          <svg viewBox="0 0 640 640" width="20" height="20" style={{'marginLeft':'5px'}}>
+                            <path d="M515.26 328.9L417.63 425.73L320 522.55L222.36 425.73L124.74 328.9L227.51 328.9L227.51 117.45L412.49 117.45L412.49 328.9L515.26 328.9Z"
+                                  style={{'fill':'#ff0000'}}/>
+                          </svg>
+                        </div>
+                      }
+
+                      {hasWooted && !hasGrabbed &&
+                        <div style={{'display':'flex', 'alignItems':'center'}}>
+                          <h6 style={{ 'color': 'white', 'font-size': '100%', 'marginLeft':'5px', 'marginTop':'0px', 'marginBottom':'0px'}}>{value.user}</h6>
+                          <svg viewBox="0 0 640 640" width="20" height="20" style={{'marginLeft':'5px'}}>
+                            <path d="M320 117.45L417.63 214.27L515.26 311.1L412.49 311.1L412.49 522.55L227.51 522.55L227.51 311.1L124.74 311.1L222.36 214.27L320 117.45Z"
+                              style={{'fill':'#008000'}}/>
+                          </svg>
+                        </div>
+                      }
+
+                      {!hasGrabbed && !hasWooted && !hasMehed &&
+                        <h6 style={{ 'color': 'white', 'font-size': '100%', 'marginLeft':'5px'}}>{value.user}</h6>
+                      }
+
+                    </div>
                   )
                 })}
 
