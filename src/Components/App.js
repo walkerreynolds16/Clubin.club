@@ -10,11 +10,15 @@ import 'react-slide-out/lib/index.css'
 import Moment from 'moment'
 import 'moment-duration-format'
 import shuffle from 'shuffle-array'
+import {API_ENDPOINT} from '../api-config.js'
+
 
 import openSocket from 'socket.io-client';
 
 // const apiEndpoint = 'http://127.0.0.1:5000'
-const apiEndpoint = 'https://plug-dj-clone-api.herokuapp.com'
+// const apiEndpoint = 'https://plug-dj-clone-api.herokuapp.com'
+const apiEndpoint = API_ENDPOINT
+
 
 const socket = openSocket.connect(apiEndpoint, {transports: ['websocket']})
 
@@ -185,6 +189,7 @@ class App extends Component {
 
 
   componentDidMount() {
+
     this.getCurrentVersion()
 
     this.updateWindowDimensions()

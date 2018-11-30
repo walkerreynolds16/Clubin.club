@@ -4,12 +4,16 @@ import Axios from 'axios'
 import "../Styles/Login.css";
 import packageJson from '../../package.json'
 import { GoogleLogin } from 'react-google-login';
+import {API_ENDPOINT} from '../api-config.js'
+
 
 //API Link
 //https://plug-dj-clone-api.herokuapp.com
 
 // const apiEndpoint = 'http://127.0.0.1:5000'
-const apiEndpoint = 'https://plug-dj-clone-api.herokuapp.com'
+// const apiEndpoint = 'https://plug-dj-clone-api.herokuapp.com'
+const apiEndpoint = API_ENDPOINT
+
 
 export default class Login extends Component {
   constructor(props) {
