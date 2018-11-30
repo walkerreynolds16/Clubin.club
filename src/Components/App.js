@@ -188,7 +188,7 @@ class App extends Component {
     this.getCurrentVersion()
 
     this.updateWindowDimensions()
-    window.addEventListener('resize', this.updateWindowDimensions);
+    // window.addEventListener('resize', this.updateWindowDimensions);
 
     window.addEventListener("beforeunload", (ev) => this.handleWindowClose(ev));
 
@@ -221,7 +221,7 @@ class App extends Component {
 
     this.handleConnect()
 
-
+    
 
   }
 
@@ -313,7 +313,8 @@ class App extends Component {
     // console.log(data.clients)
 
     this.setState({
-      clients: data.clients
+      clients: data.clients,
+      DJQueue: data.djQueue
     })
 
   }
@@ -353,7 +354,7 @@ class App extends Component {
   handleConnect = () => {
     socket.emit('Event_userConnected', this.state.currentUser)
 
-    this.getCurrentVideo()
+    // this.getCurrentVideo()
 
     //Send message to everyone saying that a user has connected
     socket.emit('Event_sendChatMessage',
