@@ -93,12 +93,14 @@ const SortableItem = SortableElement(({ value, onClickDeleteCallback, onClickMov
         <h6 style={{ 'display': 'inline-block', 'fontWeight': 'bold', 'marginLeft': '5px' }}>{value.videoTitle}</h6>
 
         <Button
-          style={{ 'display': 'inline-block', 'position': 'absolute', 'right': '45px' }} 
+          style={{ 'display': 'inline-block', 'position': 'absolute', 'right': '85px' }} 
           onClick={() => onClickMoveToTop(listIndex)}>
           
           <svg width="11" height="11" viewBox="150 150 1536 1536">
-          <path d="M518.47 474L320 311.15L121.53 474L96.19 443.58L319.63 260.24L320 260.68L320.37 260.24L543.81 443.58L518.47 
-                  474ZM320.37 166L543.81 349.34L518.47 379.76L320 216.91L121.53 379.76L96.19 349.34L319.63 166L320 166.44L320.37 166Z" />
+            <path d="m1523,992q0,13 -10,23l-466,466q-10,10 -23,10t-23,-10l-466,-466q-10,-10 -10,-23t10,-23l50,-50q10,-10 23,-10t23,
+            10l393,393l393,-393q10,-10 23,-10t23,10l50,50q10,10 10,23zm0,-384q0,13 -10,23l-466,466q-10,10 -23,10t-23,-10l-466,-466q-10,-10 -10,-23t10,
+            -23l50,-50q10,-10 23,-10t23,10l393,393l393,-393q10,-10 23,-10t23,10l50,50q10,10 10,23z" fill="black" id="svg_1" transform="rotate(180 1024 1008)"/>
+          
           </svg>
 
         </Button>
@@ -109,9 +111,9 @@ const SortableItem = SortableElement(({ value, onClickDeleteCallback, onClickMov
           onClick={() => onClickMoveToBottom(listIndex)}>
           
           <svg width="11" height="11" viewBox="150 150 1536 1536">
-          <path d="M1523 992q0 13-10 23l-466 466q-10 10-23 10t-23-10l-466-466q-10-10-10-23t10-23l50-50q10-10 23-10t23 10l393 393 393-393q10-10 23-10t23 
-          10l50 50q10 10 10 23zm0-384q0 13-10 23l-466 466q-10 10-23 10t-23-10l-466-466q-10-10-10-23t10-23l50-50q10-10 23-10t23
-          10l393 393 393-393q10-10 23-10t23 10l50 50q10 10 10 23z"></path>
+            <path d="M1523 992q0 13-10 23l-466 466q-10 10-23 10t-23-10l-466-466q-10-10-10-23t10-23l50-50q10-10 23-10t23 10l393 393 393-393q10-10 23-10t23 
+            10l50 50q10 10 10 23zm0-384q0 13-10 23l-466 466q-10 10-23 10t-23-10l-466-466q-10-10-10-23t10-23l50-50q10-10 23-10t23
+            10l393 393 393-393q10-10 23-10t23 10l50 50q10 10 10 23z"></path>
           </svg>
 
         </Button>
@@ -916,12 +918,12 @@ class App extends Component {
 
   onClickMoveToBottom =(index) => {
 
-      var cpCopy = this.state.currentPlaylist
-      var videoToMove = cpCopy.playlistVideos.splice(index,1)[0]
+    var cpCopy = this.state.currentPlaylist
+    var videoToMove = cpCopy.playlistVideos.splice(index,1)[0]
 
-      cpCopy.playlistVideos.push(videoToMove);
+    cpCopy.playlistVideos.push(videoToMove);
 
-      this.updatePlaylistState(cpCopy)
+    this.updatePlaylistState(cpCopy)
 
     this.setState({
       currentPlaylist: cpCopy
@@ -1429,7 +1431,21 @@ class App extends Component {
   }
 
   onClickMoveToTop = (index) => {
+    var cpCopy = this.state.currentPlaylist
+    var videoToMove = cpCopy.playlistVideos.splice(index,1)[0]
 
+    cpCopy.playlistVideos.unshift(videoToMove);
+
+    this.updatePlaylistState(cpCopy)
+
+    this.setState({
+      currentPlaylist: cpCopy
+    })
+
+    this.setBackEndPlaylist(cpCopy)
+
+    // console.log('onClickDeleteCallback')
+    this.setBackendCurrentPlaylist(cpCopy)
   }
 
   render() {
