@@ -79,7 +79,7 @@ const messagesStyle = {
 
 }
 
-const SortableItem = SortableElement(({ value, onClickDeleteCallback, onClickMoveToBottom, listIndex }) => {
+const SortableItem = SortableElement(({ value, onClickDeleteCallback, onClickMoveToBottom, onClickMoveToTop, listIndex }) => {
   var image = 'https://img.youtube.com/vi/' + value.videoId + '/0.jpg'
 
   return (
@@ -88,16 +88,27 @@ const SortableItem = SortableElement(({ value, onClickDeleteCallback, onClickMov
         <img src={image} style={{ 'width': '80px', 'height': '55px' }} />
         <h6 style={{ 'display': 'inline-block', 'fontWeight': 'bold', 'marginLeft': '5px' }}>{value.videoTitle}</h6>
 
+        <Button
+          style={{ 'display': 'inline-block', 'position': 'absolute', 'right': '45px' }} 
+          onClick={() => onClickMoveToTop(listIndex)}>
+          
+          <svg width="11" height="11" viewBox="150 150 1536 1536">
+          <path d="M518.47 474L320 311.15L121.53 474L96.19 443.58L319.63 260.24L320 260.68L320.37 260.24L543.81 443.58L518.47 
+                  474ZM320.37 166L543.81 349.34L518.47 379.76L320 216.91L121.53 379.76L96.19 349.34L319.63 166L320 166.44L320.37 166Z" />
+          </svg>
+
+        </Button>
+
         {/*Move to Bottom Button*/}
         <Button
-        style={{ 'display': 'inline-block', 'position': 'absolute', 'right': '45px' }} 
-        onClick={() => onClickMoveToBottom(listIndex)}>
-        
-        <svg width="11" height="11" viewBox="150 150 1536 1536">
-        <path d="M1523 992q0 13-10 23l-466 466q-10 10-23 10t-23-10l-466-466q-10-10-10-23t10-23l50-50q10-10 23-10t23 10l393 393 393-393q10-10 23-10t23 
-        10l50 50q10 10 10 23zm0-384q0 13-10 23l-466 466q-10 10-23 10t-23-10l-466-466q-10-10-10-23t10-23l50-50q10-10 23-10t23
-         10l393 393 393-393q10-10 23-10t23 10l50 50q10 10 10 23z"></path>
-        </svg>
+          style={{ 'display': 'inline-block', 'position': 'absolute', 'right': '45px' }} 
+          onClick={() => onClickMoveToBottom(listIndex)}>
+          
+          <svg width="11" height="11" viewBox="150 150 1536 1536">
+          <path d="M1523 992q0 13-10 23l-466 466q-10 10-23 10t-23-10l-466-466q-10-10-10-23t10-23l50-50q10-10 23-10t23 10l393 393 393-393q10-10 23-10t23 
+          10l50 50q10 10 10 23zm0-384q0 13-10 23l-466 466q-10 10-23 10t-23-10l-466-466q-10-10-10-23t10-23l50-50q10-10 23-10t23
+          10l393 393 393-393q10-10 23-10t23 10l50 50q10 10 10 23z"></path>
+          </svg>
 
         </Button>
 
@@ -116,13 +127,13 @@ const SortableItem = SortableElement(({ value, onClickDeleteCallback, onClickMov
   );
 });
 
-const SortableList = SortableContainer(({ items, onClickDeleteCallback, onClickMoveToBottom }) => {
+const SortableList = SortableContainer(({ items, onClickDeleteCallback, onClickMoveToBottom, onClickMoveToTop }) => {
   return (
     <div style={{ 'overflow': 'auto', 'position':'absolute', 'height':'100%', 'width':'100%' }}>
       <ul>
         {items.map((value, index) => (
 
-          <SortableItem key={`item-${index}`} index={index} value={value} onClickDeleteCallback={onClickDeleteCallback} onClickMoveToBottom={onClickMoveToBottom} listIndex={index} />
+          <SortableItem key={`item-${index}`} index={index} value={value} onClickDeleteCallback={onClickDeleteCallback} onClickMoveToBottom={onClickMoveToBottom} onClickMoveToTop={onClickMoveToTop}listIndex={index} />
         ))}
       </ul>
     </div>
@@ -1412,6 +1423,10 @@ class App extends Component {
     
   }
 
+  onClickMoveToTop = (index) => {
+
+  }
+
   render() {
 
     const opts = {
@@ -1501,7 +1516,8 @@ class App extends Component {
                 onSortEnd={this.onSortEnd}
                 distance={5}
                 onClickDeleteCallback={this.onClickDeleteCallback}
-                onClickMoveToBottom={this.onClickMoveToBottom} />
+                onClickMoveToBottom={this.onClickMoveToBottom}
+                onClickMoveToTop={this.onClickMoveToTop} />
             </div>
 
           </fieldset>
