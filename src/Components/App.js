@@ -13,8 +13,8 @@ import shuffle from 'shuffle-array'
 
 import openSocket from 'socket.io-client';
 
-const apiEndpoint = 'http://127.0.0.1:5000'
-//const apiEndpoint = 'https://plug-dj-clone-api.herokuapp.com'
+//const apiEndpoint = 'http://127.0.0.1:5000'
+const apiEndpoint = 'https://plug-dj-clone-api.herokuapp.com'
 
 const socket = openSocket.connect(apiEndpoint, {transports: ['websocket']})
 
@@ -156,6 +156,8 @@ class App extends Component {
       playlists: [],
       //searchedVideos: [],
       showAddPlaylistModal: false,
+      showVideoHistoryModal: false,
+      videoHistory: [],
       newPlaylistNameInput: '',
       chatMessages: [],
       userPlayingVideo: '',
@@ -519,6 +521,18 @@ class App extends Component {
       showAddVideoModal: false,
       searchList: [],
       addVideoSearchTerm: ''
+    })
+  }
+
+  onShowVideoHistoryModal = () => {
+    this.setState({
+      showVideoHistoryModal: true
+    })
+  }
+
+  onCloseVideoHistoryModal = () =>{
+    this.setState({
+      showVideoHistoryModal: false
     })
   }
 
@@ -1030,10 +1044,13 @@ class App extends Component {
     var videoId = data.videoId
     var videoTitle = data.videoTitle
 
+    this.state.videoHistory.push(data)
+
     // console.log('handle next video')
     // console.log(data)
 
     video = videoId
+
 
     this.setState({
       startTime: 0
@@ -1041,6 +1058,7 @@ class App extends Component {
 
     if (user == this.state.currentUser) {
       //sorts the playlist after users video is picked to be played
+      
       var newCurrentPlaylist = { playlistTitle: this.state.currentPlaylist.playlistTitle, playlistVideos: arrayMove(this.state.currentPlaylist.playlistVideos, 0, this.state.currentPlaylist.playlistVideos.length - 1) }
 
       // console.log('userPlayingVideo in new video = ' + user)
@@ -1468,6 +1486,8 @@ class App extends Component {
     };
 
     var playlistSlideInTitle = 'Current Playlist: ' + this.state.currentPlaylist.playlistTitle
+    var showVideoHistoryModal = 'Recently Played'
+
 
     return (
       <div>
@@ -1530,11 +1550,11 @@ class App extends Component {
               <Button style={{'margin':'5px'}} onClick={() => this.onLeaveDJ()}>Quit DJing</Button>
             }
 
-
+            <Button style={{'margin': '5px'}} onClick={this.onShowVideoHistoryModal}>Video History</Button>
 
             
-
-            <div style={{ 'marginTop': '10px', 'height':'90%', 'position':'absolute', 'width':'100%'}}>
+            {/*Search Box */}
+            {/* <div style={{ 'marginTop': '10px', 'height':'90%', 'position':'absolute', 'width':'100%'}}>
 
             <form onSubmit={(e) => this.searchPlaylist(e)}>
               <input value = {this.state.playlistSearchBoxValue} onChange={this.handleSearchBoxChange} style={{ 'background': '#6f7175', 'color': 'white', 'width':'30%' }}></input>
@@ -1549,7 +1569,7 @@ class App extends Component {
                 distance={5}
                 onClickDeleteCallback={this.onClickDeleteCallback}
                 onClickMoveToBottom={this.onClickMoveToBottom} />
-            </div>
+            </div> */}
 
           </fieldset>
         </div>
@@ -1814,6 +1834,46 @@ class App extends Component {
           </Modal.Footer>
         </Modal>
 
+
+        <Slider
+        title={showVideoHistoryModal}
+        isOpen={this.state.showVideoHistoryModal}
+        onOutsideClick={this.onCloseVideoHistoryModal}
+        
+        footer={
+          <div style={{'position':'fixed', 'right':'5px'}}>
+            {this.state.showVideoHistoryModal &&
+              <Button onClick={this.onCloseVideoHistoryModal}>Close Slider</Button>
+            }
+        </div> 
+        }>
+          
+          <div>
+            <ListGroup>
+              {this.state.videoHistory.map((value,index) => {
+                 var imageLink = 'http://img.youtube.com/vi/' + value.videoId + '/0.jpg'
+
+                 return (
+                  <ListGroupItem>
+                    <div style={{ 'position': 'relative' }}>
+                      <img src={imageLink} style={{ 'width': '120px', 'height': '90px' }} />
+                      <h5 style={{ 'display': 'inline-block', 'fontWeight': 'bold', 'marginLeft': '5px', 'wordWrap': 'break-all' }}>{value.videoTitle}</h5>
+                      <p style={{ 'display': 'inline-block', 'position': 'absolute', 'right': '0px', 'top': '40%' }}>Played By: {value.user}</p>
+                      
+                    </div>
+                  </ListGroupItem>
+                )
+
+
+              })}
+              
+            </ListGroup>
+          </div>
+        
+
+          </Slider>
+        
+
         <Slider
           title={playlistSlideInTitle}
           isOpen={this.state.showPlaylistSlideIn}
@@ -1831,7 +1891,7 @@ class App extends Component {
           footer={
             <div style={{'position':'fixed', 'right':'5px'}}>
               {this.state.showPlaylistSlideIn &&
-                <Button onClick={this.closePlaylistSlideIn}>Close Slider</Button>
+                <Button onClick={this.onCloseVideoHistoryModal}>Close Slider</Button>
               }
             </div> 
             
