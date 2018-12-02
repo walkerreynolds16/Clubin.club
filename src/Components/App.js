@@ -83,7 +83,7 @@ const messagesStyle = {
 
 }
 
-const SortableItem = SortableElement(({ value, onClickDeleteCallback, onClickMoveToBottom, listIndex }) => {
+const SortableItem = SortableElement(({ value, onClickDeleteCallback, onClickMoveToBottom, onClickMoveToTop, listIndex }) => {
   var image = 'https://img.youtube.com/vi/' + value.videoId + '/0.jpg'
 
   return (
@@ -92,16 +92,29 @@ const SortableItem = SortableElement(({ value, onClickDeleteCallback, onClickMov
         <img src={image} style={{ 'width': '80px', 'height': '55px' }} alt={listIndex} />
         <h6 style={{ 'display': 'inline-block', 'fontWeight': 'bold', 'marginLeft': '5px' }}>{value.videoTitle}</h6>
 
+        <Button
+          style={{ 'display': 'inline-block', 'position': 'absolute', 'right': '85px' }} 
+          onClick={() => onClickMoveToTop(listIndex)}>
+          
+          <svg width="11" height="11" viewBox="150 150 1536 1536">
+            <path d="m1523,992q0,13 -10,23l-466,466q-10,10 -23,10t-23,-10l-466,-466q-10,-10 -10,-23t10,-23l50,-50q10,-10 23,-10t23,
+            10l393,393l393,-393q10,-10 23,-10t23,10l50,50q10,10 10,23zm0,-384q0,13 -10,23l-466,466q-10,10 -23,10t-23,-10l-466,-466q-10,-10 -10,-23t10,
+            -23l50,-50q10,-10 23,-10t23,10l393,393l393,-393q10,-10 23,-10t23,10l50,50q10,10 10,23z" fill="black" id="svg_1" transform="rotate(180 1024 1008)"/>
+          
+          </svg>
+
+        </Button>
+
         {/*Move to Bottom Button*/}
         <Button
-        style={{ 'display': 'inline-block', 'position': 'absolute', 'right': '45px' }} 
-        onClick={() => onClickMoveToBottom(listIndex)}>
-        
-        <svg width="11" height="11" viewBox="150 150 1536 1536">
-        <path d="M1523 992q0 13-10 23l-466 466q-10 10-23 10t-23-10l-466-466q-10-10-10-23t10-23l50-50q10-10 23-10t23 10l393 393 393-393q10-10 23-10t23 
-        10l50 50q10 10 10 23zm0-384q0 13-10 23l-466 466q-10 10-23 10t-23-10l-466-466q-10-10-10-23t10-23l50-50q10-10 23-10t23
-         10l393 393 393-393q10-10 23-10t23 10l50 50q10 10 10 23z"></path>
-        </svg>
+          style={{ 'display': 'inline-block', 'position': 'absolute', 'right': '45px' }} 
+          onClick={() => onClickMoveToBottom(listIndex)}>
+          
+          <svg width="11" height="11" viewBox="150 150 1536 1536">
+            <path d="M1523 992q0 13-10 23l-466 466q-10 10-23 10t-23-10l-466-466q-10-10-10-23t10-23l50-50q10-10 23-10t23 10l393 393 393-393q10-10 23-10t23 
+            10l50 50q10 10 10 23zm0-384q0 13-10 23l-466 466q-10 10-23 10t-23-10l-466-466q-10-10-10-23t10-23l50-50q10-10 23-10t23
+            10l393 393 393-393q10-10 23-10t23 10l50 50q10 10 10 23z"></path>
+          </svg>
 
         </Button>
 
@@ -120,13 +133,13 @@ const SortableItem = SortableElement(({ value, onClickDeleteCallback, onClickMov
   );
 });
 
-const SortableList = SortableContainer(({ items, onClickDeleteCallback, onClickMoveToBottom }) => {
+const SortableList = SortableContainer(({ items, onClickDeleteCallback, onClickMoveToBottom, onClickMoveToTop }) => {
   return (
     <div style={{ 'overflow': 'auto', 'position':'absolute', 'height':'100%', 'width':'100%' }}>
       <ul>
         {items.map((value, index) => (
 
-          <SortableItem key={`item-${index}`} index={index} value={value} onClickDeleteCallback={onClickDeleteCallback} onClickMoveToBottom={onClickMoveToBottom} listIndex={index} />
+          <SortableItem key={`item-${index}`} index={index} value={value} onClickDeleteCallback={onClickDeleteCallback} onClickMoveToBottom={onClickMoveToBottom} onClickMoveToTop={onClickMoveToTop}listIndex={index} />
         ))}
       </ul>
     </div>
@@ -185,7 +198,10 @@ class App extends Component {
       showGrabMenu: false,
       admins: [],
       isAdmin: false,
-      showAdminModal: false
+      showAdminModal: false,
+      hasSkipped: false,
+      skippers: []
+
     }
   }
 
@@ -222,6 +238,8 @@ class App extends Component {
     socket.on('Event_mehChanged', (data) => this.handleMehChange(data))
 
     socket.on('Event_grabChanged', (data) => this.handleGrabChange(data))
+
+    socket.on('Event_skipChanged', (data) => this.handleSkipChange(data))    
 
     this.getAdmins()
 
@@ -291,6 +309,15 @@ class App extends Component {
       })
   }
 
+  handleSkipChange = (data) => {
+    console.log('Skippers =  ' + data.skippers)
+    console.log('# of Skippers' + data.skippers.length)
+
+    this.setState({
+      skippers: data.skippers
+    })
+  }
+
   handleWootChange = (data) => {
     console.log('Wooters =  ' + data.wooters)
     console.log('# of woots' + data.wooters.length)
@@ -332,9 +359,19 @@ class App extends Component {
 
     // console.log(data.clients)
 
+    // console.log("DJQueue")
+    // console.log(data.djQueue)
+
+    // console.log("Skippers")
+    // console.log(data.skippers)
+
     this.setState({
-      clients: data.clients
+      clients: data.clients,
+      DJQueue: data.djQueue,
+      skippers: data.skippers
     })
+
+    this.forceUpdate()
   }
 
   handleUserConnecting = (data) => {
@@ -344,7 +381,8 @@ class App extends Component {
 
     this.setState({
       clients: data.clients,
-      DJQueue: data.djQueue
+      DJQueue: data.djQueue,
+      skippers: data.skippers
     })
 
   }
@@ -847,7 +885,6 @@ class App extends Component {
       })
   }
 
-
   openAddPlaylistModal = () => {
     this.setState({
       showAddPlaylistModal: true
@@ -930,12 +967,12 @@ class App extends Component {
 
   onClickMoveToBottom =(index) => {
 
-      var cpCopy = this.state.currentPlaylist
-      var videoToMove = cpCopy.playlistVideos.splice(index,1)[0]
+    var cpCopy = this.state.currentPlaylist
+    var videoToMove = cpCopy.playlistVideos.splice(index,1)[0]
 
-      cpCopy.playlistVideos.push(videoToMove);
+    cpCopy.playlistVideos.push(videoToMove);
 
-      this.updatePlaylistState(cpCopy)
+    this.updatePlaylistState(cpCopy)
 
     this.setState({
       currentPlaylist: cpCopy
@@ -1090,7 +1127,9 @@ class App extends Component {
       grabbed: false,
       wooters: [],
       mehers: [],
-      grabbers: []
+      grabbers: [],
+      hasSkipped: false,
+      skippers: []
     })
 
     this.forceUpdate()
@@ -1110,18 +1149,23 @@ class App extends Component {
     this.forceUpdate()
   }
 
-  onSkipVideo = () => {
-    socket.emit('Event_skipCurrentVideo',
-      {
-        user: this.state.currentUser
-      }
-    )
-    socket.emit('Event_sendChatMessage',
+  onSkipVideo = (adminOverride = false) => {
+    if(video !== ''){
+      var override = this.state.isUserDJing
+
+      socket.emit('Event_skipCurrentVideo',
         {
-          user: 'Server',
-          message: this.state.currentUser + ' has skipped the song'
+          user: this.state.currentUser,
+          isSkipping: !this.state.hasSkipped,
+          overrideSkip: override || adminOverride
         }
       )
+
+      this.setState({
+        hasSkipped: !this.state.hasSkipped
+      })
+    }
+    
   }
 
   onVolumeChange = (value) => {
@@ -1453,6 +1497,24 @@ class App extends Component {
       showAdminModal: false
     })
   }
+  
+  onClickMoveToTop = (index) => {
+    var cpCopy = this.state.currentPlaylist
+    var videoToMove = cpCopy.playlistVideos.splice(index,1)[0]
+
+    cpCopy.playlistVideos.unshift(videoToMove);
+
+    this.updatePlaylistState(cpCopy)
+
+    this.setState({
+      currentPlaylist: cpCopy
+    })
+
+    this.setBackEndPlaylist(cpCopy)
+
+    // console.log('onClickDeleteCallback')
+    this.setBackendCurrentPlaylist(cpCopy)
+  }
 
   render() {
 
@@ -1547,7 +1609,8 @@ class App extends Component {
                 onSortEnd={this.onSortEnd}
                 distance={5}
                 onClickDeleteCallback={this.onClickDeleteCallback}
-                onClickMoveToBottom={this.onClickMoveToBottom} />
+                onClickMoveToBottom={this.onClickMoveToBottom}
+                onClickMoveToTop={this.onClickMoveToTop} />
             </div>
 
           </fieldset>
@@ -1694,9 +1757,18 @@ class App extends Component {
                   )
                 })}
 
-                {/* <div style={{ float:"left", clear: "both" }}
-                    ref={(el) => { this.messagesEnd = el; }}>
-                </div> */}
+              </div>
+
+            </Tab>
+
+            <Tab eventKey={4} title={"Skippers (" + this.state.skippers.length + ")"} style={tabStyle}>
+              
+              <div style={messagesStyle}>
+                {this.state.skippers.map((value, index) => {
+                  return (
+                    <h6 style={{ 'color': 'white', 'font-size': '100%', 'marginLeft':'5px'}}>{value}</h6>
+                  )
+                })}
               </div>
 
             </Tab>
