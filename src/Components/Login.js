@@ -62,7 +62,7 @@ export default class Login extends Component {
           this.forceUpdate()
         }else if(response.data === 'fuck you'){
           alert('Stop trying to ruin my database you dingus')
-        }else if(response.data == 'user already connected'){
+        }else if(response.data === 'user already connected'){
           alert('This user is already connected you dingus')
         }else{
           alert('Your password was wrong you dingus')

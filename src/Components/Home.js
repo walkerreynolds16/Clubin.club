@@ -1,7 +1,7 @@
 import React, { Component } from 'react'
 import App from './App'
 import Login from './Login'
-import { BrowserRouter as Router, Route, Redirect } from "react-router-dom";
+import { BrowserRouter as Router, Route } from "react-router-dom";
 import Axios from 'axios'
 import packageJson from '../../package.json'
 import {API_ENDPOINT} from '../api-config.js'

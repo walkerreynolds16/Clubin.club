@@ -89,7 +89,7 @@ const SortableItem = SortableElement(({ value, onClickDeleteCallback, onClickMov
   return (
     <div style={{ 'marginTop': '8px', 'marginBottom': '8px', 'position': 'relative' }}>
       <li style={{ 'display': 'flex', 'alignItems': 'center' }}>
-        <img src={image} style={{ 'width': '80px', 'height': '55px' }} />
+        <img src={image} style={{ 'width': '80px', 'height': '55px' }} alt={listIndex} />
         <h6 style={{ 'display': 'inline-block', 'fontWeight': 'bold', 'marginLeft': '5px' }}>{value.videoTitle}</h6>
 
         {/*Move to Bottom Button*/}
@@ -182,8 +182,10 @@ class App extends Component {
       wooted: false,
       mehed: false,
       grabbed: false,
-      showGrabMenu: false
-
+      showGrabMenu: false,
+      admins: [],
+      isAdmin: false,
+      showAdminModal: false
     }
   }
 
@@ -221,6 +223,7 @@ class App extends Component {
 
     socket.on('Event_grabChanged', (data) => this.handleGrabChange(data))
 
+    this.getAdmins()
 
     this.startKeepBackendAlive()
 
@@ -228,6 +231,28 @@ class App extends Component {
 
     
 
+  }
+
+  getAdmins = () => {
+    var url = apiEndpoint + '/getAdmins'
+    Axios.get(url)
+      .then((response) => {
+        console.log(response)
+
+        var admins = response['data']
+        var isAdmin = false
+
+        if(admins.includes(this.state.currentUser)){
+          console.log('IM AN ADMIN')
+          isAdmin = true
+        }
+
+        this.setState({
+          admins: admins,
+          isAdmin: isAdmin
+        })
+
+      })
   }
 
   startKeepBackendAlive = () => {
@@ -1043,7 +1068,7 @@ class App extends Component {
       startTime: 0
     })
 
-    if (user == this.state.currentUser) {
+    if (user === this.state.currentUser) {
       //sorts the playlist after users video is picked to be played
       var newCurrentPlaylist = { playlistTitle: this.state.currentPlaylist.playlistTitle, playlistVideos: arrayMove(this.state.currentPlaylist.playlistVideos, 0, this.state.currentPlaylist.playlistVideos.length - 1) }
 
@@ -1202,7 +1227,7 @@ class App extends Component {
     var url = apiEndpoint + '/getCurrentVersion'
     Axios.get(url)
       .then((response) => {
-        console.log(response)
+        // console.log(response)
         this.setState({
           currentVersion: response['data']['version']
         })
@@ -1219,7 +1244,7 @@ class App extends Component {
     var removedPlaylist = newPlaylists.splice(index, 1)
 
     // If the new playlist doesn't have anything in it anymore, disable add video/dj buttons
-    if(newPlaylists.length == 0){
+    if(newPlaylists.length === 0){
       this.setState({
         disableAddVideoButton: true,
         playlists: [],
@@ -1233,7 +1258,7 @@ class App extends Component {
     }
 
     // If the removed playlist was the current playlist
-    if(removedPlaylist[0].playlistTitle == this.state.currentPlaylist.playlistTitle){
+    if(removedPlaylist[0].playlistTitle === this.state.currentPlaylist.playlistTitle){
       var newCurrentPlaylist = { playlistTitle: '', playlistVideos: [] }
 
       // if the new playlists have at least 1 playlist in it, make that the new current playlist
@@ -1293,7 +1318,7 @@ class App extends Component {
     playlistCopy[index].playlistVideos = shuffle(playlistCopy[index].playlistVideos)
 
     // shuffle playlist is also the current playlist
-    if(playlistCopy[index].playlistTitle == this.state.currentPlaylist.playlistTitle){
+    if(playlistCopy[index].playlistTitle === this.state.currentPlaylist.playlistTitle){
       this.setState({
         currentPlaylist: playlistCopy[index]
       })
@@ -1417,6 +1442,18 @@ class App extends Component {
     
   }
 
+  showAdminModal = () => {
+    this.setState({
+      showAdminModal: true
+    })
+  }
+
+  closeAdminModal = () => {
+    this.setState({
+      showAdminModal: false
+    })
+  }
+
   render() {
 
     const opts = {
@@ -1495,6 +1532,10 @@ class App extends Component {
               <Button style={{'margin':'5px'}} onClick={() => this.onLeaveDJ()}>Quit DJing</Button>
             }
 
+            {this.state.isAdmin && 
+              <Button style={{'margin':'5px'}} onClick={() => this.showAdminModal()}>Admin Menu</Button>
+            }
+
             {/* <Button style={{ 'marginLeft': '10px' }} onClick={() => this.onLeaveDJ()}>Test</Button> */}
 
 
@@ -1518,7 +1559,8 @@ class App extends Component {
             opts={opts}
             onReady={this.onReady}
             onStateChange={this.onPlayerStateChange}
-            onPause={this.onPlayerPause} />
+            onPause={this.onPlayerPause}
+            id="youtube" />
 
         </div>
 
@@ -1529,7 +1571,8 @@ class App extends Component {
             activeKey={this.state.tabKey}
             onSelect={this.handleTabSelect}
             animation={false}
-            style={{'width':'35%', 'right':'0px', 'position':'fixed', 'bottom':'25%', 'backgroundColor':'#fff'}}>
+            style={{'width':'35%', 'right':'0px', 'position':'fixed', 'bottom':'25%', 'backgroundColor':'#fff'}}
+            id="Main Tabs">
 
             <Tab style={tabStyle} eventKey={1} title="Chat">
 
@@ -1542,7 +1585,7 @@ class App extends Component {
                     <div>
                       {this.state.chatMessages.map((value, index) => {
                         return (
-                          <h6 style={{ 'color': 'white', 'font-size': '100%', 'marginLeft':'5px'}}>{value}</h6>
+                          <h6 key={index+value} style={{ 'color': 'white', 'fontSize': '100%', 'marginLeft':'5px'}}>{value}</h6>
                         )
                       })}
 
@@ -1597,7 +1640,7 @@ class App extends Component {
                   var hasGrabbed = this.state.grabbers.includes(username)
 
                   return (
-                    <div>
+                    <div key={index + value}>
                       {hasGrabbed && 
                         <div style={{'display':'flex', 'alignItems':'center'}}>
                           <h6 style={{ 'color': 'white', 'font-size': '100%', 'marginLeft':'5px', 'marginTop':'0px', 'marginBottom':'0px'}}>{value.user}</h6>
@@ -1629,7 +1672,7 @@ class App extends Component {
                       }
 
                       {!hasGrabbed && !hasWooted && !hasMehed &&
-                        <h6 style={{ 'color': 'white', 'font-size': '100%', 'marginLeft':'5px'}}>{value.user}</h6>
+                        <h6 style={{ 'color': 'white', 'fontSize': '100%', 'marginLeft':'5px'}}>{value.user}</h6>
                       }
 
                     </div>
@@ -1754,7 +1797,7 @@ class App extends Component {
                   return (
                     <ListGroupItem onClick={() => this.onSearchListItemClicked(index)}>
                       <div style={{ 'position': 'relative' }}>
-                        <img src={imageLink} style={{ 'width': '120px', 'height': '90px' }} />
+                        <img src={imageLink} style={{ 'width': '120px', 'height': '90px' }} alt={index}/>
                         <h5 style={{ 'display': 'inline-block', 'fontWeight': 'bold', 'marginLeft': '5px', 'wordWrap': 'break-all' }}>{value.videoTitle}</h5>
                         <p style={{ 'display': 'inline-block', 'position': 'absolute', 'right': '0px', 'top': '40%' }}>{value.duration}</p>
                         
@@ -1777,7 +1820,7 @@ class App extends Component {
           isOpen={this.state.showPlaylistSlideIn}
           onOutsideClick={this.closePlaylistSlideIn}
           header={
-            <div style={{ 'position': 'fixed','right': '5px', 'position': 'fixed', 'top': '15px' }}>
+            <div style={{ 'position': 'fixed','right': '5px', 'top': '15px' }}>
                 {this.state.showPlaylistSlideIn &&
                   <div>
                     <Button style={{  }} onClick={this.openAddPlaylistModal}>Add Playlist</Button>
@@ -1801,9 +1844,9 @@ class App extends Component {
                 var title = value.playlistTitle
                 var videos = value.playlistVideos
 
-                if (title != '') {
+                if (title !== '') {
                   return (
-                    <ListGroupItem style={{ 'position': 'relative', 'display': 'flex', 'alignItems': 'center'  }} onClick={() => this.changeCurrentPlaylist(index)}>
+                    <ListGroupItem key={index + value} style={{ 'position': 'relative', 'display': 'flex', 'alignItems': 'center'  }} onClick={() => this.changeCurrentPlaylist(index)}>
 
                       <h5 style={{ 'display': 'inline-block', 'fontWeight': 'bold', 'marginLeft': '5px', 'wordWrap': 'break-all' }}>{title}</h5>
                       <h6 style={{ 'display': 'inline-block', 'marginLeft': '2px' }}>({videos.length})</h6>
@@ -1908,9 +1951,9 @@ class App extends Component {
                   var title = value.playlistTitle
                   var videos = value.playlistVideos
 
-                  if (title != '') {
+                  if (title !== '') {
                     return (
-                      <ListGroupItem style={{ 'position': 'relative', 'display': 'flex', 'alignItems': 'center'  }} onClick={() => this.grabToPlaylist(index)}>
+                      <ListGroupItem key={index+value} style={{ 'position': 'relative', 'display': 'flex', 'alignItems': 'center'  }} onClick={() => this.grabToPlaylist(index)}>
 
                         <h5 style={{ 'display': 'inline-block', 'fontWeight': 'bold', 'marginLeft': '5px', 'wordWrap': 'break-all' }}>{title}</h5>
                         <h6 style={{ 'display': 'inline-block', 'marginLeft': '2px' }}>({videos.length})</h6>
@@ -1926,6 +1969,32 @@ class App extends Component {
           </Modal.Body>
           <Modal.Footer>
             <Button onClick={this.closeGrabMenu}>Close</Button>
+          </Modal.Footer>
+        </Modal>
+
+        <Modal show={this.state.showAdminModal} onHide={this.closeAdminModal} bsSize='large'>
+          <Modal.Header closeButton>
+            <Modal.Title>Admin Menu</Modal.Title>
+          </Modal.Header>
+          <Modal.Body>
+            <div>
+              <form>
+                <fieldset>
+                  <legend>Skip Video</legend>
+                  <Button onClick={() => { this.onSkipVideo()}}>Skip</Button>
+                </fieldset>
+              </form>
+
+              <form>
+                <fieldset>
+                  <legend>Skip Video</legend>
+                  <Button onClick={() => { this.onSkipVideo()}}>Skip</Button>
+                </fieldset>
+              </form>
+            </div>
+          </Modal.Body>
+          <Modal.Footer>
+            <Button onClick={this.closeAdminModal}>Close</Button>
           </Modal.Footer>
         </Modal>
 
