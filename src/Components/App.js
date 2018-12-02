@@ -195,7 +195,9 @@ class App extends Component {
       wooted: false,
       mehed: false,
       grabbed: false,
-      showGrabMenu: false
+      showGrabMenu: false,
+      hasSkipped: false,
+      skippers: []
 
     }
   }
@@ -233,6 +235,8 @@ class App extends Component {
     socket.on('Event_mehChanged', (data) => this.handleMehChange(data))
 
     socket.on('Event_grabChanged', (data) => this.handleGrabChange(data))
+
+    socket.on('Event_skipChanged', (data) => this.handleSkipChange(data))    
 
 
     this.startKeepBackendAlive()
@@ -279,6 +283,15 @@ class App extends Component {
       })
   }
 
+  handleSkipChange = (data) => {
+    console.log('Skippers =  ' + data.skippers)
+    console.log('# of Skippers' + data.skippers.length)
+
+    this.setState({
+      skippers: data.skippers
+    })
+  }
+
   handleWootChange = (data) => {
     console.log('Wooters =  ' + data.wooters)
     console.log('# of woots' + data.wooters.length)
@@ -320,9 +333,19 @@ class App extends Component {
 
     // console.log(data.clients)
 
+    // console.log("DJQueue")
+    // console.log(data.djQueue)
+
+    // console.log("Skippers")
+    // console.log(data.skippers)
+
     this.setState({
-      clients: data.clients
+      clients: data.clients,
+      DJQueue: data.djQueue,
+      skippers: data.skippers
     })
+
+    this.forceUpdate()
   }
 
   handleUserConnecting = (data) => {
@@ -332,7 +355,8 @@ class App extends Component {
 
     this.setState({
       clients: data.clients,
-      DJQueue: data.djQueue
+      DJQueue: data.djQueue,
+      skippers: data.skippers
     })
 
   }
@@ -835,7 +859,6 @@ class App extends Component {
       })
   }
 
-
   openAddPlaylistModal = () => {
     this.setState({
       showAddPlaylistModal: true
@@ -1078,7 +1101,9 @@ class App extends Component {
       grabbed: false,
       wooters: [],
       mehers: [],
-      grabbers: []
+      grabbers: [],
+      hasSkipped: false,
+      skippers: []
     })
 
     this.forceUpdate()
@@ -1098,18 +1123,23 @@ class App extends Component {
     this.forceUpdate()
   }
 
-  onSkipVideo = () => {
-    socket.emit('Event_skipCurrentVideo',
-      {
-        user: this.state.currentUser
-      }
-    )
-    socket.emit('Event_sendChatMessage',
+  onSkipVideo = (adminOverride = false) => {
+    if(video !== ''){
+      var override = this.state.isUserDJing
+
+      socket.emit('Event_skipCurrentVideo',
         {
-          user: 'Server',
-          message: this.state.currentUser + ' has skipped the song'
+          user: this.state.currentUser,
+          isSkipping: !this.state.hasSkipped,
+          overrideSkip: override || adminOverride
         }
       )
+
+      this.setState({
+        hasSkipped: !this.state.hasSkipped
+      })
+    }
+    
   }
 
   onVolumeChange = (value) => {
@@ -1683,9 +1713,18 @@ class App extends Component {
                   )
                 })}
 
-                {/* <div style={{ float:"left", clear: "both" }}
-                    ref={(el) => { this.messagesEnd = el; }}>
-                </div> */}
+              </div>
+
+            </Tab>
+
+            <Tab eventKey={4} title={"Skippers (" + this.state.skippers.length + ")"} style={tabStyle}>
+              
+              <div style={messagesStyle}>
+                {this.state.skippers.map((value, index) => {
+                  return (
+                    <h6 style={{ 'color': 'white', 'font-size': '100%', 'marginLeft':'5px'}}>{value}</h6>
+                  )
+                })}
               </div>
 
             </Tab>
