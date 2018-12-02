@@ -1125,7 +1125,7 @@ class App extends Component {
 
   onSkipVideo = (adminOverride = false) => {
     if(video !== ''){
-      var override = this.state.isUserDJing
+      var override = this.state.userPlayingVideo === this.state.currentUser
 
       socket.emit('Event_skipCurrentVideo',
         {
@@ -1403,7 +1403,6 @@ class App extends Component {
 
   onClickGrab = () => {
     if(video !== '' && this.state.userPlayingVideo !== this.state.currentUser){
-      
 
       this.setState({
         showGrabMenu: true
