@@ -11,6 +11,7 @@ import Moment from 'moment'
 import 'moment-duration-format'
 import shuffle from 'shuffle-array'
 import {API_ENDPOINT} from '../api-config.js'
+import Leaderboard from '../Components/Leaderboard'
 
 
 import openSocket from 'socket.io-client';
@@ -201,7 +202,9 @@ class App extends Component {
       showAdminModal: false,
       hasSkipped: false,
       skippers: [],
-      chaosSkipMode: false
+      chaosSkipMode: false,
+      leaderboardList: [],
+      showLeaderboard: false
 
     }
   }
@@ -242,7 +245,9 @@ class App extends Component {
 
     socket.on('Event_skipChanged', (data) => this.handleSkipChange(data))    
     
-    socket.on('Event_chaosSkipModeChanged', (data) => this.handleChaosSkipModeChanged(data))    
+    socket.on('Event_chaosSkipModeChanged', (data) => this.handleChaosSkipModeChanged(data))
+    
+    socket.on('Event_leaderboardChanged', (data) => this.handleLeaderBoardChange(data))
 
 
     this.getAdmins()
@@ -253,6 +258,15 @@ class App extends Component {
 
     
 
+  }
+
+  handleLeaderBoardChange = (data) => {
+    console.log("leaderboard change")
+    console.log(data)
+
+    this.setState({
+      leaderboardList: data
+    })
   }
 
   handleChaosSkipModeChanged = (data) => {
@@ -1533,6 +1547,18 @@ class App extends Component {
     socket.emit('Event_toggleChaosSkipMode')
   }
 
+  showLeaderboard = () => {
+    this.setState({
+      showLeaderboard: true
+    })
+  }
+
+  closeLeaderboard = () => {
+    this.setState({
+      showLeaderboard: false
+    })
+  }
+
   render() {
 
     const opts = {
@@ -1782,17 +1808,14 @@ class App extends Component {
 
             </Tab>
 
-            {/* <Tab eventKey={4} title={"Skippers (" + this.state.skippers.length + ")"} style={tabStyle}>
-              
+            <Tab eventKey={4} title="Miscellaneous" style={tabStyle}>
               <div style={messagesStyle}>
-                {this.state.skippers.map((value, index) => {
-                  return (
-                    <h6 style={{ 'color': 'white', 'font-size': '100%', 'marginLeft':'5px'}}>{value}</h6>
-                  )
-                })}
-              </div>
-
-            </Tab> */}
+                <Button onClick={() => this.showLeaderboard()} style={{'margin':'10px'}}>Leaderboard</Button>
+              </div>                
+              
+              {/* <Leaderboard leaderboardList={this.state.leaderboardList}/> */}
+              
+            </Tab>
 
           </Tabs>
         </div>
@@ -2093,6 +2116,20 @@ class App extends Component {
           </Modal.Footer>
         </Modal>
 
+
+        <Modal show={this.state.showLeaderboard} onHide={this.closeLeaderboard} bsSize='large'>
+          <Modal.Header closeButton>
+            <Modal.Title>Leaderboard</Modal.Title>
+          </Modal.Header>
+          <Modal.Body>
+            <div>
+              <Leaderboard leaderboardList={this.state.leaderboardList}/>
+            </div>
+          </Modal.Body>
+          <Modal.Footer>
+            <Button onClick={this.closeLeaderboard}>Close</Button>
+          </Modal.Footer>
+        </Modal>
 
 
         <Playbar 
