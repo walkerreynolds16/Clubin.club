@@ -200,7 +200,8 @@ class App extends Component {
       isAdmin: false,
       showAdminModal: false,
       hasSkipped: false,
-      skippers: []
+      skippers: [],
+      chaosSkipMode: false
 
     }
   }
@@ -240,6 +241,9 @@ class App extends Component {
     socket.on('Event_grabChanged', (data) => this.handleGrabChange(data))
 
     socket.on('Event_skipChanged', (data) => this.handleSkipChange(data))    
+    
+    socket.on('Event_chaosSkipModeChanged', (data) => this.handleChaosSkipModeChanged(data))    
+
 
     this.getAdmins()
 
@@ -249,6 +253,15 @@ class App extends Component {
 
     
 
+  }
+
+  handleChaosSkipModeChanged = (data) => {
+    console.log('handleChaosSkipModeChanged')
+    console.log(data)
+
+    this.setState({
+      chaosSkipMode: data
+    })
   }
 
   getAdmins = () => {
@@ -382,7 +395,8 @@ class App extends Component {
     this.setState({
       clients: data.clients,
       DJQueue: data.djQueue,
-      skippers: data.skippers
+      skippers: data.skippers,
+      chaosSkipMode: data.chaosSkipMode
     })
 
   }
@@ -1515,6 +1529,10 @@ class App extends Component {
     this.setBackendCurrentPlaylist(cpCopy)
   }
 
+  adminToggleChaosSkipMode = () => {
+    socket.emit('Event_toggleChaosSkipMode')
+  }
+
   render() {
 
     const opts = {
@@ -1573,7 +1591,13 @@ class App extends Component {
 
             <Button style={{'margin':'5px'}} onClick={this.openPlaylistSlideIn}>Playlists</Button>
             
-            <Button style={{'margin':'5px'}} onClick={() => this.onSkipVideo()}>Skip Video</Button>
+
+            {this.state.chaosSkipMode &&
+              <Button style={{'margin':'5px', 'backgroundColor':'#e50000'}} onClick={() => this.onSkipVideo()}>Skip Video</Button>
+            }
+            {!this.state.chaosSkipMode &&
+              <Button style={{'margin':'5px'}} onClick={() => this.onSkipVideo()}>Skip Video</Button>
+            }
 
             {!this.state.isUserDJing && this.state.disableAddVideoButton && 
 
@@ -1700,42 +1724,40 @@ class App extends Component {
                   var hasWooted = this.state.wooters.includes(username)
                   var hasMehed = this.state.mehers.includes(username)
                   var hasGrabbed = this.state.grabbers.includes(username)
+                  var hasSkipped = this.state.skippers.includes(username)
 
                   return (
-                    <div key={index + value}>
+                    <div key={index + value} style={{'display':'flex', 'alignItems':'center'}}>
+                      {hasSkipped &&
+                        <h6 style={{ 'color': '#e50000', 'font-size': '100%', 'marginLeft':'5px', 'marginTop':'5px', 'marginBottom':'5px', }}>{value.user}</h6>
+                      }
+
+                      {!hasSkipped &&
+                        <h6 style={{ 'color': 'white', 'font-size': '100%', 'marginLeft':'5px', 'marginTop':'5px', 'marginBottom':'5px', }}>{value.user}</h6>
+                      }
+
                       {hasGrabbed && 
-                        <div style={{'display':'flex', 'alignItems':'center'}}>
-                          <h6 style={{ 'color': 'white', 'font-size': '100%', 'marginLeft':'5px', 'marginTop':'0px', 'marginBottom':'0px'}}>{value.user}</h6>
-                          <svg viewBox="0 0 640 640" width="20" height="20" style={{'marginLeft':'5px'}}>
-                            <path d="M389.25 250.79L544.09 272.19L432.05 375.98L458.49 522.55L320 453.35L181.51 522.55L207.96 375.98L95.91 272.19L250.76 250.79L320 117.45L389.25 250.79Z"
-                                  style={{'fill':'#9400D3'}}/>
-                          </svg>
-                        </div>
+                        <svg viewBox="0 0 640 640" width="20" height="20" style={{'marginLeft':'5px'}}>
+                          <path d="M389.25 250.79L544.09 272.19L432.05 375.98L458.49 522.55L320 453.35L181.51 522.55L207.96 375.98L95.91 272.19L250.76 250.79L320 117.45L389.25 250.79Z"
+                                style={{'fill':'#9400D3'}}/>
+                        </svg>
                       }
 
                       {hasMehed && 
-                        <div style={{'display':'flex', 'alignItems':'center'}}>
-                          <h6 style={{ 'color': 'white', 'font-size': '100%', 'marginLeft':'5px', 'marginTop':'0px', 'marginBottom':'0px'}}>{value.user}</h6>
-                          <svg viewBox="0 0 640 640" width="20" height="20" style={{'marginLeft':'5px'}}>
-                            <path d="M515.26 328.9L417.63 425.73L320 522.55L222.36 425.73L124.74 328.9L227.51 328.9L227.51 117.45L412.49 117.45L412.49 328.9L515.26 328.9Z"
-                                  style={{'fill':'#ff0000'}}/>
-                          </svg>
-                        </div>
+                        <svg viewBox="0 0 640 640" width="20" height="20" style={{'marginLeft':'5px'}}>
+                          <path d="M515.26 328.9L417.63 425.73L320 522.55L222.36 425.73L124.74 328.9L227.51 328.9L227.51 117.45L412.49 117.45L412.49 328.9L515.26 328.9Z"
+                                style={{'fill':'#ff0000'}}/>
+                        </svg>
                       }
 
                       {hasWooted && !hasGrabbed &&
-                        <div style={{'display':'flex', 'alignItems':'center'}}>
-                          <h6 style={{ 'color': 'white', 'font-size': '100%', 'marginLeft':'5px', 'marginTop':'0px', 'marginBottom':'0px'}}>{value.user}</h6>
-                          <svg viewBox="0 0 640 640" width="20" height="20" style={{'marginLeft':'5px'}}>
-                            <path d="M320 117.45L417.63 214.27L515.26 311.1L412.49 311.1L412.49 522.55L227.51 522.55L227.51 311.1L124.74 311.1L222.36 214.27L320 117.45Z"
-                              style={{'fill':'#008000'}}/>
-                          </svg>
-                        </div>
+                        <svg viewBox="0 0 640 640" width="20" height="20" style={{'marginLeft':'5px'}}>
+                          <path d="M320 117.45L417.63 214.27L515.26 311.1L412.49 311.1L412.49 522.55L227.51 522.55L227.51 311.1L124.74 311.1L222.36 214.27L320 117.45Z"
+                            style={{'fill':'#008000'}}/>
+                        </svg>
                       }
 
-                      {!hasGrabbed && !hasWooted && !hasMehed &&
-                        <h6 style={{ 'color': 'white', 'fontSize': '100%', 'marginLeft':'5px'}}>{value.user}</h6>
-                      }
+                      
 
                     </div>
                   )
@@ -1760,7 +1782,7 @@ class App extends Component {
 
             </Tab>
 
-            <Tab eventKey={4} title={"Skippers (" + this.state.skippers.length + ")"} style={tabStyle}>
+            {/* <Tab eventKey={4} title={"Skippers (" + this.state.skippers.length + ")"} style={tabStyle}>
               
               <div style={messagesStyle}>
                 {this.state.skippers.map((value, index) => {
@@ -1770,7 +1792,7 @@ class App extends Component {
                 })}
               </div>
 
-            </Tab>
+            </Tab> */}
 
           </Tabs>
         </div>
@@ -2052,16 +2074,18 @@ class App extends Component {
               <form>
                 <fieldset>
                   <legend>Skip Video</legend>
-                  <Button onClick={() => { this.onSkipVideo()}}>Skip</Button>
+                  <Button onClick={() => { this.onSkipVideo(true)}}>Skip</Button>
                 </fieldset>
               </form>
 
               <form>
                 <fieldset>
-                  <legend>Skip Video</legend>
-                  <Button onClick={() => { this.onSkipVideo()}}>Skip</Button>
+                  <legend>Toggle Chaos Skip Mode</legend>
+                  <Button onClick={() => { this.adminToggleChaosSkipMode()}}>Toggle</Button>
                 </fieldset>
               </form>
+
+              
             </div>
           </Modal.Body>
           <Modal.Footer>
