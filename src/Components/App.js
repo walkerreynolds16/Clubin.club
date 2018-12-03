@@ -84,7 +84,7 @@ const messagesStyle = {
 
 }
 
-const SortableItem = SortableElement(({ value, onClickDeleteCallback, onClickMoveToBottom, onClickMoveToTop, listIndex }) => {
+const SortableItem = SortableElement(({ value, onClickDeleteCallback, onClickMoveToBottom, onClickMoveToTop, listIndex, copyVideoToPlaylist }) => {
   var image = 'https://img.youtube.com/vi/' + value.videoId + '/0.jpg'
 
   return (
@@ -117,6 +117,13 @@ const SortableItem = SortableElement(({ value, onClickDeleteCallback, onClickMov
             10l393 393 393-393q10-10 23-10t23 10l50 50q10 10 10 23z"></path>
           </svg>
 
+        </Button>
+
+        <Button
+        style={{ 'display': 'inline-block', 'position': 'absolute', 'right': '45px' }} 
+        onClick={() => copyVideoToPlaylist(listIndex)}
+        >
+        Copy
         </Button>
 
         <Button
@@ -208,7 +215,8 @@ class App extends Component {
       skippers: [],
       chaosSkipMode: false,
       leaderboardList: [],
-      showLeaderboard: false
+      showLeaderboard: false,
+      showCopyModal: false
 
     }
   }
@@ -1619,6 +1627,26 @@ class App extends Component {
     })
   }
 
+  getPlaylistforCopy = (video, index) => {
+
+  }
+
+  copyVideoToPlaylist = (video, index) => {
+
+  }
+
+  showCopyModal = () => {
+    this.setState({
+      showCopyModal: true
+    })
+  }
+
+  closeCopyModal = () => {
+    this.setState({
+      showCopyModal: false
+    })
+  }
+
   render() {
 
     const opts = {
@@ -1730,7 +1758,8 @@ class App extends Component {
                 distance={5}
                 onClickDeleteCallback={this.onClickDeleteCallback}
                 onClickMoveToBottom={this.onClickMoveToBottom}
-                onClickMoveToTop={this.onClickMoveToTop} />
+                onClickMoveToTop={this.onClickMoveToTop}
+                onClickCopyToPlaylist={this.copyVideoToPlaylist} />
             
 
           </fieldset>
@@ -2225,6 +2254,39 @@ class App extends Component {
           <Modal.Footer>
             <Button onClick={this.closeAdminModal}>Close</Button>
           </Modal.Footer>
+        </Modal>
+
+        <Modal show={this.state.showCopyModal} onHide={this.closeCopyModal} bsSize='large'>
+                <Modal.Header closeButton>
+                <Modal.Title>Copy Song to Playlist</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                  <div>
+                    <ListGroup>
+                      {this.state.playlists.map((playlist,index) =>{
+
+                        return(
+                          <ListGroupItem onClick={this.copyVideoToPlaylist(index)}>
+                            <div>
+                              <h5>{index.title}</h5>
+                              
+                            </div>
+                          
+                          </ListGroupItem>
+                        )
+                        
+
+
+                      })}
+                      
+                        
+
+                     
+                      
+                    </ListGroup>
+                  </div>
+                </Modal.Body>
+
         </Modal>
 
 
