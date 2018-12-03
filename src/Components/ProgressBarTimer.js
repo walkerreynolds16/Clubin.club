@@ -1,7 +1,6 @@
 import React, { Component } from 'react'
 import {Line} from 'rc-progress'
 import CC from 'color-convert'
-import Moment from 'moment'
 import 'moment-duration-format'
 
 

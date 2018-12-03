@@ -1,7 +1,4 @@
 import React, { Component } from 'react'
-import App from './App'
-import Login from './Login'
-import { BrowserRouter as Router, Route, Redirect } from "react-router-dom";
 import Slider from 'rc-slider'
 import Tooltip from 'rc-tooltip'
 import ProgressBarTimer from './ProgressBarTimer'
@@ -9,7 +6,6 @@ import ProgressBarTimer from './ProgressBarTimer'
 import 'rc-slider/assets/index.css';
 import 'rc-tooltip/assets/bootstrap.css';
 
-const createSliderWithTooltip = Slider.createSliderWithTooltip;
 const Handle = Slider.Handle;
 
 const handle = (props) => {
@@ -27,15 +23,6 @@ const handle = (props) => {
   );
 };
 
-const mainStyle = {
-  height: '60px',
-  borderStyle: 'solid',
-  borderWidth: '5px',
-  position: 'fixed',
-  bottom: '0px',
-  display: 'inline',
-  left: '0px'
-}
 
 const volumeSliderStyle = {
   width: '15%',

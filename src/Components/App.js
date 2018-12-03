@@ -10,11 +10,16 @@ import 'react-slide-out/lib/index.css'
 import Moment from 'moment'
 import 'moment-duration-format'
 import shuffle from 'shuffle-array'
+import {API_ENDPOINT} from '../api-config.js'
+import Leaderboard from '../Components/Leaderboard'
+
 
 import openSocket from 'socket.io-client';
 
-//const apiEndpoint = 'http://127.0.0.1:5000'
-const apiEndpoint = 'https://plug-dj-clone-api.herokuapp.com'
+// const apiEndpoint = 'http://127.0.0.1:5000'
+// const apiEndpoint = 'https://plug-dj-clone-api.herokuapp.com'
+const apiEndpoint = API_ENDPOINT
+
 
 const socket = openSocket.connect(apiEndpoint, {transports: ['websocket']})
 
@@ -79,25 +84,38 @@ const messagesStyle = {
 
 }
 
-const SortableItem = SortableElement(({ value, onClickDeleteCallback, onClickMoveToBottom, listIndex }) => {
+const SortableItem = SortableElement(({ value, onClickDeleteCallback, onClickMoveToBottom, onClickMoveToTop, listIndex }) => {
   var image = 'https://img.youtube.com/vi/' + value.videoId + '/0.jpg'
 
   return (
     <div style={{ 'marginTop': '8px', 'marginBottom': '8px', 'position': 'relative' }}>
       <li style={{ 'display': 'flex', 'alignItems': 'center' }}>
-        <img src={image} style={{ 'width': '80px', 'height': '55px' }} />
+        <img src={image} style={{ 'width': '80px', 'height': '55px' }} alt={listIndex} />
         <h6 style={{ 'display': 'inline-block', 'fontWeight': 'bold', 'marginLeft': '5px' }}>{value.videoTitle}</h6>
+
+        <Button
+          style={{ 'display': 'inline-block', 'position': 'absolute', 'right': '85px' }} 
+          onClick={() => onClickMoveToTop(listIndex)}>
+          
+          <svg width="11" height="11" viewBox="150 150 1536 1536">
+            <path d="m1523,992q0,13 -10,23l-466,466q-10,10 -23,10t-23,-10l-466,-466q-10,-10 -10,-23t10,-23l50,-50q10,-10 23,-10t23,
+            10l393,393l393,-393q10,-10 23,-10t23,10l50,50q10,10 10,23zm0,-384q0,13 -10,23l-466,466q-10,10 -23,10t-23,-10l-466,-466q-10,-10 -10,-23t10,
+            -23l50,-50q10,-10 23,-10t23,10l393,393l393,-393q10,-10 23,-10t23,10l50,50q10,10 10,23z" fill="black" id="svg_1" transform="rotate(180 1024 1008)"/>
+          
+          </svg>
+
+        </Button>
 
         {/*Move to Bottom Button*/}
         <Button
-        style={{ 'display': 'inline-block', 'position': 'absolute', 'right': '45px' }} 
-        onClick={() => onClickMoveToBottom(listIndex)}>
-        
-        <svg width="11" height="11" viewBox="150 150 1536 1536">
-        <path d="M1523 992q0 13-10 23l-466 466q-10 10-23 10t-23-10l-466-466q-10-10-10-23t10-23l50-50q10-10 23-10t23 10l393 393 393-393q10-10 23-10t23 
-        10l50 50q10 10 10 23zm0-384q0 13-10 23l-466 466q-10 10-23 10t-23-10l-466-466q-10-10-10-23t10-23l50-50q10-10 23-10t23
-         10l393 393 393-393q10-10 23-10t23 10l50 50q10 10 10 23z"></path>
-        </svg>
+          style={{ 'display': 'inline-block', 'position': 'absolute', 'right': '45px' }} 
+          onClick={() => onClickMoveToBottom(listIndex)}>
+          
+          <svg width="11" height="11" viewBox="150 150 1536 1536">
+            <path d="M1523 992q0 13-10 23l-466 466q-10 10-23 10t-23-10l-466-466q-10-10-10-23t10-23l50-50q10-10 23-10t23 10l393 393 393-393q10-10 23-10t23 
+            10l50 50q10 10 10 23zm0-384q0 13-10 23l-466 466q-10 10-23 10t-23-10l-466-466q-10-10-10-23t10-23l50-50q10-10 23-10t23
+            10l393 393 393-393q10-10 23-10t23 10l50 50q10 10 10 23z"></path>
+          </svg>
 
         </Button>
 
@@ -116,13 +134,13 @@ const SortableItem = SortableElement(({ value, onClickDeleteCallback, onClickMov
   );
 });
 
-const SortableList = SortableContainer(({ items, onClickDeleteCallback, onClickMoveToBottom }) => {
+const SortableList = SortableContainer(({ items, onClickDeleteCallback, onClickMoveToBottom, onClickMoveToTop }) => {
   return (
     <div style={{ 'overflow': 'auto', 'position':'absolute', 'height':'100%', 'width':'100%' }}>
       <ul>
         {items.map((value, index) => (
 
-          <SortableItem key={`item-${index}`} index={index} value={value} onClickDeleteCallback={onClickDeleteCallback} onClickMoveToBottom={onClickMoveToBottom} listIndex={index} />
+          <SortableItem key={`item-${index}`} index={index} value={value} onClickDeleteCallback={onClickDeleteCallback} onClickMoveToBottom={onClickMoveToBottom} onClickMoveToTop={onClickMoveToTop}listIndex={index} />
         ))}
       </ul>
     </div>
@@ -182,17 +200,26 @@ class App extends Component {
       wooted: false,
       mehed: false,
       grabbed: false,
-      showGrabMenu: false
+      showGrabMenu: false,
+      admins: [],
+      isAdmin: false,
+      showAdminModal: false,
+      hasSkipped: false,
+      skippers: [],
+      chaosSkipMode: false,
+      leaderboardList: [],
+      showLeaderboard: false
 
     }
   }
 
 
   componentDidMount() {
+
     this.getCurrentVersion()
 
     this.updateWindowDimensions()
-    window.addEventListener('resize', this.updateWindowDimensions);
+    // window.addEventListener('resize', this.updateWindowDimensions);
 
     window.addEventListener("beforeunload", (ev) => this.handleWindowClose(ev));
 
@@ -220,13 +247,61 @@ class App extends Component {
 
     socket.on('Event_grabChanged', (data) => this.handleGrabChange(data))
 
+    socket.on('Event_skipChanged', (data) => this.handleSkipChange(data))    
+    
+    socket.on('Event_chaosSkipModeChanged', (data) => this.handleChaosSkipModeChanged(data))
+    
+    socket.on('Event_leaderboardChanged', (data) => this.handleLeaderBoardChange(data))
+
+
+    this.getAdmins()
 
     this.startKeepBackendAlive()
 
     this.handleConnect()
 
+    
 
+  }
 
+  handleLeaderBoardChange = (data) => {
+    console.log("leaderboard change")
+    console.log(data)
+
+    this.setState({
+      leaderboardList: data
+    })
+  }
+
+  handleChaosSkipModeChanged = (data) => {
+    console.log('handleChaosSkipModeChanged')
+    console.log(data)
+
+    this.setState({
+      chaosSkipMode: data
+    })
+  }
+
+  getAdmins = () => {
+    var url = apiEndpoint + '/getAdmins'
+    Axios.get(url)
+      .then((response) => {
+        console.log(response)
+
+        var admins = response['data']
+        var isAdmin = false
+
+        if(admins.includes(this.state.currentUser)){
+          console.log('IM AN ADMIN')
+          isAdmin = true
+        }
+
+        this.setState({
+          admins: admins,
+          isAdmin: isAdmin
+        })
+
+      })
   }
 
   startKeepBackendAlive = () => {
@@ -263,6 +338,15 @@ class App extends Component {
         }
 
       })
+  }
+
+  handleSkipChange = (data) => {
+    console.log('Skippers =  ' + data.skippers)
+    console.log('# of Skippers' + data.skippers.length)
+
+    this.setState({
+      skippers: data.skippers
+    })
   }
 
   handleWootChange = (data) => {
@@ -306,9 +390,19 @@ class App extends Component {
 
     // console.log(data.clients)
 
+    // console.log("DJQueue")
+    // console.log(data.djQueue)
+
+    // console.log("Skippers")
+    // console.log(data.skippers)
+
     this.setState({
-      clients: data.clients
+      clients: data.clients,
+      DJQueue: data.djQueue,
+      skippers: data.skippers
     })
+
+    this.forceUpdate()
   }
 
   handleUserConnecting = (data) => {
@@ -317,7 +411,10 @@ class App extends Component {
     // console.log(data.clients)
 
     this.setState({
-      clients: data.clients
+      clients: data.clients,
+      DJQueue: data.djQueue,
+      skippers: data.skippers,
+      chaosSkipMode: data.chaosSkipMode
     })
 
   }
@@ -357,7 +454,7 @@ class App extends Component {
   handleConnect = () => {
     socket.emit('Event_userConnected', this.state.currentUser)
 
-    this.getCurrentVideo()
+    // this.getCurrentVideo()
 
     //Send message to everyone saying that a user has connected
     socket.emit('Event_sendChatMessage',
@@ -832,7 +929,6 @@ class App extends Component {
       })
   }
 
-
   openAddPlaylistModal = () => {
     this.setState({
       showAddPlaylistModal: true
@@ -915,12 +1011,12 @@ class App extends Component {
 
   onClickMoveToBottom =(index) => {
 
-      var cpCopy = this.state.currentPlaylist
-      var videoToMove = cpCopy.playlistVideos.splice(index,1)[0]
+    var cpCopy = this.state.currentPlaylist
+    var videoToMove = cpCopy.playlistVideos.splice(index,1)[0]
 
-      cpCopy.playlistVideos.push(videoToMove);
+    cpCopy.playlistVideos.push(videoToMove);
 
-      this.updatePlaylistState(cpCopy)
+    this.updatePlaylistState(cpCopy)
 
     this.setState({
       currentPlaylist: cpCopy
@@ -1056,7 +1152,7 @@ class App extends Component {
       startTime: 0
     })
 
-    if (user == this.state.currentUser) {
+    if (user === this.state.currentUser) {
       //sorts the playlist after users video is picked to be played
       
       var newCurrentPlaylist = { playlistTitle: this.state.currentPlaylist.playlistTitle, playlistVideos: arrayMove(this.state.currentPlaylist.playlistVideos, 0, this.state.currentPlaylist.playlistVideos.length - 1) }
@@ -1079,7 +1175,9 @@ class App extends Component {
       grabbed: false,
       wooters: [],
       mehers: [],
-      grabbers: []
+      grabbers: [],
+      hasSkipped: false,
+      skippers: []
     })
 
     this.forceUpdate()
@@ -1099,18 +1197,23 @@ class App extends Component {
     this.forceUpdate()
   }
 
-  onSkipVideo = () => {
-    socket.emit('Event_skipCurrentVideo',
-      {
-        user: this.state.currentUser
-      }
-    )
-    socket.emit('Event_sendChatMessage',
+  onSkipVideo = (adminOverride = false) => {
+    if(video !== ''){
+      var override = this.state.userPlayingVideo === this.state.currentUser
+
+      socket.emit('Event_skipCurrentVideo',
         {
-          user: 'Server',
-          message: this.state.currentUser + ' has skipped the song'
+          user: this.state.currentUser,
+          isSkipping: !this.state.hasSkipped,
+          overrideSkip: override || adminOverride
         }
       )
+
+      this.setState({
+        hasSkipped: !this.state.hasSkipped
+      })
+    }
+    
   }
 
   onVolumeChange = (value) => {
@@ -1216,7 +1319,7 @@ class App extends Component {
     var url = apiEndpoint + '/getCurrentVersion'
     Axios.get(url)
       .then((response) => {
-        console.log(response)
+        // console.log(response)
         this.setState({
           currentVersion: response['data']['version']
         })
@@ -1233,7 +1336,7 @@ class App extends Component {
     var removedPlaylist = newPlaylists.splice(index, 1)
 
     // If the new playlist doesn't have anything in it anymore, disable add video/dj buttons
-    if(newPlaylists.length == 0){
+    if(newPlaylists.length === 0){
       this.setState({
         disableAddVideoButton: true,
         playlists: [],
@@ -1247,7 +1350,7 @@ class App extends Component {
     }
 
     // If the removed playlist was the current playlist
-    if(removedPlaylist[0].playlistTitle == this.state.currentPlaylist.playlistTitle){
+    if(removedPlaylist[0].playlistTitle === this.state.currentPlaylist.playlistTitle){
       var newCurrentPlaylist = { playlistTitle: '', playlistVideos: [] }
 
       // if the new playlists have at least 1 playlist in it, make that the new current playlist
@@ -1307,7 +1410,7 @@ class App extends Component {
     playlistCopy[index].playlistVideos = shuffle(playlistCopy[index].playlistVideos)
 
     // shuffle playlist is also the current playlist
-    if(playlistCopy[index].playlistTitle == this.state.currentPlaylist.playlistTitle){
+    if(playlistCopy[index].playlistTitle === this.state.currentPlaylist.playlistTitle){
       this.setState({
         currentPlaylist: playlistCopy[index]
       })
@@ -1374,7 +1477,6 @@ class App extends Component {
 
   onClickGrab = () => {
     if(video !== '' && this.state.userPlayingVideo !== this.state.currentUser){
-      
 
       this.setState({
         showGrabMenu: true
@@ -1467,6 +1569,53 @@ class App extends Component {
   handleSearchBoxChange = (event) => {
     this.setState({
       playlistSearchBoxValue: event.target.value
+
+    })
+  }
+  
+  showAdminModal = () => {
+    this.setState({
+      showAdminModal: true
+    })
+  }
+
+  closeAdminModal = () => {
+    this.setState({
+      showAdminModal: false
+    })
+  }
+  
+  onClickMoveToTop = (index) => {
+    var cpCopy = this.state.currentPlaylist
+    var videoToMove = cpCopy.playlistVideos.splice(index,1)[0]
+
+    cpCopy.playlistVideos.unshift(videoToMove);
+
+    this.updatePlaylistState(cpCopy)
+
+    this.setState({
+      currentPlaylist: cpCopy
+    })
+
+    this.setBackEndPlaylist(cpCopy)
+
+    // console.log('onClickDeleteCallback')
+    this.setBackendCurrentPlaylist(cpCopy)
+  }
+
+  adminToggleChaosSkipMode = () => {
+    socket.emit('Event_toggleChaosSkipMode')
+  }
+
+  showLeaderboard = () => {
+    this.setState({
+      showLeaderboard: true
+    })
+  }
+
+  closeLeaderboard = () => {
+    this.setState({
+      showLeaderboard: false
     })
   }
 
@@ -1530,7 +1679,13 @@ class App extends Component {
 
             <Button style={{'margin':'5px'}} onClick={this.openPlaylistSlideIn}>Playlists</Button>
             
-            <Button style={{'margin':'5px'}} onClick={() => this.onSkipVideo()}>Skip Video</Button>
+
+            {this.state.chaosSkipMode &&
+              <Button style={{'margin':'5px', 'backgroundColor':'#e50000'}} onClick={() => this.onSkipVideo()}>Skip Video</Button>
+            }
+            {!this.state.chaosSkipMode &&
+              <Button style={{'margin':'5px'}} onClick={() => this.onSkipVideo()}>Skip Video</Button>
+            }
 
             {!this.state.isUserDJing && this.state.disableAddVideoButton && 
 
@@ -1553,23 +1708,30 @@ class App extends Component {
             <Button style={{'margin': '5px'}} onClick={this.onShowVideoHistoryModal}>Video History</Button>
 
             
-            {/*Search Box */}
+           
             {/* <div style={{ 'marginTop': '10px', 'height':'90%', 'position':'absolute', 'width':'100%'}}>
+            {this.state.isAdmin && 
+              <Button style={{'margin':'5px'}} onClick={() => this.showAdminModal()}>Admin Menu</Button>
+            }
 
-            <form onSubmit={(e) => this.searchPlaylist(e)}>
+            {/* <Button style={{ 'marginLeft': '10px' }} onClick={() => this.onLeaveDJ()}>Test</Button> */}
+
+              {/*Search Box */}
+            {/* <form onSubmit={(e) => this.searchPlaylist(e)}>
               <input value = {this.state.playlistSearchBoxValue} onChange={this.handleSearchBoxChange} style={{ 'background': '#6f7175', 'color': 'white', 'width':'30%' }}></input>
 
             </form>
 
-            {<Button onClick={(e) => this.searchPlaylist(e)}>Search</Button> }
+            {<Button onClick={(e) => this.searchPlaylist(e)}>Search</Button> } */}
 
               <SortableList
                 items={this.state.currentPlaylist.playlistVideos}
                 onSortEnd={this.onSortEnd}
                 distance={5}
                 onClickDeleteCallback={this.onClickDeleteCallback}
-                onClickMoveToBottom={this.onClickMoveToBottom} />
-            </div> */}
+                onClickMoveToBottom={this.onClickMoveToBottom}
+                onClickMoveToTop={this.onClickMoveToTop} />
+            
 
           </fieldset>
         </div>
@@ -1580,7 +1742,8 @@ class App extends Component {
             opts={opts}
             onReady={this.onReady}
             onStateChange={this.onPlayerStateChange}
-            onPause={this.onPlayerPause} />
+            onPause={this.onPlayerPause}
+            id="youtube" />
 
         </div>
 
@@ -1591,7 +1754,8 @@ class App extends Component {
             activeKey={this.state.tabKey}
             onSelect={this.handleTabSelect}
             animation={false}
-            style={{'width':'35%', 'right':'0px', 'position':'fixed', 'bottom':'25%', 'backgroundColor':'#fff'}}>
+            style={{'width':'35%', 'right':'0px', 'position':'fixed', 'bottom':'25%', 'backgroundColor':'#fff'}}
+            id="Main Tabs">
 
             <Tab style={tabStyle} eventKey={1} title="Chat">
 
@@ -1604,7 +1768,7 @@ class App extends Component {
                     <div>
                       {this.state.chatMessages.map((value, index) => {
                         return (
-                          <h6 style={{ 'color': 'white', 'font-size': '100%', 'marginLeft':'5px'}}>{value}</h6>
+                          <h6 key={index+value} style={{ 'color': 'white', 'fontSize': '100%', 'marginLeft':'5px'}}>{value}</h6>
                         )
                       })}
 
@@ -1657,42 +1821,40 @@ class App extends Component {
                   var hasWooted = this.state.wooters.includes(username)
                   var hasMehed = this.state.mehers.includes(username)
                   var hasGrabbed = this.state.grabbers.includes(username)
+                  var hasSkipped = this.state.skippers.includes(username)
 
                   return (
-                    <div>
+                    <div key={index + value} style={{'display':'flex', 'alignItems':'center'}}>
+                      {hasSkipped &&
+                        <h6 style={{ 'color': '#e50000', 'font-size': '100%', 'marginLeft':'5px', 'marginTop':'5px', 'marginBottom':'5px', }}>{value.user}</h6>
+                      }
+
+                      {!hasSkipped &&
+                        <h6 style={{ 'color': 'white', 'font-size': '100%', 'marginLeft':'5px', 'marginTop':'5px', 'marginBottom':'5px', }}>{value.user}</h6>
+                      }
+
                       {hasGrabbed && 
-                        <div style={{'display':'flex', 'alignItems':'center'}}>
-                          <h6 style={{ 'color': 'white', 'font-size': '100%', 'marginLeft':'5px', 'marginTop':'0px', 'marginBottom':'0px'}}>{value.user}</h6>
-                          <svg viewBox="0 0 640 640" width="20" height="20" style={{'marginLeft':'5px'}}>
-                            <path d="M389.25 250.79L544.09 272.19L432.05 375.98L458.49 522.55L320 453.35L181.51 522.55L207.96 375.98L95.91 272.19L250.76 250.79L320 117.45L389.25 250.79Z"
-                                  style={{'fill':'#9400D3'}}/>
-                          </svg>
-                        </div>
+                        <svg viewBox="0 0 640 640" width="20" height="20" style={{'marginLeft':'5px'}}>
+                          <path d="M389.25 250.79L544.09 272.19L432.05 375.98L458.49 522.55L320 453.35L181.51 522.55L207.96 375.98L95.91 272.19L250.76 250.79L320 117.45L389.25 250.79Z"
+                                style={{'fill':'#9400D3'}}/>
+                        </svg>
                       }
 
                       {hasMehed && 
-                        <div style={{'display':'flex', 'alignItems':'center'}}>
-                          <h6 style={{ 'color': 'white', 'font-size': '100%', 'marginLeft':'5px', 'marginTop':'0px', 'marginBottom':'0px'}}>{value.user}</h6>
-                          <svg viewBox="0 0 640 640" width="20" height="20" style={{'marginLeft':'5px'}}>
-                            <path d="M515.26 328.9L417.63 425.73L320 522.55L222.36 425.73L124.74 328.9L227.51 328.9L227.51 117.45L412.49 117.45L412.49 328.9L515.26 328.9Z"
-                                  style={{'fill':'#ff0000'}}/>
-                          </svg>
-                        </div>
+                        <svg viewBox="0 0 640 640" width="20" height="20" style={{'marginLeft':'5px'}}>
+                          <path d="M515.26 328.9L417.63 425.73L320 522.55L222.36 425.73L124.74 328.9L227.51 328.9L227.51 117.45L412.49 117.45L412.49 328.9L515.26 328.9Z"
+                                style={{'fill':'#ff0000'}}/>
+                        </svg>
                       }
 
                       {hasWooted && !hasGrabbed &&
-                        <div style={{'display':'flex', 'alignItems':'center'}}>
-                          <h6 style={{ 'color': 'white', 'font-size': '100%', 'marginLeft':'5px', 'marginTop':'0px', 'marginBottom':'0px'}}>{value.user}</h6>
-                          <svg viewBox="0 0 640 640" width="20" height="20" style={{'marginLeft':'5px'}}>
-                            <path d="M320 117.45L417.63 214.27L515.26 311.1L412.49 311.1L412.49 522.55L227.51 522.55L227.51 311.1L124.74 311.1L222.36 214.27L320 117.45Z"
-                              style={{'fill':'#008000'}}/>
-                          </svg>
-                        </div>
+                        <svg viewBox="0 0 640 640" width="20" height="20" style={{'marginLeft':'5px'}}>
+                          <path d="M320 117.45L417.63 214.27L515.26 311.1L412.49 311.1L412.49 522.55L227.51 522.55L227.51 311.1L124.74 311.1L222.36 214.27L320 117.45Z"
+                            style={{'fill':'#008000'}}/>
+                        </svg>
                       }
 
-                      {!hasGrabbed && !hasWooted && !hasMehed &&
-                        <h6 style={{ 'color': 'white', 'font-size': '100%', 'marginLeft':'5px'}}>{value.user}</h6>
-                      }
+                      
 
                     </div>
                   )
@@ -1713,11 +1875,17 @@ class App extends Component {
                   )
                 })}
 
-                {/* <div style={{ float:"left", clear: "both" }}
-                    ref={(el) => { this.messagesEnd = el; }}>
-                </div> */}
               </div>
 
+            </Tab>
+
+            <Tab eventKey={4} title="Miscellaneous" style={tabStyle}>
+              <div style={messagesStyle}>
+                <Button onClick={() => this.showLeaderboard()} style={{'margin':'10px'}}>Leaderboard</Button>
+              </div>                
+              
+              {/* <Leaderboard leaderboardList={this.state.leaderboardList}/> */}
+              
             </Tab>
 
           </Tabs>
@@ -1816,7 +1984,7 @@ class App extends Component {
                   return (
                     <ListGroupItem onClick={() => this.onSearchListItemClicked(index)}>
                       <div style={{ 'position': 'relative' }}>
-                        <img src={imageLink} style={{ 'width': '120px', 'height': '90px' }} />
+                        <img src={imageLink} style={{ 'width': '120px', 'height': '90px' }} alt={index}/>
                         <h5 style={{ 'display': 'inline-block', 'fontWeight': 'bold', 'marginLeft': '5px', 'wordWrap': 'break-all' }}>{value.videoTitle}</h5>
                         <p style={{ 'display': 'inline-block', 'position': 'absolute', 'right': '0px', 'top': '40%' }}>{value.duration}</p>
                         
@@ -1879,7 +2047,7 @@ class App extends Component {
           isOpen={this.state.showPlaylistSlideIn}
           onOutsideClick={this.closePlaylistSlideIn}
           header={
-            <div style={{ 'position': 'fixed','right': '5px', 'position': 'fixed', 'top': '15px' }}>
+            <div style={{ 'position': 'fixed','right': '5px', 'top': '15px' }}>
                 {this.state.showPlaylistSlideIn &&
                   <div>
                     <Button style={{  }} onClick={this.openAddPlaylistModal}>Add Playlist</Button>
@@ -1903,9 +2071,9 @@ class App extends Component {
                 var title = value.playlistTitle
                 var videos = value.playlistVideos
 
-                if (title != '') {
+                if (title !== '') {
                   return (
-                    <ListGroupItem style={{ 'position': 'relative', 'display': 'flex', 'alignItems': 'center'  }} onClick={() => this.changeCurrentPlaylist(index)}>
+                    <ListGroupItem key={index + value} style={{ 'position': 'relative', 'display': 'flex', 'alignItems': 'center'  }} onClick={() => this.changeCurrentPlaylist(index)}>
 
                       <h5 style={{ 'display': 'inline-block', 'fontWeight': 'bold', 'marginLeft': '5px', 'wordWrap': 'break-all' }}>{title}</h5>
                       <h6 style={{ 'display': 'inline-block', 'marginLeft': '2px' }}>({videos.length})</h6>
@@ -2010,9 +2178,9 @@ class App extends Component {
                   var title = value.playlistTitle
                   var videos = value.playlistVideos
 
-                  if (title != '') {
+                  if (title !== '') {
                     return (
-                      <ListGroupItem style={{ 'position': 'relative', 'display': 'flex', 'alignItems': 'center'  }} onClick={() => this.grabToPlaylist(index)}>
+                      <ListGroupItem key={index+value} style={{ 'position': 'relative', 'display': 'flex', 'alignItems': 'center'  }} onClick={() => this.grabToPlaylist(index)}>
 
                         <h5 style={{ 'display': 'inline-block', 'fontWeight': 'bold', 'marginLeft': '5px', 'wordWrap': 'break-all' }}>{title}</h5>
                         <h6 style={{ 'display': 'inline-block', 'marginLeft': '2px' }}>({videos.length})</h6>
@@ -2031,6 +2199,48 @@ class App extends Component {
           </Modal.Footer>
         </Modal>
 
+        <Modal show={this.state.showAdminModal} onHide={this.closeAdminModal} bsSize='large'>
+          <Modal.Header closeButton>
+            <Modal.Title>Admin Menu</Modal.Title>
+          </Modal.Header>
+          <Modal.Body>
+            <div>
+              <form>
+                <fieldset>
+                  <legend>Skip Video</legend>
+                  <Button onClick={() => { this.onSkipVideo(true)}}>Skip</Button>
+                </fieldset>
+              </form>
+
+              <form>
+                <fieldset>
+                  <legend>Toggle Chaos Skip Mode</legend>
+                  <Button onClick={() => { this.adminToggleChaosSkipMode()}}>Toggle</Button>
+                </fieldset>
+              </form>
+
+              
+            </div>
+          </Modal.Body>
+          <Modal.Footer>
+            <Button onClick={this.closeAdminModal}>Close</Button>
+          </Modal.Footer>
+        </Modal>
+
+
+        <Modal show={this.state.showLeaderboard} onHide={this.closeLeaderboard} bsSize='large'>
+          <Modal.Header closeButton>
+            <Modal.Title>Leaderboard</Modal.Title>
+          </Modal.Header>
+          <Modal.Body>
+            <div>
+              <Leaderboard leaderboardList={this.state.leaderboardList}/>
+            </div>
+          </Modal.Body>
+          <Modal.Footer>
+            <Button onClick={this.closeLeaderboard}>Close</Button>
+          </Modal.Footer>
+        </Modal>
 
 
         <Playbar 

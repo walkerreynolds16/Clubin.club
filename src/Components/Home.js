@@ -1,12 +1,15 @@
 import React, { Component } from 'react'
 import App from './App'
 import Login from './Login'
-import { BrowserRouter as Router, Route, Redirect } from "react-router-dom";
+import { BrowserRouter as Router, Route } from "react-router-dom";
 import Axios from 'axios'
 import packageJson from '../../package.json'
+import {API_ENDPOINT} from '../api-config.js'
 
 // const apiEndpoint = 'http://127.0.0.1:5000'
-const apiEndpoint = 'https://plug-dj-clone-api.herokuapp.com'
+// const apiEndpoint = 'https://plug-dj-clone-api.herokuapp.com'
+
+const apiEndpoint = API_ENDPOINT
 
 export default class Home extends Component {
   constructor(props) {
@@ -22,7 +25,6 @@ export default class Home extends Component {
   }
 
   componentDidMount(){
-    console.log(this.state.frontEndVersion)
     this.checkVersion()
   }
 

@@ -1,7 +1,7 @@
 {
   "name": "app",
   "version": "0.1.0",
-  "projectVersion": "0.350",
+  "projectVersion": "0.440",
   "private": true,
   "dependencies": {
     "axios": "^0.18.0",
@@ -15,6 +15,7 @@
     "react": "^16.4.2",
     "react-bootstrap": "^0.32.3",
     "react-bootstrap-slider": "^2.1.5",
+    "react-bootstrap-table": "^4.3.1",
     "react-dom": "^16.4.2",
     "react-google-login": "^3.2.1",
     "react-modal": "^3.5.1",

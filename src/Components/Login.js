@@ -4,12 +4,16 @@ import Axios from 'axios'
 import "../Styles/Login.css";
 import packageJson from '../../package.json'
 import { GoogleLogin } from 'react-google-login';
+import {API_ENDPOINT} from '../api-config.js'
+
 
 //API Link
 //https://plug-dj-clone-api.herokuapp.com
 
 // const apiEndpoint = 'http://127.0.0.1:5000'
-const apiEndpoint = 'https://plug-dj-clone-api.herokuapp.com'
+// const apiEndpoint = 'https://plug-dj-clone-api.herokuapp.com'
+const apiEndpoint = API_ENDPOINT
+
 
 export default class Login extends Component {
   constructor(props) {
@@ -58,7 +62,7 @@ export default class Login extends Component {
           this.forceUpdate()
         }else if(response.data === 'fuck you'){
           alert('Stop trying to ruin my database you dingus')
-        }else if(response.data == 'user already connected'){
+        }else if(response.data === 'user already connected'){
           alert('This user is already connected you dingus')
         }else{
           alert('Your password was wrong you dingus')
