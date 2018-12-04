@@ -1634,25 +1634,17 @@ class App extends Component {
     this.showCopyModal()
   }
 
-  copyVideoToPlaylist = (playlist) => {
+  copyVideoToPlaylist = (playlist, index) => {
 
     var copyOfPlaylists = this.state.playlists.slice()
-    var list = playlist.playlistVideos.slice()
+    var playlistIndex = copyOfPlaylists.indexOf(playlist)
 
-    list.unshift(this.state.videoToCopy)
+    playlist.playlistVideos.push(this.state.videoToCopy)
 
-    var newPlaylist = { playlistTitle: playlist.playlistTitle, playlistVideos: list }
+    this.updatePlaylistState(playlist)
 
-    var index = copyOfPlaylists.indexOf(playlist)
+    copyOfPlaylists[playlistIndex] = playlist
 
-    copyOfPlaylists[index] = newPlaylist
-
-    this.updatePlaylistState(newPlaylist)
-
-     //Update backend for new video
-     this.addVideoToPlaylist(this.state.videoToCopy)
-
- 
      this.setState({
       playlists: copyOfPlaylists,
       videoToCopy: null,
@@ -1661,7 +1653,7 @@ class App extends Component {
 
 
     this.setBackendCurrentPlaylist(playlist)
-
+    
     this.forceUpdate()
   }
 
@@ -2297,7 +2289,7 @@ class App extends Component {
                       {this.state.playlists.map((playlist,index) =>{
 
                         return(
-                          <ListGroupItem onClick={() => this.copyVideoToPlaylist(playlist)}>
+                          <ListGroupItem onClick={() => this.copyVideoToPlaylist(playlist, index)}>
                             <div>
                               <h5>{playlist.playlistTitle}</h5>
                               
