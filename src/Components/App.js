@@ -121,7 +121,7 @@ const SortableItem = SortableElement(({ value, onClickDeleteCallback, onClickMov
 
         <Button
         style={{ 'display': 'inline-block', 'position': 'absolute', 'right': '45px' }} 
-        onClick={() => getPlaylistforCopy(listIndex)}
+        onClick={() => getPlaylistforCopy(value)}
         >
         Copy
         </Button>
@@ -217,7 +217,7 @@ class App extends Component {
       leaderboardList: [],
       showLeaderboard: false,
       showCopyModal: false,
-      videoToCopy: ''
+      videoToCopy: null
     }
   }
 
@@ -1634,8 +1634,35 @@ class App extends Component {
     this.showCopyModal()
   }
 
-  copyVideoToPlaylist = (index) => {
-    console.log(this.state.videoToCopy.videoTitle)
+  copyVideoToPlaylist = (playlist) => {
+
+    var copyOfPlaylists = this.state.playlists.slice()
+    var list = playlist.playlistVideos.slice()
+
+    list.unshift(this.state.videoToCopy)
+
+    var newPlaylist = { playlistTitle: playlist.playlistTitle, playlistVideos: list }
+
+    var index = copyOfPlaylists.indexOf(playlist)
+
+    copyOfPlaylists[index] = newPlaylist
+
+    this.updatePlaylistState(newPlaylist)
+
+     //Update backend for new video
+     this.addVideoToPlaylist(this.state.videoToCopy)
+
+ 
+     this.setState({
+      playlists: copyOfPlaylists,
+      videoToCopy: null,
+      showCopyModal: false
+    })
+
+
+    this.setBackendCurrentPlaylist(playlist)
+
+    this.forceUpdate()
   }
 
   showCopyModal = () => {
@@ -2270,7 +2297,7 @@ class App extends Component {
                       {this.state.playlists.map((playlist,index) =>{
 
                         return(
-                          <ListGroupItem onClick={() => this.copyVideoToPlaylist(index)}>
+                          <ListGroupItem onClick={() => this.copyVideoToPlaylist(playlist)}>
                             <div>
                               <h5>{playlist.playlistTitle}</h5>
                               
