@@ -1652,7 +1652,7 @@ class App extends Component {
     })
 
 
-    this.setBackendCurrentPlaylist(playlist)
+    this.setBackEndPlaylist(playlist)
     
     this.forceUpdate()
   }
