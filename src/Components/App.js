@@ -196,7 +196,10 @@ class App extends Component {
       leaderboardList: [],
       showLeaderboard: false,
       showCopyModal: false,
-      videoToCopy: null
+      videoToCopy: null,
+      showRenameModal: false,
+      renameBoxValue: '',
+      playlistToRename: null,
     }
   }
 
@@ -983,6 +986,64 @@ class App extends Component {
     this.setState({
       playlists: playlistCopy,
       newPlaylistNameInput: ''
+    })
+  }
+
+  openRenamePlaylist = (index) => {
+    this.openRenameModal()
+    this.setState({
+      playlistToRename: index
+    })
+  }
+
+  renamePlaylist = (e) => {
+    if (e !== undefined)
+    {
+      e.preventDefault()
+    }
+
+    var copyOfPlaylists = this.state.playlists.slice()
+    var index = this.state.playlistToRename
+
+    //console.log(this.state.renameBoxValue)
+    console.log(copyOfPlaylists[index].playlistTitle)
+
+   
+
+    copyOfPlaylists[index].playlistTitle = this.state.renameBoxValue
+
+
+    console.log(copyOfPlaylists[index].playlistTitle)
+
+    //this.updatePlaylistState(playlist)
+
+    this.setState({
+      playlists: copyOfPlaylists,
+      showRenameModal: false,
+      renameBoxValue: '',
+      playlistToRename: null
+    })
+
+    this.setBackEndPlaylist(copyOfPlaylists[index])
+
+    this.forceUpdate()
+  }
+
+  openRenameModal = () => {
+    this.setState({
+      showRenameModal: true
+    })
+  }
+
+  closeRenameModal = () => {
+    this.setState({
+      showRenameModal: false
+    })
+  }
+
+  handleRenameBoxValue = (event) => {
+    this.setState({
+      renameBoxValue: event.target.value
     })
   }
 
@@ -2110,6 +2171,11 @@ class App extends Component {
                       <h6 style={{ 'display': 'inline-block', 'marginLeft': '2px' }}>({videos.length})</h6>
 
                       <Button
+                      style= {{ 'display': 'inline-block', 'position': 'absolute', 'right': '105px' }}
+                      onClick={(e) => {e.stopPropagation(); this.openRenamePlaylist(index)}}
+                      >Rename</Button>
+
+                      <Button
                         style= {{ 'display': 'inline-block', 'position': 'absolute', 'right': '55px' }}
                         onClick={(e) => {e.stopPropagation(); this.shufflePlaylist(index)}}>
 
@@ -2289,6 +2355,24 @@ class App extends Component {
                   </div>
                 </Modal.Body>
 
+        </Modal>
+
+        <Modal show={this.state.showRenameModal} onHide={this.closeRenameModal} bsSize='small'>
+                <Modal.Header closeButton>
+                  <Modal.Title>Rename Playlist</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                  <div>
+                    <form onSubmit={(e) => this.renamePlaylist(e)}>
+                        <div style={{ 'position':'relative', 'left':'5px', 'marginTop':'3px', 'width':'100%', 'position':'absolute' }}>
+                            <input value={this.state.renameBoxValue} onChange={this.handleRenameBoxValue}></input>
+                        </div>
+                    </form>
+
+                    <Button onClick={(e) =>this.renamePlaylist(e)}>Rename</Button>
+                  </div>
+                </Modal.Body>
+        
         </Modal>
 
 
