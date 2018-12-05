@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 import Playbar from '../Components/Playbar';
 import YouTube from 'react-youtube';
 import { SortableContainer, SortableElement, arrayMove } from 'react-sortable-hoc';
-import { Button, ListGroup, ListGroupItem, Modal, Tooltip, OverlayTrigger, Tab, Tabs } from 'react-bootstrap';
+import { Button, ListGroup, ListGroupItem, Modal, Tooltip, OverlayTrigger, Tab, Tabs, ButtonToolbar, DropdownButton, Dropdown, MenuItem,Glyphicon } from 'react-bootstrap';
 import Slider from 'react-slide-out'
 import Axios from 'axios'
 import '../Styles/App.css';
@@ -84,7 +84,7 @@ const messagesStyle = {
 
 }
 
-const SortableItem = SortableElement(({ value, onClickDeleteCallback, onClickMoveToBottom, onClickMoveToTop, listIndex }) => {
+const SortableItem = SortableElement(({ value, onClickDeleteCallback, onClickMoveToBottom, onClickMoveToTop, listIndex, getPlaylistforCopy }) => {
   var image = 'https://img.youtube.com/vi/' + value.videoId + '/0.jpg'
 
   return (
@@ -93,54 +93,40 @@ const SortableItem = SortableElement(({ value, onClickDeleteCallback, onClickMov
         <img src={image} style={{ 'width': '80px', 'height': '55px' }} alt={listIndex} />
         <h6 style={{ 'display': 'inline-block', 'fontWeight': 'bold', 'marginLeft': '5px' }}>{value.videoTitle}</h6>
 
-        <Button
-          style={{ 'display': 'inline-block', 'position': 'absolute', 'right': '85px' }} 
-          onClick={() => onClickMoveToTop(listIndex)}>
-          
-          <svg width="11" height="11" viewBox="150 150 1536 1536">
-            <path d="m1523,992q0,13 -10,23l-466,466q-10,10 -23,10t-23,-10l-466,-466q-10,-10 -10,-23t10,-23l50,-50q10,-10 23,-10t23,
-            10l393,393l393,-393q10,-10 23,-10t23,10l50,50q10,10 10,23zm0,-384q0,13 -10,23l-466,466q-10,10 -23,10t-23,-10l-466,-466q-10,-10 -10,-23t10,
-            -23l50,-50q10,-10 23,-10t23,10l393,393l393,-393q10,-10 23,-10t23,10l50,50q10,10 10,23z" fill="black" id="svg_1" transform="rotate(180 1024 1008)"/>
-          
-          </svg>
+        <div style={{ 'display': 'inline-block', 'position': 'absolute', 'right': '5px' }}>
+       
+        <Dropdown pullRight title="Menu" id="menu-nav-dropdown">
 
-        </Button>
+            <Dropdown.Toggle noCaret inverse>
+              <Glyphicon glyph="option-vertical" />
+            </Dropdown.Toggle>
 
-        {/*Move to Bottom Button*/}
-        <Button
-          style={{ 'display': 'inline-block', 'position': 'absolute', 'right': '45px' }} 
-          onClick={() => onClickMoveToBottom(listIndex)}>
-          
-          <svg width="11" height="11" viewBox="150 150 1536 1536">
-            <path d="M1523 992q0 13-10 23l-466 466q-10 10-23 10t-23-10l-466-466q-10-10-10-23t10-23l50-50q10-10 23-10t23 10l393 393 393-393q10-10 23-10t23 
-            10l50 50q10 10 10 23zm0-384q0 13-10 23l-466 466q-10 10-23 10t-23-10l-466-466q-10-10-10-23t10-23l50-50q10-10 23-10t23
-            10l393 393 393-393q10-10 23-10t23 10l50 50q10 10 10 23z"></path>
-          </svg>
+            
+            <Dropdown.Menu>
+            <MenuItem onSelect={() => onClickMoveToTop(listIndex)}>Move To Top</MenuItem>
+            <MenuItem onSelect={() => onClickMoveToBottom(listIndex)}>Move To Bottom</MenuItem>
+            <MenuItem onSelect={() => getPlaylistforCopy(value)}>Copy To Another Playlist</MenuItem>
+            <MenuItem divider />
+            <MenuItem onSelect={() => onClickDeleteCallback(listIndex)}>Delete</MenuItem>            
+            </Dropdown.Menu>
+          </Dropdown>
+            
 
-        </Button>
-
-        <Button
-          style={{ 'display': 'inline-block', 'position': 'absolute', 'right': '5px' }}
-          onClick={() => onClickDeleteCallback(listIndex)}>
-
-          <svg width="11" height="11" viewBox="0 0 1024 1024">
-            <path d="M192 1024h640l64-704h-768zM640 128v-128h-256v128h-320v192l64-64h768l64 64v-192h-320zM576 128h-128v-64h128v64z"></path>
-          </svg>
-
-        </Button>
+        
+        </div>
       </li>
     </div>
 
   );
 });
 
-const SortableList = SortableContainer(({ items, onClickDeleteCallback, onClickMoveToBottom, onClickMoveToTop }) => {
+const SortableList = SortableContainer(({ items, onClickDeleteCallback, onClickMoveToBottom, onClickMoveToTop,getPlaylistforCopy }) => {
   return (
     <div style={{ 'overflow': 'auto', 'position':'absolute', 'height':'100%', 'width':'100%' }}>
       <ul>
         {items.map((value, index) => (
 
-          <SortableItem key={`item-${index}`} index={index} value={value} onClickDeleteCallback={onClickDeleteCallback} onClickMoveToBottom={onClickMoveToBottom} onClickMoveToTop={onClickMoveToTop}listIndex={index} />
+          <SortableItem key={`item-${index}`} index={index} value={value} onClickDeleteCallback={onClickDeleteCallback} onClickMoveToBottom={onClickMoveToBottom} onClickMoveToTop={onClickMoveToTop}listIndex={index} getPlaylistforCopy={getPlaylistforCopy} />
         ))}
       </ul>
     </div>
@@ -172,12 +158,16 @@ class App extends Component {
       currentUser: this.props.loginUsername,
       showPlaylistSlideIn: false,
       playlists: [],
+      //searchedVideos: [],
       showAddPlaylistModal: false,
+      showVideoHistoryModal: false,
+      videoHistory: [],
       newPlaylistNameInput: '',
       chatMessages: [],
       userPlayingVideo: '',
       currentVideoTitle: '',
       messageBoxValue: '',
+      playlistSearchBoxValue: '',
       isUserDJing: false,
       testSetUsername: '',
       startTime: 0,
@@ -204,8 +194,9 @@ class App extends Component {
       skippers: [],
       chaosSkipMode: false,
       leaderboardList: [],
-      showLeaderboard: false
-
+      showLeaderboard: false,
+      showCopyModal: false,
+      videoToCopy: null
     }
   }
 
@@ -614,6 +605,18 @@ class App extends Component {
       showAddVideoModal: false,
       searchList: [],
       addVideoSearchTerm: ''
+    })
+  }
+
+  onShowVideoHistoryModal = () => {
+    this.setState({
+      showVideoHistoryModal: true
+    })
+  }
+
+  onCloseVideoHistoryModal = () =>{
+    this.setState({
+      showVideoHistoryModal: false
     })
   }
 
@@ -1124,10 +1127,13 @@ class App extends Component {
     var videoId = data.videoId
     var videoTitle = data.videoTitle
 
+    this.state.videoHistory.push(data)
+
     // console.log('handle next video')
     // console.log(data)
 
     video = videoId
+
 
     this.setState({
       startTime: 0
@@ -1135,6 +1141,7 @@ class App extends Component {
 
     if (user === this.state.currentUser) {
       //sorts the playlist after users video is picked to be played
+      
       var newCurrentPlaylist = { playlistTitle: this.state.currentPlaylist.playlistTitle, playlistVideos: arrayMove(this.state.currentPlaylist.playlistVideos, 0, this.state.currentPlaylist.playlistVideos.length - 1) }
 
       // console.log('userPlayingVideo in new video = ' + user)
@@ -1513,6 +1520,46 @@ class App extends Component {
     
   }
 
+  searchPlaylist = (e) =>{
+
+    if(e !== undefined)
+    {
+      e.preventDefault();
+    }
+
+    var searchedVideos = []
+
+    for(var i = 0; i < this.state.currentPlaylist.playlistVideos.length; i++)
+    {
+      var currentVid = this.state.currentPlaylist.playlistVideos[i]
+      var vidTitle = currentVid['videoTitle']
+
+      if(vidTitle.toLowerCase().indexOf(this.state.playlistSearchBoxValue.toLowerCase) !== -1)
+      {
+        /*This array holds the list of videos that have been found with the substring we get
+        from above*/
+        searchedVideos.push(currentVid)
+      }
+    }
+
+    //var currentVideos = this.state.currentPlaylist.playlistVideos
+    //this.state.currentPlaylist.currentPlaylistVideos = this.state.searchedVideos
+    this.setState(
+      {
+        currentPlaylistVideos: searchedVideos
+      }
+    )
+
+    this.forceUpdate();
+  }
+
+  handleSearchBoxChange = (event) => {
+    this.setState({
+      playlistSearchBoxValue: event.target.value
+
+    })
+  }
+  
   showAdminModal = () => {
     this.setState({
       showAdminModal: true
@@ -1559,6 +1606,48 @@ class App extends Component {
     })
   }
 
+  getPlaylistforCopy = (video) => {
+    this.setState({
+      videoToCopy: video
+    })
+    this.showCopyModal()
+  }
+
+  copyVideoToPlaylist = (playlist, index) => {
+
+    var copyOfPlaylists = this.state.playlists.slice()
+    var playlistIndex = copyOfPlaylists.indexOf(playlist)
+
+    playlist.playlistVideos.push(this.state.videoToCopy)
+
+    this.updatePlaylistState(playlist)
+
+    copyOfPlaylists[playlistIndex] = playlist
+
+     this.setState({
+      playlists: copyOfPlaylists,
+      videoToCopy: null,
+      showCopyModal: false
+    })
+
+
+    this.setBackEndPlaylist(playlist)
+    
+    this.forceUpdate()
+  }
+
+  showCopyModal = () => {
+    this.setState({
+      showCopyModal: true
+    })
+  }
+
+  closeCopyModal = () => {
+    this.setState({
+      showCopyModal: false
+    })
+  }
+
   render() {
 
     const opts = {
@@ -1575,6 +1664,8 @@ class App extends Component {
     };
 
     var playlistSlideInTitle = 'Current Playlist: ' + this.state.currentPlaylist.playlistTitle
+    var showVideoHistoryModal = 'Recently Played'
+
 
     return (
       <div>
@@ -1643,24 +1734,35 @@ class App extends Component {
               <Button style={{'margin':'5px'}} onClick={() => this.onLeaveDJ()}>Quit DJing</Button>
             }
 
+            {/* <Button style={{'margin': '5px'}} onClick={this.onShowVideoHistoryModal}>Video History</Button> */}
+
+            
+           
+            {/* <div style={{ 'marginTop': '10px', 'height':'90%', 'position':'absolute', 'width':'100%'}}>
             {this.state.isAdmin && 
               <Button style={{'margin':'5px'}} onClick={() => this.showAdminModal()}>Admin Menu</Button>
             }
 
             {/* <Button style={{ 'marginLeft': '10px' }} onClick={() => this.onLeaveDJ()}>Test</Button> */}
 
+              {/*Search Box */}
+            {/* <form onSubmit={(e) => this.searchPlaylist(e)}>
+              <input value = {this.state.playlistSearchBoxValue} onChange={this.handleSearchBoxChange} style={{ 'background': '#6f7175', 'color': 'white', 'width':'30%' }}></input>
 
+            </form>
 
+            {<Button onClick={(e) => this.searchPlaylist(e)}>Search</Button> } */}
 
-            <div style={{ 'marginTop': '10px', 'height':'90%', 'position':'absolute', 'width':'100%'}}>
               <SortableList
                 items={this.state.currentPlaylist.playlistVideos}
                 onSortEnd={this.onSortEnd}
                 distance={5}
                 onClickDeleteCallback={this.onClickDeleteCallback}
                 onClickMoveToBottom={this.onClickMoveToBottom}
-                onClickMoveToTop={this.onClickMoveToTop} />
-            </div>
+                onClickMoveToTop={this.onClickMoveToTop}
+                onClickCopyToPlaylist={this.copyVideoToPlaylist}
+                getPlaylistforCopy = {this.getPlaylistforCopy} />
+            
 
           </fieldset>
         </div>
@@ -1725,7 +1827,7 @@ class App extends Component {
                         {this.state.currentUser + ":"}
                       </span>
 
-                      <input value={this.state.messageBoxValue} onChange={this.handleMessageBoxChange} style={{ 'background': '#9699a0', 'color': 'white', 'width':'70%' }}></input>
+                      <input value={this.state.messageBoxValue} onChange={this.handleMessageBoxChange} style={{ 'background': '#6f7175', 'color': 'white', 'width':'70%' }}></input>
                       
                     </div>
 
@@ -1931,6 +2033,46 @@ class App extends Component {
           </Modal.Footer>
         </Modal>
 
+
+        <Slider
+        title={showVideoHistoryModal}
+        isOpen={this.state.showVideoHistoryModal}
+        onOutsideClick={this.onCloseVideoHistoryModal}
+        
+        footer={
+          <div style={{'position':'fixed', 'right':'5px'}}>
+            {this.state.showVideoHistoryModal &&
+              <Button onClick={this.onCloseVideoHistoryModal}>Close Slider</Button>
+            }
+        </div> 
+        }>
+          
+          <div>
+            <ListGroup>
+              {this.state.videoHistory.map((value,index) => {
+                 var imageLink = 'http://img.youtube.com/vi/' + value.videoId + '/0.jpg'
+
+                 return (
+                  <ListGroupItem>
+                    <div style={{ 'position': 'relative' }}>
+                      <img src={imageLink} style={{ 'width': '120px', 'height': '90px' }} />
+                      <h5 style={{ 'display': 'inline-block', 'fontWeight': 'bold', 'marginLeft': '5px', 'wordWrap': 'break-all' }}>{value.videoTitle}</h5>
+                      <p style={{ 'display': 'inline-block', 'position': 'absolute', 'right': '0px', 'top': '40%' }}>Played By: {value.user}</p>
+                      
+                    </div>
+                  </ListGroupItem>
+                )
+
+
+              })}
+              
+            </ListGroup>
+          </div>
+        
+
+          </Slider>
+        
+
         <Slider
           title={playlistSlideInTitle}
           isOpen={this.state.showPlaylistSlideIn}
@@ -1948,7 +2090,7 @@ class App extends Component {
           footer={
             <div style={{'position':'fixed', 'right':'5px'}}>
               {this.state.showPlaylistSlideIn &&
-                <Button onClick={this.closePlaylistSlideIn}>Close Slider</Button>
+                <Button onClick={this.onCloseVideoHistoryModal}>Close Slider</Button>
               }
             </div> 
             
@@ -2114,6 +2256,39 @@ class App extends Component {
           <Modal.Footer>
             <Button onClick={this.closeAdminModal}>Close</Button>
           </Modal.Footer>
+        </Modal>
+
+        <Modal show={this.state.showCopyModal} onHide={this.closeCopyModal} bsSize='small'>
+                <Modal.Header closeButton>
+                <Modal.Title>Copy Song to Playlist</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                  <div>
+                    <ListGroup>
+                      {this.state.playlists.map((playlist,index) =>{
+
+                        return(
+                          <ListGroupItem onClick={() => this.copyVideoToPlaylist(playlist, index)}>
+                            <div>
+                              <h5>{playlist.playlistTitle}</h5>
+                              
+                            </div>
+                          
+                          </ListGroupItem>
+                        )
+                        
+
+
+                      })}
+                      
+                        
+
+                     
+                      
+                    </ListGroup>
+                  </div>
+                </Modal.Body>
+
         </Modal>
 
 
