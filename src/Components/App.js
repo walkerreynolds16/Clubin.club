@@ -195,8 +195,12 @@ class App extends Component {
       chaosSkipMode: false,
       leaderboardList: [],
       showLeaderboard: false,
+      adminRemoveUserInput: '',
       showCopyModal: false,
-      videoToCopy: null
+      videoToCopy: null,
+      showRenameModal: false,
+      renameBoxValue: '',
+      playlistToRename: null,
     }
   }
 
@@ -934,6 +938,12 @@ class App extends Component {
     })
   }
 
+  adminRemoveUserInputChange = (event) => {
+    this.setState({
+      adminRemoveUserInput: event.target.value
+    })
+  }
+
   makeNewPlaylist = (e) => {
     if (e !== undefined) {
       e.preventDefault();
@@ -983,6 +993,64 @@ class App extends Component {
     this.setState({
       playlists: playlistCopy,
       newPlaylistNameInput: ''
+    })
+  }
+
+  openRenamePlaylist = (index) => {
+    this.openRenameModal()
+    this.setState({
+      playlistToRename: index
+    })
+  }
+
+  renamePlaylist = (e) => {
+    if (e !== undefined)
+    {
+      e.preventDefault()
+    }
+
+    var copyOfPlaylists = this.state.playlists.slice()
+    var index = this.state.playlistToRename
+
+    //console.log(this.state.renameBoxValue)
+    console.log(copyOfPlaylists[index].playlistTitle)
+
+   
+
+    copyOfPlaylists[index].playlistTitle = this.state.renameBoxValue
+
+
+    console.log(copyOfPlaylists[index].playlistTitle)
+
+    //this.updatePlaylistState(playlist)
+
+    this.setState({
+      playlists: copyOfPlaylists,
+      showRenameModal: false,
+      renameBoxValue: '',
+      playlistToRename: null
+    })
+
+    this.setBackEndPlaylist(copyOfPlaylists[index])
+
+    this.forceUpdate()
+  }
+
+  openRenameModal = () => {
+    this.setState({
+      showRenameModal: true
+    })
+  }
+
+  closeRenameModal = () => {
+    this.setState({
+      showRenameModal: false
+    })
+  }
+
+  handleRenameBoxValue = (event) => {
+    this.setState({
+      renameBoxValue: event.target.value
     })
   }
 
@@ -1606,6 +1674,10 @@ class App extends Component {
     })
   }
 
+  adminRemoveUser = () => {
+    socket.emit('Event_userDisconnected', this.state.adminRemoveUserInput)
+  }
+  
   getPlaylistforCopy = (video) => {
     this.setState({
       videoToCopy: video
@@ -1734,16 +1806,10 @@ class App extends Component {
               <Button style={{'margin':'5px'}} onClick={() => this.onLeaveDJ()}>Quit DJing</Button>
             }
 
-            {/* <Button style={{'margin': '5px'}} onClick={this.onShowVideoHistoryModal}>Video History</Button> */}
-
-            
-           
-            {/* <div style={{ 'marginTop': '10px', 'height':'90%', 'position':'absolute', 'width':'100%'}}>
             {this.state.isAdmin && 
               <Button style={{'margin':'5px'}} onClick={() => this.showAdminModal()}>Admin Menu</Button>
             }
 
-            {/* <Button style={{ 'marginLeft': '10px' }} onClick={() => this.onLeaveDJ()}>Test</Button> */}
 
               {/*Search Box */}
             {/* <form onSubmit={(e) => this.searchPlaylist(e)}>
@@ -2110,6 +2176,11 @@ class App extends Component {
                       <h6 style={{ 'display': 'inline-block', 'marginLeft': '2px' }}>({videos.length})</h6>
 
                       <Button
+                      style= {{ 'display': 'inline-block', 'position': 'absolute', 'right': '105px' }}
+                      onClick={(e) => {e.stopPropagation(); this.openRenamePlaylist(index)}}
+                      >Rename</Button>
+
+                      <Button
                         style= {{ 'display': 'inline-block', 'position': 'absolute', 'right': '55px' }}
                         onClick={(e) => {e.stopPropagation(); this.shufflePlaylist(index)}}>
 
@@ -2250,6 +2321,14 @@ class App extends Component {
                 </fieldset>
               </form>
 
+              <form>
+                <fieldset>
+                  <legend>Remove user from connected users (only use if someone's account did not properly disconnect)</legend>
+                  <input value={this.state.adminRemoveUserInput} onChange={this.adminRemoveUserInputChange}  />
+                  <Button onClick={() => this.adminRemoveUser()}>Toggle</Button>
+                </fieldset>
+              </form>
+
               
             </div>
           </Modal.Body>
@@ -2289,6 +2368,24 @@ class App extends Component {
                   </div>
                 </Modal.Body>
 
+        </Modal>
+
+        <Modal show={this.state.showRenameModal} onHide={this.closeRenameModal} bsSize='small'>
+                <Modal.Header closeButton>
+                  <Modal.Title>Rename Playlist</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                  <div>
+                    <form onSubmit={(e) => this.renamePlaylist(e)}>
+                        <div style={{ 'position':'relative', 'left':'5px', 'marginTop':'3px', 'width':'100%', 'position':'absolute' }}>
+                            <input value={this.state.renameBoxValue} onChange={this.handleRenameBoxValue}></input>
+                        </div>
+                    </form>
+
+                    <Button onClick={(e) =>this.renamePlaylist(e)}>Rename</Button>
+                  </div>
+                </Modal.Body>
+        
         </Modal>
 
 
