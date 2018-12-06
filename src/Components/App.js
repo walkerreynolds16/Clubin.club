@@ -46,7 +46,7 @@ const listStyle = {
   right: '0px',
   background: '#9699a0',
   border: '2px double #74757E',
-  height: '65%'
+  height: '64.2%'
 }
 
 const playerStyle = {
@@ -137,7 +137,7 @@ const SortableItem = SortableElement(({ value, onClickDeleteCallback, onClickMov
 
 const SortableList = SortableContainer(({ items, onClickDeleteCallback, onClickMoveToBottom, onClickMoveToTop,getPlaylistforCopy }) => {
   return (
-    <div style={{ 'overflow': 'auto', 'position':'absolute', 'height':'100%', 'width':'100%' }}>
+    <div style={{ 'overflow': 'auto', 'position':'absolute', 'height':'93%', 'width':'100%' }}>
       <ul>
         {items.map((value, index) => (
 
@@ -1811,11 +1811,6 @@ class App extends Component {
               <Button style={{'margin':'5px'}} onClick={() => this.onLeaveDJ()}>Quit DJing</Button>
             }
 
-            {/* <Button style={{'margin': '5px'}} onClick={this.onShowVideoHistoryModal}>Video History</Button> */}
-
-            
-           
-            {/* </fieldset>/<div style={{ 'marginTop': '10px', 'height':'90%', 'position':'absolute', 'width':'100%'}}> */}
             {this.state.isAdmin && 
               <Button style={{'margin':'5px'}} onClick={() => this.showAdminModal()}>Admin Menu</Button>
             }
@@ -1832,7 +1827,7 @@ class App extends Component {
               <SortableList
                 items={this.state.currentPlaylist.playlistVideos}
                 onSortEnd={this.onSortEnd}
-                distance={5}
+                distance={0}
                 onClickDeleteCallback={this.onClickDeleteCallback}
                 onClickMoveToBottom={this.onClickMoveToBottom}
                 onClickMoveToTop={this.onClickMoveToTop}
