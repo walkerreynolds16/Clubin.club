@@ -1740,6 +1740,11 @@ class App extends Component {
       }
     };
 
+    const wootToolTip = (<Tooltip>{this.state.wooters.map(s=><React.Fragment>{s}<br/></React.Fragment>)}</Tooltip>);
+    const mehToolTip = (<Tooltip>{this.state.mehers.map(s=><React.Fragment>{s}<br/></React.Fragment>)}</Tooltip>);
+    const grabToolTip = (<Tooltip>{this.state.grabbers.map(s=><React.Fragment>{s}<br/></React.Fragment>)}</Tooltip>);
+
+
     var playlistSlideInTitle = 'Current Playlist: ' + this.state.currentPlaylist.playlistTitle
     var showVideoHistoryModal = 'Recently Played'
 
@@ -2000,58 +2005,106 @@ class App extends Component {
 
         {/* Woot/Meh/Grab stuff */}
         {/* <div style={{'width': '13%', 'left': (parseInt(this.state.playerWidth.substring(0,this.state.playerWidth.length - 2)) + 7 + 'px'), 'position':'fixed', 'bottom':'0px', 'borderStyle':'solid', 'borderWidth':'5px', 'height':'60px'}}> */}
-        <div style={{'width': '13%', 'right': '35%', 'position':'fixed', 'bottom':'61px', 'borderStyle':'solid', 'borderWidth':'5px', 'height':'60px'}}>
-              
-              <div style={{'display':'flex', 'flexWrap':'nowrap', 'alignItems': 'baseline', 'alignContent':'space-between'}}>
+        <div style={{ 'width': '13%', 'right': '35%', 'position': 'fixed', 'bottom': '61px', 'borderStyle': 'solid', 'borderWidth': '5px', 'height': '60px' }}>
 
-                {/* Woot */}
-                <div style={{'width':'33%', 'margin':'10px'}}>           
-                  <svg viewBox="0 0 640 640" width="40" height="40" style={{'cursor':'pointer'}} onClick={this.onClickWoot}>
+          <div style={{ 'display': 'flex', 'flexWrap': 'nowrap', 'alignItems': 'baseline', 'alignContent': 'space-between' }}>
+
+            {/* Woot */}
+            <div style={{ 'width': '33%', 'margin': '10px' }}>
+
+              {this.state.wooters.length >= 1 ? (<OverlayTrigger placement="top" overlay={wootToolTip}>
+                <svg viewBox="0 0 640 640" width="40" height="40" style={{ 'cursor': 'pointer' }} onClick={this.onClickWoot}>
+                  {!this.state.wooted &&
+                    <path d="M320 117.45L417.63 214.27L515.26 311.1L412.49 311.1L412.49 522.55L227.51 522.55L227.51 311.1L124.74 311.1L222.36 214.27L320 117.45Z"
+                      style={{ 'fill': '#fff' }} />
+                  }
+
+                  {this.state.wooted &&
+                    <path d="M320 117.45L417.63 214.27L515.26 311.1L412.49 311.1L412.49 522.55L227.51 522.55L227.51 311.1L124.74 311.1L222.36 214.27L320 117.45Z"
+                      style={{ 'fill': '#008000' }} />
+                  }
+
+                </svg>
+              </OverlayTrigger>
+              ) : (
+                  <svg viewBox="0 0 640 640" width="40" height="40" style={{ 'cursor': 'pointer' }} onClick={this.onClickWoot}>
                     {!this.state.wooted &&
                       <path d="M320 117.45L417.63 214.27L515.26 311.1L412.49 311.1L412.49 522.55L227.51 522.55L227.51 311.1L124.74 311.1L222.36 214.27L320 117.45Z"
-                            style={{'fill':'#fff'}}/>
+                        style={{ 'fill': '#fff' }} />
                     }
-                    
+
                     {this.state.wooted &&
                       <path d="M320 117.45L417.63 214.27L515.26 311.1L412.49 311.1L412.49 522.55L227.51 522.55L227.51 311.1L124.74 311.1L222.36 214.27L320 117.45Z"
-                            style={{'fill':'#008000'}}/>
+                        style={{ 'fill': '#008000' }} />
                     }
 
                   </svg>
-                  <span style={{'position':'absolute', 'bottom':'0px', 'fontWeight':'bold'}}>{this.state.wooters.length}</span>
-                </div>
 
-                {/* Meh */}
-                <div style={{'width':'33%', 'margin':'10px'}}>
-                  <svg viewBox="0 0 640 640" width="40" height="40" style={{'cursor':'pointer'}} onClick={this.onClickMeh}>
+                )}
+              <span style={{ 'position': 'absolute', 'bottom': '0px', 'fontWeight': 'bold' }}>{this.state.wooters.length}</span>
+            </div>
+
+            {/* Meh */}
+            <div style={{ 'width': '33%', 'margin': '10px' }}>
+              {this.state.mehers.length >= 1 ? (<OverlayTrigger placement="top" overlay={mehToolTip}>
+                <svg viewBox="0 0 640 640" width="40" height="40" style={{ 'cursor': 'pointer' }} onClick={this.onClickMeh}>
+                  {!this.state.mehed &&
+                    <path d="M515.26 328.9L417.63 425.73L320 522.55L222.36 425.73L124.74 328.9L227.51 328.9L227.51 117.45L412.49 117.45L412.49 328.9L515.26 328.9Z"
+                      style={{ 'fill': '#fff' }} />
+                  }
+
+                  {this.state.mehed &&
+                    <path d="M515.26 328.9L417.63 425.73L320 522.55L222.36 425.73L124.74 328.9L227.51 328.9L227.51 117.45L412.49 117.45L412.49 328.9L515.26 328.9Z"
+                      style={{ 'fill': '#ff0000' }} />
+                  }
+
+                </svg>
+              </OverlayTrigger>) : (
+                  <svg viewBox="0 0 640 640" width="40" height="40" style={{ 'cursor': 'pointer' }} onClick={this.onClickMeh}>
                     {!this.state.mehed &&
                       <path d="M515.26 328.9L417.63 425.73L320 522.55L222.36 425.73L124.74 328.9L227.51 328.9L227.51 117.45L412.49 117.45L412.49 328.9L515.26 328.9Z"
-                            style={{'fill':'#fff'}}/>
+                        style={{ 'fill': '#fff' }} />
                     }
 
                     {this.state.mehed &&
                       <path d="M515.26 328.9L417.63 425.73L320 522.55L222.36 425.73L124.74 328.9L227.51 328.9L227.51 117.45L412.49 117.45L412.49 328.9L515.26 328.9Z"
-                            style={{'fill':'#ff0000'}}/>
-                    }
-                    
-                  </svg>
-                  <span style={{'position':'absolute', 'bottom':'0px', 'fontWeight':'bold'}}>{this.state.mehers.length}</span>
-                </div >
-
-                {/* Grab */}
-                <div style={{'width':'33%', 'margin':'10px'}}>
-                  <svg viewBox="0 0 640 640" width="40" height="40" style={{'cursor':'pointer'}} onClick={this.onClickGrab}>
-                    {!this.state.grabbed &&
-                      <path d="M389.25 250.79L544.09 272.19L432.05 375.98L458.49 522.55L320 453.35L181.51 522.55L207.96 375.98L95.91 272.19L250.76 250.79L320 117.45L389.25 250.79Z"
-                            style={{'fill':'#fff'}}/>
+                        style={{ 'fill': '#ff0000' }} />
                     }
 
-                    {this.state.grabbed &&
-                      <path d="M389.25 250.79L544.09 272.19L432.05 375.98L458.49 522.55L320 453.35L181.51 522.55L207.96 375.98L95.91 272.19L250.76 250.79L320 117.45L389.25 250.79Z"
-                            style={{'fill':'#9400D3'}}/>
-                    }
-                    
                   </svg>
+                )}
+              <span style={{ 'position': 'absolute', 'bottom': '0px', 'fontWeight': 'bold' }}>{this.state.mehers.length}</span>
+            </div >
+
+            {/* Grab */}
+            <div style={{ 'width': '33%', 'margin': '10px' }}>
+              {this.state.grabbers.length >= 1 ? (<OverlayTrigger placement="top" overlay={grabToolTip}>
+                <svg viewBox="0 0 640 640" width="40" height="40" style={{ 'cursor': 'pointer' }} onClick={this.onClickGrab}>
+                  {!this.state.grabbed &&
+                    <path d="M389.25 250.79L544.09 272.19L432.05 375.98L458.49 522.55L320 453.35L181.51 522.55L207.96 375.98L95.91 272.19L250.76 250.79L320 117.45L389.25 250.79Z"
+                      style={{ 'fill': '#fff' }} />
+                  }
+
+                  {this.state.grabbed &&
+                    <path d="M389.25 250.79L544.09 272.19L432.05 375.98L458.49 522.55L320 453.35L181.51 522.55L207.96 375.98L95.91 272.19L250.76 250.79L320 117.45L389.25 250.79Z"
+                      style={{ 'fill': '#9400D3' }} />
+                  }
+
+                </svg>
+              </OverlayTrigger>) : (
+                <svg viewBox="0 0 640 640" width="40" height="40" style={{ 'cursor': 'pointer' }} onClick={this.onClickGrab}>
+                {!this.state.grabbed &&
+                  <path d="M389.25 250.79L544.09 272.19L432.05 375.98L458.49 522.55L320 453.35L181.51 522.55L207.96 375.98L95.91 272.19L250.76 250.79L320 117.45L389.25 250.79Z"
+                    style={{ 'fill': '#fff' }} />
+                }
+
+                {this.state.grabbed &&
+                  <path d="M389.25 250.79L544.09 272.19L432.05 375.98L458.49 522.55L320 453.35L181.51 522.55L207.96 375.98L95.91 272.19L250.76 250.79L320 117.45L389.25 250.79Z"
+                    style={{ 'fill': '#9400D3' }} />
+                }
+
+              </svg>
+              )}
                   <span style={{'position':'absolute', 'bottom':'0px', 'fontWeight':'bold'}}>{this.state.grabbers.length}</span>
                 </div>
 
