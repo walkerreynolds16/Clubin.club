@@ -1827,7 +1827,7 @@ class App extends Component {
               <SortableList
                 items={this.state.currentPlaylist.playlistVideos}
                 onSortEnd={this.onSortEnd}
-                distance={0}
+                distance={5}
                 onClickDeleteCallback={this.onClickDeleteCallback}
                 onClickMoveToBottom={this.onClickMoveToBottom}
                 onClickMoveToTop={this.onClickMoveToTop}

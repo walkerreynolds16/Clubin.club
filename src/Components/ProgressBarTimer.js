@@ -22,7 +22,7 @@ export default class ProgressBarTimer extends Component {
         timerOn: true
     })
 
-    console.log('onStartTimer()')
+    // console.log('onStartTimer()')
 
     this.onTimeUpdate()
   }
@@ -33,7 +33,7 @@ export default class ProgressBarTimer extends Component {
         progressPercentage: 0
     })
 
-    console.log('onStopTimer()')
+    // console.log('onStopTimer()')
   }
 
   onTimeUpdate = () => {
