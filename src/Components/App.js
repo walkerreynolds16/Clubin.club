@@ -204,7 +204,8 @@ class App extends Component {
       skippers: [],
       chaosSkipMode: false,
       leaderboardList: [],
-      showLeaderboard: false
+      showLeaderboard: false,
+      adminRemoveUserInput: ''
 
     }
   }
@@ -931,6 +932,12 @@ class App extends Component {
     })
   }
 
+  adminRemoveUserInputChange = (event) => {
+    this.setState({
+      adminRemoveUserInput: event.target.value
+    })
+  }
+
   makeNewPlaylist = (e) => {
     if (e !== undefined) {
       e.preventDefault();
@@ -1559,6 +1566,10 @@ class App extends Component {
     })
   }
 
+  adminRemoveUser = () => {
+    socket.emit('Event_userDisconnected', this.state.adminRemoveUserInput)
+  }
+
   render() {
 
     const opts = {
@@ -2105,6 +2116,14 @@ class App extends Component {
                 <fieldset>
                   <legend>Toggle Chaos Skip Mode</legend>
                   <Button onClick={() => { this.adminToggleChaosSkipMode()}}>Toggle</Button>
+                </fieldset>
+              </form>
+
+              <form>
+                <fieldset>
+                  <legend>Remove user from connected user (only use if someone's account did not properly disconnect)</legend>
+                  <input value={this.state.adminRemoveUserInput} onChange={this.adminRemoveUserInputChange}  />
+                  <Button onClick={() => this.adminRemoveUser()}>Toggle</Button>
                 </fieldset>
               </form>
 
