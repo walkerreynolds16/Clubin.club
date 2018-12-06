@@ -94,25 +94,40 @@ const SortableItem = SortableElement(({ value, onClickDeleteCallback, onClickMov
         <h6 style={{ 'display': 'inline-block', 'fontWeight': 'bold', 'marginLeft': '5px' }}>{value.videoTitle}</h6>
 
         <div style={{ 'display': 'inline-block', 'position': 'absolute', 'right': '5px' }}>
-       
-        <Dropdown pullRight title="Menu" id="menu-nav-dropdown">
+
+          {listIndex <= 1 ? (<Dropdown pullRight title="Menu" id="menu-nav-dropdown">
 
             <Dropdown.Toggle noCaret inverse>
               <Glyphicon glyph="option-vertical" />
             </Dropdown.Toggle>
 
-            
-            <Dropdown.Menu>
-            <MenuItem onSelect={() => onClickMoveToTop(listIndex)}>Move To Top</MenuItem>
-            <MenuItem onSelect={() => onClickMoveToBottom(listIndex)}>Move To Bottom</MenuItem>
-            <MenuItem onSelect={() => getPlaylistforCopy(value)}>Copy To Another Playlist</MenuItem>
-            <MenuItem divider />
-            <MenuItem onSelect={() => onClickDeleteCallback(listIndex)}>Delete</MenuItem>            
-            </Dropdown.Menu>
-          </Dropdown>
-            
 
-        
+            <Dropdown.Menu>
+              <MenuItem onSelect={() => onClickMoveToTop(listIndex)}>Move To Top</MenuItem>
+              <MenuItem onSelect={() => onClickMoveToBottom(listIndex)}>Move To Bottom</MenuItem>
+              <MenuItem onSelect={() => getPlaylistforCopy(value)}>Copy To Another Playlist</MenuItem>
+              <MenuItem divider />
+              <MenuItem onSelect={() => onClickDeleteCallback(listIndex)}>Delete</MenuItem>
+            </Dropdown.Menu>
+          </Dropdown>) : (<Dropdown dropup pullRight title="Menu" id="menu-nav-dropdown">
+
+            <Dropdown.Toggle noCaret inverse>
+              <Glyphicon glyph="option-vertical" />
+            </Dropdown.Toggle>
+
+
+            <Dropdown.Menu>
+              <MenuItem onSelect={() => onClickMoveToTop(listIndex)}>Move To Top</MenuItem>
+              <MenuItem onSelect={() => onClickMoveToBottom(listIndex)}>Move To Bottom</MenuItem>
+              <MenuItem onSelect={() => getPlaylistforCopy(value)}>Copy To Another Playlist</MenuItem>
+              <MenuItem divider />
+              <MenuItem onSelect={() => onClickDeleteCallback(listIndex)}>Delete</MenuItem>
+            </Dropdown.Menu>
+          </Dropdown>)}
+
+
+
+
         </div>
       </li>
     </div>
@@ -1005,26 +1020,16 @@ class App extends Component {
     var copyOfPlaylists = this.state.playlists.slice()
     var index = this.state.playlistToRename
 
-    //console.log(this.state.renameBoxValue)
-    console.log(copyOfPlaylists[index].playlistTitle)
-
    
-
     copyOfPlaylists[index].playlistTitle = this.state.renameBoxValue
 
-
-    console.log(copyOfPlaylists[index].playlistTitle)
-
-    //this.updatePlaylistState(playlist)
+    this.setAllPlaylists(copyOfPlaylists)
 
     this.setState({
-      playlists: copyOfPlaylists,
       showRenameModal: false,
       renameBoxValue: '',
       playlistToRename: null
     })
-
-    this.setBackEndPlaylist(copyOfPlaylists[index])
 
     this.forceUpdate()
   }
@@ -1799,7 +1804,7 @@ class App extends Component {
 
             
            
-            {/* <div style={{ 'marginTop': '10px', 'height':'90%', 'position':'absolute', 'width':'100%'}}>
+            {/* </fieldset>/<div style={{ 'marginTop': '10px', 'height':'90%', 'position':'absolute', 'width':'100%'}}> */}
             {this.state.isAdmin && 
               <Button style={{'margin':'5px'}} onClick={() => this.showAdminModal()}>Admin Menu</Button>
             }
@@ -2225,7 +2230,7 @@ class App extends Component {
             <div style={{ 'overflowY': 'auto' }}>
 
               <form onSubmit={(e) => this.makeNewPlaylist(e)}>
-                <input value={this.state.newPlaylistNameInput} onChange={this.handleNewPlaylistNameChange} autoFocus/>
+                <input value={this.state.newPlaylistNameInput} onChange={this.handleNewPlaylistNameChange} autoFocus />
                 <Button onClick={(e) => { this.makeNewPlaylist(e) }}>Add</Button>
               </form>
 
@@ -2243,14 +2248,14 @@ class App extends Component {
           <Modal.Body>
             <div style={{ 'overflowY': 'auto' }}>
               <form onSubmit={(e) => this.importPlaylistFromYoutube(e)}>
-                
-                  <h6 style={{'display':'inline-block'}}>Playlist Id: </h6>
-                  <input value={this.state.importPlaylistId} onChange={this.handleImportPlaylistIdChange} style={{'display':'inline-block'}} autoFocus/>
-                  <br/>
 
-                  <h6 style={{'display':'inline-block'}}>New Playlist Title: </h6>
-                  <input value={this.state.importPlaylistTitle} onChange={this.handleImportPlaylistTitleChange}  />
-                  <br/>
+                <h6 style={{ 'display': 'inline-block' }}>Playlist Id: </h6>
+                <input value={this.state.importPlaylistId} onChange={this.handleImportPlaylistIdChange} style={{ 'display': 'inline-block' }} autoFocus />
+                <br />
+
+                <h6 style={{ 'display': 'inline-block' }}>New Playlist Title: </h6>
+                <input value={this.state.importPlaylistTitle} onChange={this.handleImportPlaylistTitleChange} />
+                <br />
 
                 <Button type="submit">Add</Button>
               </form>
@@ -2277,7 +2282,7 @@ class App extends Component {
 
                   if (title !== '') {
                     return (
-                      <ListGroupItem key={index+value} style={{ 'position': 'relative', 'display': 'flex', 'alignItems': 'center'  }} onClick={() => this.grabToPlaylist(index)}>
+                      <ListGroupItem key={index + value} style={{ 'position': 'relative', 'display': 'flex', 'alignItems': 'center' }} onClick={() => this.grabToPlaylist(index)}>
 
                         <h5 style={{ 'display': 'inline-block', 'fontWeight': 'bold', 'marginLeft': '5px', 'wordWrap': 'break-all' }}>{title}</h5>
                         <h6 style={{ 'display': 'inline-block', 'marginLeft': '2px' }}>({videos.length})</h6>
@@ -2305,18 +2310,18 @@ class App extends Component {
               <form>
                 <fieldset>
                   <legend>Skip Video</legend>
-                  <Button onClick={() => { this.onSkipVideo(true)}}>Skip</Button>
+                  <Button onClick={() => { this.onSkipVideo(true) }}>Skip</Button>
                 </fieldset>
               </form>
 
               <form>
                 <fieldset>
                   <legend>Toggle Chaos Skip Mode</legend>
-                  <Button onClick={() => { this.adminToggleChaosSkipMode()}}>Toggle</Button>
+                  <Button onClick={() => { this.adminToggleChaosSkipMode() }}>Toggle</Button>
                 </fieldset>
               </form>
 
-              
+
             </div>
           </Modal.Body>
           <Modal.Footer>
@@ -2325,54 +2330,46 @@ class App extends Component {
         </Modal>
 
         <Modal show={this.state.showCopyModal} onHide={this.closeCopyModal} bsSize='small'>
-                <Modal.Header closeButton>
-                <Modal.Title>Copy Song to Playlist</Modal.Title>
-                </Modal.Header>
-                <Modal.Body>
-                  <div>
-                    <ListGroup>
-                      {this.state.playlists.map((playlist,index) =>{
+          <Modal.Header closeButton>
+            <Modal.Title>Copy Song to Playlist</Modal.Title>
+          </Modal.Header>
+          <Modal.Body>
+            <div>
+              <ListGroup>
+                {this.state.playlists.map((playlist, index) => {
 
-                        return(
-                          <ListGroupItem onClick={() => this.copyVideoToPlaylist(playlist, index)}>
-                            <div>
-                              <h5>{playlist.playlistTitle}</h5>
-                              
-                            </div>
-                          
-                          </ListGroupItem>
-                        )
-                        
+                  return (
+                    <ListGroupItem onClick={() => this.copyVideoToPlaylist(playlist, index)}>
+                      <div>
+                        <h5>{playlist.playlistTitle}</h5>
 
+                      </div>
 
-                      })}
-                      
-                        
-
-                     
-                      
-                    </ListGroup>
-                  </div>
-                </Modal.Body>
+                    </ListGroupItem>
+                  )
+                })}
+              </ListGroup>
+            </div>
+          </Modal.Body>
 
         </Modal>
 
         <Modal show={this.state.showRenameModal} onHide={this.closeRenameModal} bsSize='small'>
-                <Modal.Header closeButton>
-                  <Modal.Title>Rename Playlist</Modal.Title>
-                </Modal.Header>
-                <Modal.Body>
-                  <div>
-                    <form onSubmit={(e) => this.renamePlaylist(e)}>
-                        <div style={{ 'position':'relative', 'left':'5px', 'marginTop':'3px', 'width':'100%', 'position':'absolute' }}>
-                            <input value={this.state.renameBoxValue} onChange={this.handleRenameBoxValue}></input>
-                        </div>
-                    </form>
+          <Modal.Header closeButton>
+            <Modal.Title>Rename Playlist</Modal.Title>
+          </Modal.Header>
+          <Modal.Body>
+            <div>
+              <form onSubmit={(e) => this.renamePlaylist(e)}>
+                <div>
+                  <input value={this.state.renameBoxValue} onChange={this.handleRenameBoxValue}></input>
+                  <Button onClick={(e) => this.renamePlaylist(e)}>Rename</Button>
+                </div>
+              </form>
 
-                    <Button onClick={(e) =>this.renamePlaylist(e)}>Rename</Button>
-                  </div>
-                </Modal.Body>
-        
+            </div>
+          </Modal.Body>
+
         </Modal>
 
 
@@ -2382,7 +2379,7 @@ class App extends Component {
           </Modal.Header>
           <Modal.Body>
             <div>
-              <Leaderboard leaderboardList={this.state.leaderboardList}/>
+              <Leaderboard leaderboardList={this.state.leaderboardList} />
             </div>
           </Modal.Body>
           <Modal.Footer>
@@ -2391,16 +2388,16 @@ class App extends Component {
         </Modal>
 
 
-        <Playbar 
-            ref={this.playbarRef}
-            onSliderChange={this.onVolumeChange} 
-            onToggleMutePlayer={this.onToggleMutePlayer} 
-            getPlayerVolume={this.getPlayerVolume} 
-            getPlayerIsMuted={this.getPlayerIsMuted}
-            userPlayingVideo={this.state.userPlayingVideo}
-            currentVideoTitle={this.state.currentVideoTitle}
-            playerWidth={this.state.playerWidth}
-            player={this.state.player}/>
+        <Playbar
+          ref={this.playbarRef}
+          onSliderChange={this.onVolumeChange}
+          onToggleMutePlayer={this.onToggleMutePlayer}
+          getPlayerVolume={this.getPlayerVolume}
+          getPlayerIsMuted={this.getPlayerIsMuted}
+          userPlayingVideo={this.state.userPlayingVideo}
+          currentVideoTitle={this.state.currentVideoTitle}
+          playerWidth={this.state.playerWidth}
+          player={this.state.player} />
 
       </div>
     );
