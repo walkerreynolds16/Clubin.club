@@ -1,7 +1,7 @@
 {
   "name": "app",
   "version": "0.1.0",
-  "projectVersion": "0.451",
+  "projectVersion": "0.452",
   "private": true,
   "dependencies": {
     "axios": "^0.18.0",
