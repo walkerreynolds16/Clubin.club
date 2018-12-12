@@ -463,12 +463,12 @@ class App extends Component {
     // this.getCurrentVideo()
 
     //Send message to everyone saying that a user has connected
-    socket.emit('Event_sendChatMessage',
-      {
-        user: 'Server',
-        message: this.state.currentUser + ' has connected'
-      }
-    )
+    // socket.emit('Event_sendChatMessage',
+    //   {
+    //     user: 'Server',
+    //     message: this.state.currentUser + ' has connected'
+    //   }
+    // )
   }
 
   getCurrentVideo = () => {
