@@ -238,6 +238,7 @@ class App extends Component {
       showRenameModal: false,
       renameBoxValue: '',
       playlistToRename: null,
+      addVideoByIdInput: ''
     }
   }
 
@@ -661,7 +662,7 @@ class App extends Component {
     })
   }
 
-  handleAddVideoIDChange = (event) => {
+  handleAddVideoSearchChange = (event) => {
     this.setState({
       addVideoSearchTerm: event.target.value
     })
@@ -1785,6 +1786,53 @@ class App extends Component {
     })
   }
 
+  handleAddVideoByIdChange = (event) => {
+    this.setState({
+      addVideoByIdInput: event.target.value
+    })
+  }
+
+  onAddVideoById = (e) => {
+    if (e !== undefined) {
+      e.preventDefault();
+    }
+
+    var id = this.state.addVideoByIdInput
+    var url = 'https://www.googleapis.com/youtube/v3/videos?id=' + id +'&part=snippet&key=' + youtubeAPIKey
+    var searchList = []
+
+    Axios.get(url)
+      .then(response => {
+
+        if(response['data']['items'].length > 0){
+          var title = response['data']['items'][0]['snippet']['localized']['title']
+  
+          var getVideoDurationUrl = 'https://www.googleapis.com/youtube/v3/videos?id=' + id + '&part=contentDetails&key=' + youtubeAPIKey
+  
+            Axios.get(getVideoDurationUrl)
+              .then((response) => {
+                console.log(response)
+  
+                var duration = Moment.duration(response['data']['items'][0]['contentDetails']['duration']).format('h:mm:ss').padStart(4, '0:0')
+  
+                searchList.push({ videoId: id, videoTitle: title, duration: duration })
+  
+                this.setState({
+                  searchList: searchList
+                })
+  
+                this.forceUpdate()
+  
+  
+              })
+        }
+      
+        
+      })
+
+      
+  }
+
   render() {
 
     const opts = {
@@ -2185,31 +2233,50 @@ class App extends Component {
             <Modal.Title>Add Video to List</Modal.Title>
           </Modal.Header>
           <Modal.Body>
-            <div style={{ 'overflowY': 'auto' }}>
+            <div >
+              
+              <div style={{"display":'flex','alignItems':'center', 'marginBottom':'30px', 'justifyContent':'center'}}>
+                <div style={{"width":"40%"}}>
+                  <form onSubmit={(e) => this.onAddVideoSearch(e)}>
+                    <legend>Search YouTube</legend>
+                    <input value={this.state.addVideoSearchTerm} onChange={this.handleAddVideoSearchChange} autoFocus/>
+                    <Button style={{"marginLeft":"10px"}} onClick={(e) => { this.onAddVideoSearch(e) }}>Search</Button>
+                  </form>
+                </div>
 
-              <form onSubmit={(e) => this.onAddVideoSearch(e)}>
-                <input value={this.state.addVideoSearchTerm} onChange={this.handleAddVideoIDChange} autoFocus/>
-                <Button onClick={(e) => { this.onAddVideoSearch(e) }}>Search</Button>
-              </form>
+                <div style={{"width":"40%"}}>
+                  <form onSubmit={(e) => this.onAddVideoById(e)}>
+                    <legend>Search by YouTube Video Id</legend>
+                    <input value={this.state.addVideoByIdInput} onChange={this.handleAddVideoByIdChange} autoFocus/>
+                    <Button style={{"marginLeft":"10px"}} onClick={(e) => { this.onAddVideoById(e) }}>Search</Button>
+                  </form>
+                </div>
+              </div>
+              
+              
 
-              <ListGroup>
-                {this.state.searchList.map((value, index) => {
-                  var imageLink = 'http://img.youtube.com/vi/' + value.videoId + '/0.jpg'
+              <div style={{ 'overflowY': 'auto' }}>
+                <ListGroup>
+                  {this.state.searchList.map((value, index) => {
+                    var imageLink = 'http://img.youtube.com/vi/' + value.videoId + '/0.jpg'
 
-                  return (
-                    <ListGroupItem onClick={() => this.onSearchListItemClicked(index)}>
-                      <div style={{ 'position': 'relative' }}>
-                        <img src={imageLink} style={{ 'width': '120px', 'height': '90px' }} alt={index}/>
-                        <h5 style={{ 'display': 'inline-block', 'fontWeight': 'bold', 'marginLeft': '5px', 'wordWrap': 'break-all' }}>{value.videoTitle}</h5>
-                        <p style={{ 'display': 'inline-block', 'position': 'absolute', 'right': '0px', 'top': '40%' }}>{value.duration}</p>
-                        
-                      </div>
-                    </ListGroupItem>
-                  )
+                    return (
+                      <ListGroupItem onClick={() => this.onSearchListItemClicked(index)}>
+                        <div style={{ 'position': 'relative' }}>
+                          <img src={imageLink} style={{ 'width': '120px', 'height': '90px' }} alt={index}/>
+                          <h5 style={{ 'display': 'inline-block', 'fontWeight': 'bold', 'marginLeft': '5px', 'wordWrap': 'break-all' }}>{value.videoTitle}</h5>
+                          <p style={{ 'display': 'inline-block', 'position': 'absolute', 'right': '0px', 'top': '40%' }}>{value.duration}</p>
+                          
+                        </div>
+                      </ListGroupItem>
+                    )
 
-                })}
-              </ListGroup>
+                  })}
+                </ListGroup>
+              </div>
+              
 
+              
             </div>
           </Modal.Body>
           <Modal.Footer>
