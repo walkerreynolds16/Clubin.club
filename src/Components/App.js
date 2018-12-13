@@ -93,6 +93,26 @@ const SortableItem = SortableElement(({ value, onClickDeleteCallback, onClickMov
         <img src={image} style={{ 'width': '80px', 'height': '55px' }} alt={listIndex} />
         <h6 style={{ 'display': 'inline-block', 'fontWeight': 'bold', 'marginLeft': '5px' }}>{value.videoTitle}</h6>
 
+        <Button onClick={() => onClickMoveToTop(listIndex)}
+        style={{ 'display': 'inline-block', 'position': 'absolute', 'right': '85px' }}>
+
+          <svg viewBox="50 0 515 515" width="13" height="15">
+            <path d="M320 117.45L417.63 214.27L515.26 311.1L412.49 311.1L412.49 522.55L227.51 522.55L227.51 311.1L124.74 311.1L222.36 214.27L320 117.45Z"/>
+          </svg>
+        
+        </Button>
+
+        <Button onClick={() => onClickMoveToBottom(listIndex)}
+          style={{ 'display': 'inline-block', 'position': 'absolute', 'right': '45px' }}>
+        
+          <svg viewBox="50 0 515 515" width="13" height="15">
+
+            <path d="M515.26 328.9L417.63 425.73L320 522.55L222.36 425.73L124.74 328.9L227.51 328.9L227.51 117.45L412.49 117.45L412.49 328.9L515.26 328.9Z"
+              style={{ 'fill': '#000000' }} />
+
+          </svg>
+        </Button>
+
         <div style={{ 'display': 'inline-block', 'position': 'absolute', 'right': '5px' }}>
 
           {listIndex <= 1 ? (<Dropdown pullRight title="Menu" id="menu-nav-dropdown">
@@ -103,8 +123,6 @@ const SortableItem = SortableElement(({ value, onClickDeleteCallback, onClickMov
 
 
             <Dropdown.Menu>
-              <MenuItem onSelect={() => onClickMoveToTop(listIndex)}>Move To Top</MenuItem>
-              <MenuItem onSelect={() => onClickMoveToBottom(listIndex)}>Move To Bottom</MenuItem>
               <MenuItem onSelect={() => getPlaylistforCopy(value)}>Copy To Another Playlist</MenuItem>
               <MenuItem divider />
               <MenuItem onSelect={() => onClickDeleteCallback(listIndex)}>Delete</MenuItem>
@@ -117,8 +135,6 @@ const SortableItem = SortableElement(({ value, onClickDeleteCallback, onClickMov
 
 
             <Dropdown.Menu>
-              <MenuItem onSelect={() => onClickMoveToTop(listIndex)}>Move To Top</MenuItem>
-              <MenuItem onSelect={() => onClickMoveToBottom(listIndex)}>Move To Bottom</MenuItem>
               <MenuItem onSelect={() => getPlaylistforCopy(value)}>Copy To Another Playlist</MenuItem>
               <MenuItem divider />
               <MenuItem onSelect={() => onClickDeleteCallback(listIndex)}>Delete</MenuItem>
@@ -715,31 +731,57 @@ class App extends Component {
   //also call backend to update record
   onSearchListItemClicked = (index) => {
 
-    //Make a copy of the current playlist's videos
-    var list = this.state.currentPlaylist.playlistVideos.slice()
-    //Make a copy of the video search results
+    if (!this.checkForDuplicateVideo(index)) {
+      //Make a copy of the current playlist's videos
+      var list = this.state.currentPlaylist.playlistVideos.slice()
+      //Make a copy of the video search results
+      var searchRes = this.state.searchList.slice()
+
+      //Add the clicked video to the copy of the current playlist's videos
+      list.unshift(searchRes[index])
+
+      //Make a new object for the playlists state
+      var newPlaylist = { playlistTitle: this.state.currentPlaylist.playlistTitle, playlistVideos: list }
+
+      this.updatePlaylistState(newPlaylist)
+
+      this.setState({
+        currentPlaylist: newPlaylist
+      })
+
+      this.forceUpdate()
+
+      //Update backend for new video
+      this.addVideoToPlaylist(searchRes[index])
+
+      // console.log('onSearchListItemClicked')
+      this.setBackendCurrentPlaylist(newPlaylist)
+    }
+    else {
+      alert("This video is already in the current playlist")
+    }
+  }
+
+  checkForDuplicateVideo = (index) => {
+
+    var foundDup = false
+    var videos = this.state.currentPlaylist.playlistVideos
     var searchRes = this.state.searchList.slice()
 
-    //Add the clicked video to the copy of the current playlist's videos
-    list.unshift(searchRes[index])
-
-    //Make a new object for the playlists state
-    var newPlaylist = { playlistTitle: this.state.currentPlaylist.playlistTitle, playlistVideos: list }
-
-    this.updatePlaylistState(newPlaylist)
-
-    this.setState({
-      currentPlaylist: newPlaylist
+    videos.map((video, NA) => {
+      //console.log("Checking playlist against clicked item. Playlist Video ID: " + video.videoId + " clicked ID: " + searchRes[index].videoId)
+      if (video.videoId === searchRes[index].videoId) {
+        //console.log("Dup found")
+        foundDup = true
+      }
     })
 
-    this.forceUpdate()
-
-    //Update backend for new video
-    this.addVideoToPlaylist(searchRes[index])
-
-    // console.log('onSearchListItemClicked')
-    this.setBackendCurrentPlaylist(newPlaylist)
-
+    if (foundDup) {
+      return true
+    }
+    else {
+      return false
+    }
   }
 
   //This function is used to update the playlists state with an updated playlist
