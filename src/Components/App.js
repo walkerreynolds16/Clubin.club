@@ -860,12 +860,6 @@ class App extends Component {
       currentPlaylist: newPlaylist
     })
 
-    // if(videoList.length > 0){
-    //   video = videoList[0]['videoId']
-
-    // }
-
-    //
     this.forceUpdate()
 
     // console.log('setFrontEndPlaylist')
@@ -903,7 +897,9 @@ class App extends Component {
         // console.log(response)
 
         if (response.data.length !== 0) {
-          this.setFrontEndPlaylist(response.data)
+          // I think this is an outdated function and it doesn't do anything. Some testing shows that it doesn't do anything yet
+          // I'll keep an eye out for weird things
+          // this.setFrontEndPlaylist(response.data)
 
           this.setState({
             playlists: response.data.playlists,
@@ -1263,6 +1259,8 @@ class App extends Component {
       // console.log('currentVideoTitle in new video = ' + videoTitle)
 
       this.updatePlaylistState(newCurrentPlaylist)
+
+      // this.setBackEndPlaylist(newCurrentPlaylist)
 
       this.setState({
         currentPlaylist: newCurrentPlaylist        
