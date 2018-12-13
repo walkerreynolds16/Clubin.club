@@ -692,12 +692,14 @@ class App extends Component {
 
             var videoId = item['id']['videoId']
             var videoTitle = item['snippet']['title']
+            var channelName = item['snippet']['channelTitle']
+            
 
             idString += videoId + ','
 
             if (videoId !== undefined) {
               //add videos to a list to be displayed on the modal
-              searchList.push({ videoId: videoId, videoTitle: videoTitle, duration: '' })
+              searchList.push({ videoId: videoId, videoTitle: videoTitle, duration: '', channelName, viewCount: ''})
 
             }
 
@@ -705,6 +707,7 @@ class App extends Component {
 
           idString = idString.substring(0, idString.length - 1)
           var getVideoDurationUrl = 'https://www.googleapis.com/youtube/v3/videos?id=' + idString + '&part=contentDetails&key=' + youtubeAPIKey
+          var getVideoViewCountUrl = 'https://www.googleapis.com/youtube/v3/videos?id=' + idString + '&part=statistics&key=' + youtubeAPIKey
 
           Axios.get(getVideoDurationUrl)
             .then((response) => {
@@ -724,6 +727,22 @@ class App extends Component {
 
               this.forceUpdate()
 
+
+            })
+
+            Axios.get(getVideoViewCountUrl)
+            .then((response) =>{
+              //console.log(response)
+
+              var viewCountRes = response['data']['items']
+
+              for(var i = 0; i < viewCountRes.length; i++)
+              {
+                var viewCount = Number(parseFloat(viewCountRes[i]['statistics']['viewCount']).toFixed(2)).toLocaleString('en', {minimumFractionDigits:0 })
+                
+                //add the concatenation here so that you don't wind up with an empty "Views: " string on the results
+                searchList[i].viewCount = "Views: " + viewCount
+              }
 
             })
 
@@ -2260,16 +2279,19 @@ class App extends Component {
                   {this.state.searchList.map((value, index) => {
                     var imageLink = 'http://img.youtube.com/vi/' + value.videoId + '/0.jpg'
 
-                    return (
-                      <ListGroupItem onClick={() => this.onSearchListItemClicked(index)}>
-                        <div style={{ 'position': 'relative' }}>
-                          <img src={imageLink} style={{ 'width': '120px', 'height': '90px' }} alt={index}/>
-                          <h5 style={{ 'display': 'inline-block', 'fontWeight': 'bold', 'marginLeft': '5px', 'wordWrap': 'break-all' }}>{value.videoTitle}</h5>
-                          <p style={{ 'display': 'inline-block', 'position': 'absolute', 'right': '0px', 'top': '40%' }}>{value.duration}</p>
-                          
-                        </div>
-                      </ListGroupItem>
-                    )
+                  return (
+                    <ListGroupItem onClick={() => this.onSearchListItemClicked(index)}>
+                      <div style={{ 'position': 'relative' }}>
+                        <img src={imageLink} style={{ 'width': '120px', 'height': '90px' }} alt={index}/>
+                        <h5 style={{ 'display': 'inline-block', 'fontWeight': 'bold', 'marginLeft': '5px', 'wordWrap': 'break-all' }}>{value.videoTitle}</h5>
+                        <h6 style={{ 'display': 'inline-block', 'marginLeft': '10px', 'bottom': '40%' }}>{value.channelName}</h6>
+
+                        <p style={{ 'display': 'inline-block', 'position': 'absolute', 'right': '0px', 'top': '40%' }}>{value.duration}</p>
+                        <p style={{ 'display': 'inline-block', 'position': 'absolute', 'right': '80px', 'top': '40%' }}>{value.viewCount}</p>
+
+                      </div>
+                    </ListGroupItem>
+                  )
 
                   })}
                 </ListGroup>
