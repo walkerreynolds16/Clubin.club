@@ -171,6 +171,12 @@ const disabledAddVideoButtonTooltip = (
   </Tooltip>
 );
 
+const info1Tooltip = (
+  <Tooltip>
+    Only use if someone's account did not properly disconnect.
+  </Tooltip>
+)
+
 
 class App extends Component {
 
@@ -1719,8 +1725,22 @@ class App extends Component {
     })
   }
 
-  adminRemoveUser = () => {
-    socket.emit('Event_userDisconnected', this.state.adminRemoveUserInput)
+  adminRemoveUser = (e) => {
+    e.preventDefault()
+
+    var isConnected = false
+    for(const item of this.state.clients){
+      if(item.user === this.state.adminRemoveUserInput){
+        isConnected = true
+      }
+    }
+
+    if(isConnected){
+      socket.emit('Event_userDisconnected', this.state.adminRemoveUserInput)
+    }else {
+      alert("That user is not in the clients list")
+    }
+    
   }
   
   getPlaylistforCopy = (video) => {
@@ -2412,18 +2432,30 @@ class App extends Component {
                 </fieldset>
               </form>
 
-              <form>
+              <form style={{"marginTop":"10px"}}>
                 <fieldset>
                   <legend>Toggle Chaos Skip Mode</legend>
                   <Button onClick={() => { this.adminToggleChaosSkipMode() }}>Toggle</Button>
                 </fieldset>
               </form>
 
-              <form>
+              <form onSubmit={(e) => { this.adminRemoveUser(e) }} style={{"marginTop":"10px"}}>
                 <fieldset>
-                  <legend>Remove user from connected users (only use if someone's account did not properly disconnect)</legend>
+                  <legend>
+                    Remove user from connected users
+                    <OverlayTrigger placement="right" overlay={info1Tooltip} >
+                      <svg width="10px" height="10px" viewBox="0 0 100 100" style={{"marginLeft":"5px"}}>
+                        <path d="M50.433,0.892c-27.119,0-49.102,21.983-49.102,49.102s21.983,49.103,49.102,49.103s49.101-21.984,49.101-49.103S77.552,0.892,
+                        50.433,0.892z M59,79.031C59,83.433,55.194,87,50.5,87S42,83.433,42,79.031V42.469c0-4.401,3.806-7.969,8.5-7.969s8.5,3.568,8.5,7.969V79.031z M50.433,
+                        31.214c-5.048,0-9.141-4.092-9.141-9.142c0-5.049,4.092-9.141,9.141-9.141c5.05,0,9.142,4.092,9.142,9.141C59.574,27.122,55.482,31.214,50.433,31.214z"/>
+                      </svg>
+                    </OverlayTrigger>
+                    
+                  </legend>
+                  
+
                   <input value={this.state.adminRemoveUserInput} onChange={this.adminRemoveUserInputChange}  />
-                  <Button onClick={() => this.adminRemoveUser()}>Toggle</Button>
+                  <Button style={{"marginLeft":'10px'}} onClick={(e) => { this.adminRemoveUser(e) }}>Remove</Button>
                 </fieldset>
               </form>
 
