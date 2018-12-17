@@ -659,7 +659,8 @@ class App extends Component {
     this.setState({
       showAddVideoModal: false,
       searchList: [],
-      addVideoSearchTerm: ''
+      addVideoSearchTerm: '',
+      addVideoByIdInput: ''
     })
   }
 
