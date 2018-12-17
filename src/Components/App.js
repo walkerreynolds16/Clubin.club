@@ -84,7 +84,7 @@ const messagesStyle = {
 
 }
 
-const SortableItem = SortableElement(({ value, onClickDeleteCallback, onClickMoveToBottom, onClickMoveToTop, listIndex, getPlaylistforCopy }) => {
+const SortableItem = SortableElement(({ value, onClickDeleteCallback, onClickMoveToBottom, onClickMoveToTop, listIndex, getPlaylistforCopy, renameVideoTitle }) => {
   var image = 'https://img.youtube.com/vi/' + value.videoId + '/0.jpg'
 
   return (
@@ -123,6 +123,7 @@ const SortableItem = SortableElement(({ value, onClickDeleteCallback, onClickMov
 
 
             <Dropdown.Menu>
+              <MenuItem onSelect={() => renameVideoTitle(listIndex)}>Rename Video</MenuItem>
               <MenuItem onSelect={() => getPlaylistforCopy(value)}>Copy To Another Playlist</MenuItem>
               <MenuItem divider />
               <MenuItem onSelect={() => onClickDeleteCallback(listIndex)}>Delete</MenuItem>
@@ -135,6 +136,7 @@ const SortableItem = SortableElement(({ value, onClickDeleteCallback, onClickMov
 
 
             <Dropdown.Menu>
+              <MenuItem onSelect={() => renameVideoTitle(listIndex)}>Rename Video</MenuItem>
               <MenuItem onSelect={() => getPlaylistforCopy(value)}>Copy To Another Playlist</MenuItem>
               <MenuItem divider />
               <MenuItem onSelect={() => onClickDeleteCallback(listIndex)}>Delete</MenuItem>
@@ -151,13 +153,21 @@ const SortableItem = SortableElement(({ value, onClickDeleteCallback, onClickMov
   );
 });
 
-const SortableList = SortableContainer(({ items, onClickDeleteCallback, onClickMoveToBottom, onClickMoveToTop,getPlaylistforCopy }) => {
+const SortableList = SortableContainer(({ items, onClickDeleteCallback, onClickMoveToBottom, onClickMoveToTop, getPlaylistforCopy, renameVideoTitle }) => {
   return (
     <div style={{ 'overflow': 'auto', 'position':'absolute', 'height':'93%', 'width':'100%' }}>
       <ul>
         {items.map((value, index) => (
 
-          <SortableItem key={`item-${index}`} index={index} value={value} onClickDeleteCallback={onClickDeleteCallback} onClickMoveToBottom={onClickMoveToBottom} onClickMoveToTop={onClickMoveToTop}listIndex={index} getPlaylistforCopy={getPlaylistforCopy} />
+          <SortableItem key={`item-${index}`} 
+                        index={index} 
+                        value={value} 
+                        onClickDeleteCallback={onClickDeleteCallback} 
+                        onClickMoveToBottom={onClickMoveToBottom} 
+                        onClickMoveToTop={onClickMoveToTop}
+                        listIndex={index} 
+                        getPlaylistforCopy={getPlaylistforCopy}
+                        renameVideoTitle={renameVideoTitle} />
         ))}
       </ul>
     </div>
@@ -238,7 +248,10 @@ class App extends Component {
       showRenameModal: false,
       renameBoxValue: '',
       playlistToRename: null,
-      addVideoByIdInput: ''
+      addVideoByIdInput: '',
+      showRenameVideoTitleModal: false,
+      renameVideoTitleIndex: 0,
+      renameVideoTitleInput: ''
     }
   }
 
@@ -1852,6 +1865,57 @@ class App extends Component {
       
   }
 
+  renameVideoTitle = (e) => {
+    if (e !== undefined) {
+      e.preventDefault();
+    }
+
+    // console.log(this.state.renameVideoTitleInput)
+    // console.log(this.state.renameVideoTitleIndex)
+
+    var playlistCopy = this.state.currentPlaylist
+    var oldTitle = playlistCopy.playlistVideos[this.state.renameVideoTitleIndex].videoTitle
+    // console.log(oldTitle)
+
+    playlistCopy.playlistVideos[this.state.renameVideoTitleIndex].videoTitle = this.state.renameVideoTitleInput
+
+    this.setState({
+      currentPlaylist: playlistCopy
+    })
+
+    this.updatePlaylistState(playlistCopy)
+
+    this.setBackEndPlaylist(playlistCopy)
+
+    this.forceUpdate()
+  }
+
+  startRenameVideoTitle = (listIndex) => {
+    // console.log(listIndex)
+    this.showRenameVideoTitleModal(true)
+
+    this.setState({
+      renameVideoTitleIndex: listIndex
+    })
+  }
+
+  showRenameVideoTitleModal = (action) => {
+    
+    this.setState({
+      showRenameVideoTitleModal: action,
+      renameVideoTitleIndex: 0,
+      renameVideoTitleInput: ''
+    })
+  }
+
+  handleRenameVideoTitleChange = (event) => {
+    this.setState({
+      renameVideoTitleInput: event.target.value
+    })
+  }
+
+  
+
   render() {
 
     const opts = {
@@ -1964,7 +2028,8 @@ class App extends Component {
                 onClickMoveToBottom={this.onClickMoveToBottom}
                 onClickMoveToTop={this.onClickMoveToTop}
                 onClickCopyToPlaylist={this.copyVideoToPlaylist}
-                getPlaylistforCopy = {this.getPlaylistforCopy} />
+                getPlaylistforCopy={this.getPlaylistforCopy}
+                renameVideoTitle={this.startRenameVideoTitle} />
             
 
           </fieldset>
@@ -2266,7 +2331,7 @@ class App extends Component {
                 <div style={{"width":"40%"}}>
                   <form onSubmit={(e) => this.onAddVideoById(e)}>
                     <legend>Search by YouTube Video Id</legend>
-                    <input value={this.state.addVideoByIdInput} onChange={this.handleAddVideoByIdChange} autoFocus/>
+                    <input value={this.state.addVideoByIdInput} onChange={this.handleAddVideoByIdChange}/>
                     <Button style={{"marginLeft":"10px"}} onClick={(e) => { this.onAddVideoById(e) }}>Search</Button>
                   </form>
                 </div>
@@ -2611,6 +2676,29 @@ class App extends Component {
           </Modal.Body>
           <Modal.Footer>
             <Button onClick={this.closeLeaderboard}>Close</Button>
+          </Modal.Footer>
+        </Modal>
+
+        <Modal show={this.state.showRenameVideoTitleModal} onHide={() => this.showRenameVideoTitleModal(false)} bsSize='large'>
+          <Modal.Header closeButton>
+            <Modal.Title>Rename Video</Modal.Title>
+          </Modal.Header>
+          <Modal.Body>
+            <div>
+              {this.state.showRenameVideoTitleModal && 
+                <span>Video Name: {this.state.currentPlaylist.playlistVideos[this.state.renameVideoTitleIndex].videoTitle}</span>
+              }
+              
+              <form onSubmit={(e) => this.renameVideoTitle(e)} style={{'marginTop': '10px'}}>
+                <div>
+                  <input value={this.state.renameVideoTitleInput} onChange={this.handleRenameVideoTitleChange} autoFocus></input>
+                  <Button onClick={(e) => this.renameVideoTitle(e)}>Rename</Button>
+                </div>
+              </form>
+            </div>
+          </Modal.Body>
+          <Modal.Footer>
+            <Button onClick={() => this.showRenameVideoTitleModal(false)}>Close</Button>
           </Modal.Footer>
         </Modal>
 
