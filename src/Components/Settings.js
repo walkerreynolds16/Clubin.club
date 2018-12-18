@@ -64,7 +64,7 @@ export default class Settings extends Component {
       volume: value
     })
 
-    this.forceUpdate()
+    //this.forceUpdate()
   }
 
   setNotificationSound = (obj, index) => {
@@ -144,6 +144,8 @@ export default class Settings extends Component {
                     <Slider style={{'marginLeft':'5px'}} min={0} max={100} handle={handle} onChange={this.onNotificationVolumeChange} defaultValue={this.state.volume}/>
 
                     <span style={{"marginLeft":'10px'}}>{this.state.volume}</span>
+
+                    <Button style={{"marginLeft":'10px'}} onClick={() => this.props.testNotificationSound()}>Test Sound</Button>
                   </div>
                 </fieldset>
               </form>
@@ -153,7 +155,7 @@ export default class Settings extends Component {
                   <legend>Change Notification Noise</legend>
 
                   <DropdownButton
-                    bsStyle='Default'
+                    bsStyle='default'
                     title={this.state.currentNotificationSound.title}
                     id={`dropdown`}>
 

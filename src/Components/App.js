@@ -297,6 +297,10 @@ class App extends Component {
   }
 
 
+  testNotificationNoise = () => {
+    console.log('testing')
+    this.notificationPlayer.current.startNotification()
+  }
 
   handleLeaderBoardChange = (data) => {
     // console.log("leaderboard change")
@@ -1968,18 +1972,24 @@ class App extends Component {
     this.setState({
       notificationVolume: value
     })
+
+    this.notificationPlayer.current.onSettingsChangeVolume(value)
   }
 
   notificationMuted = (value) => {
     this.setState({
       notificationMuted: value
     })
+
+    this.notificationPlayer.current.onSettingsChangeMuted(value)
   }
 
   changeNotificationSound = (index) => {
     this.setState({
       notificationListIndex: index
     })
+
+    this.notificationPlayer.current.onSettingsChangeCurrentNotification(index)
   }
 
   render() {
@@ -2732,7 +2742,7 @@ class App extends Component {
                 {this.state.playlists.map((playlist, index) => {
 
                   return (
-                    <ListGroupItem onClick={() => this.moveVideoToPlaylist(playlist, index)}>
+                    <ListGroupItem onClick={() => this.moveVideoToPlaylist(playlist, index)} key={index}>
                       <div>
                         <h5>{playlist.playlistTitle}</h5>
 
@@ -2812,6 +2822,7 @@ class App extends Component {
             notificationMutedChange={this.notificationMuted}
             notificationVolumeChange={this.changeNotificationVolume}
             notificationListIndexChange={this.changeNotificationSound}
+            testNotificationSound={this.testNotificationNoise}
           />
         }
         

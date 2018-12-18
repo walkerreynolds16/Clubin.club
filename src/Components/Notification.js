@@ -16,15 +16,41 @@ export default class Notification extends Component {
   }
 
   componentWillReceiveProps() {
+    // console.log("Receiving props ****")
+    // console.log(this.state.isMuted)
+    // console.log(this.state.volume)
+    // this.setState({
+    //   volume: this.props.volume,
+    //   isMuted: this.props.isMuted,
+    //   currentNotification: notificationList[this.props.notificationListIndex]
+    // })
+  }
+
+  onSettingsChangeVolume = (value) => {
     this.setState({
-      volume: this.props.volume,
-      isMuted: this.props.isMuted,
-      currentNotification: notificationList[this.props.notificationListIndex]
+      playStatus: Sound.status.STOPPED,
+      volume: value
+    })
+  }
+
+  onSettingsChangeMuted = (value) => {
+    this.setState({
+      playStatus: Sound.status.STOPPED,
+      isMuted: value
+    })
+  }
+  onSettingsChangeCurrentNotification = (value) => {
+    this.setState({
+      playStatus: Sound.status.STOPPED,
+      currentNotification: notificationList[value]
     })
   }
 
 
   startNotification = () => {
+    console.log("start notification ****")
+    console.log(this.state.isMuted)
+    console.log(this.state.volume)
     this.setState({
       playStatus: Sound.status.PLAYING
     })
@@ -39,9 +65,7 @@ export default class Notification extends Component {
 
 
   render() {
-    console.log(this.state.volume)
-    console.log(this.state.isMuted)
-
+    
     return (
       <div>
         {this.state.isMuted &&
