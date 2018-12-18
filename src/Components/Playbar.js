@@ -6,6 +6,7 @@ import ProgressBarTimer from './ProgressBarTimer'
 import 'rc-slider/assets/index.css';
 import 'rc-tooltip/assets/bootstrap.css';
 
+const createSliderWithTooltip = Slider.createSliderWithTooltip;
 const Handle = Slider.Handle;
 
 const handle = (props) => {
@@ -54,42 +55,6 @@ export default class Playbar extends Component {
     }
   }
 
-  componentDidMount() {    
-    // this.waitForVolume()
-    // this.waitForIsMuted()
-    
-  }
-
-  waitForVolume = () => {
-    console.log('calling volume')
-    var vol = this.props.getPlayerVolume()
-
-    if(vol === undefined){
-      setTimeout(this.waitForVolume, 100)
-    }else {
-      this.setState({
-        volume: vol
-      })
-
-      this.forceUpdate()
-    }
-
-  }
-
-  waitForIsMuted = () => {
-    var mute = this.props.getPlayerIsMuted()
-
-    if(mute === undefined){
-      setTimeout(this.waitForIsMuted, 100)
-    }else {
-      this.setState({
-        isMuted: mute
-      })
-
-      this.forceUpdate()
-    }
-  }
-
   onSliderChange = (value) => {
     this.props.onSliderChange(value)
 
@@ -102,12 +67,6 @@ export default class Playbar extends Component {
 
   onMute = () => {
     this.props.onToggleMutePlayer()
-
-    // if(this.state.isMuted){
-    //   this.setState({
-    //     volume: this.props.getPlayerVolume()
-    //   })
-    // }
 
     this.setState({
       isMuted: !this.state.isMuted

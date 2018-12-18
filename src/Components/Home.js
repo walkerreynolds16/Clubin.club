@@ -34,7 +34,7 @@ export default class Home extends Component {
 
     Axios.get(url)
       .then((response) => {  
-        console.log(response)      
+        // console.log(response)      
         var currentVersion = response['data']['version']
 
         this.setState({

@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 import Playbar from '../Components/Playbar';
 import YouTube from 'react-youtube';
 import { SortableContainer, SortableElement, arrayMove } from 'react-sortable-hoc';
-import { Button, ListGroup, ListGroupItem, Modal, Tooltip, OverlayTrigger, Tab, Tabs, ButtonToolbar, DropdownButton, Dropdown, MenuItem,Glyphicon } from 'react-bootstrap';
+import { Button, ListGroup, ListGroupItem, Modal, Tooltip, OverlayTrigger, Tab, Tabs, ButtonToolbar, DropdownButton, Dropdown, MenuItem, Glyphicon } from 'react-bootstrap';
 import Slider from 'react-slide-out'
 import Axios from 'axios'
 import '../Styles/App.css';
@@ -12,13 +12,14 @@ import 'moment-duration-format'
 import shuffle from 'shuffle-array'
 import {API_ENDPOINT} from '../api-config.js'
 import Leaderboard from '../Components/Leaderboard'
-
+import Notification from '../Components/Notification'
+import Settings from '../Components/Settings'
 
 import openSocket from 'socket.io-client';
 
-// const apiEndpoint = 'http://127.0.0.1:5000'
-// const apiEndpoint = 'https://plug-dj-clone-api.herokuapp.com'
 const apiEndpoint = API_ENDPOINT
+
+var isWindowFocused = true
 
 
 const socket = openSocket.connect(apiEndpoint, {transports: ['websocket']})
@@ -117,7 +118,7 @@ const SortableItem = SortableElement(({ value, onClickDeleteCallback, onClickMov
 
           {listIndex <= 1 ? (<Dropdown pullRight title="Menu" id="menu-nav-dropdown">
 
-            <Dropdown.Toggle noCaret inverse>
+            <Dropdown.Toggle noCaret>
               <Glyphicon glyph="option-vertical" />
             </Dropdown.Toggle>
 
@@ -130,7 +131,7 @@ const SortableItem = SortableElement(({ value, onClickDeleteCallback, onClickMov
             </Dropdown.Menu>
           </Dropdown>) : (<Dropdown dropup pullRight title="Menu" id="menu-nav-dropdown">
 
-            <Dropdown.Toggle noCaret inverse>
+            <Dropdown.Toggle noCaret>
               <Glyphicon glyph="option-vertical" />
             </Dropdown.Toggle>
 
@@ -194,6 +195,7 @@ class App extends Component {
     super(props)
 
     this.playbarRef = React.createRef()
+    this.notificationPlayer = React.createRef()
 
     this.state = {
       currentPlaylist: { playlistTitle: '', playlistVideos: [] },
@@ -251,64 +253,53 @@ class App extends Component {
       addVideoByIdInput: '',
       showRenameVideoTitleModal: false,
       renameVideoTitleIndex: 0,
-      renameVideoTitleInput: ''
+      renameVideoTitleInput: '',
+      notificationListIndex: 0,
+      notificationVolume: 100,
+      notificationMuted: true,
+      showSettingsModal: false
     }
   }
 
 
-  componentDidMount() {
-
-    this.getCurrentVersion()
-
-    this.updateWindowDimensions()
-    // window.addEventListener('resize', this.updateWindowDimensions);
-
+  componentDidMount() {    
+    window.addEventListener('resize', this.updateWindowDimensions);
     window.addEventListener("beforeunload", (ev) => this.handleWindowClose(ev));
-
-    this.getPlaylistsForCurrentUser()
-
-    this.getCurrentVideoMetrics()
-
+    window.addEventListener("focus", () => {isWindowFocused = true})
+    window.addEventListener("blur", () => {isWindowFocused = false})
+    
     socket.on('Event_userConnecting', (data) => this.handleUserConnecting(data))
-
     socket.on('message', (msg) => this.handleMessage(msg))
-
     socket.on('Event_receiveChatMessage', (data) => this.handleReceiveChatMessage(data))
-
     socket.on('Event_nextVideo', (data) => this.handleNextVideo(data))
-
     socket.on('Event_stopVideo', () => this.handleStopVideo())
-
     socket.on('Event_DJQueueChanging', (DJs) => this.handleDJQueueChange(DJs))
-    
     socket.on('Event_userDisconnecting', (data) => this.handleUserDisconnecting(data))
-
     socket.on('Event_wootChanged', (data) => this.handleWootChange(data))
-
     socket.on('Event_mehChanged', (data) => this.handleMehChange(data))
-
     socket.on('Event_grabChanged', (data) => this.handleGrabChange(data))
-
     socket.on('Event_skipChanged', (data) => this.handleSkipChange(data))    
-    
     socket.on('Event_chaosSkipModeChanged', (data) => this.handleChaosSkipModeChanged(data))
-    
     socket.on('Event_leaderboardChanged', (data) => this.handleLeaderBoardChange(data))
 
-
+    this.getCurrentVersion()
+    this.updateWindowDimensions()
+    this.getPlaylistsForCurrentUser()
+    this.getCurrentVideoMetrics()
     this.getAdmins()
-
     this.startKeepBackendAlive()
-
     this.handleConnect()
-
     
+  }
 
+
+  testNotificationNoise = () => {
+    this.notificationPlayer.current.startNotification()
   }
 
   handleLeaderBoardChange = (data) => {
-    console.log("leaderboard change")
-    console.log(data)
+    // console.log("leaderboard change")
+    // console.log(data)
 
     this.setState({
       leaderboardList: data
@@ -316,8 +307,8 @@ class App extends Component {
   }
 
   handleChaosSkipModeChanged = (data) => {
-    console.log('handleChaosSkipModeChanged')
-    console.log(data)
+    // console.log('handleChaosSkipModeChanged')
+    // console.log(data)
 
     this.setState({
       chaosSkipMode: data
@@ -328,13 +319,13 @@ class App extends Component {
     var url = apiEndpoint + '/getAdmins'
     Axios.get(url)
       .then((response) => {
-        console.log(response)
+        // console.log(response)
 
         var admins = response['data']
         var isAdmin = false
 
         if(admins.includes(this.state.currentUser)){
-          console.log('IM AN ADMIN')
+          // console.log('IM AN ADMIN')
           isAdmin = true
         }
 
@@ -1267,7 +1258,12 @@ class App extends Component {
     var message = data.message
     var time = data.time
 
-    this.state.chatMessages.push("["+time+"] "+user + ": " + message)
+    this.state.chatMessages.push("[" + time + "] "+ user + ": " + message)
+
+    if(user !== 'Server' && !isWindowFocused){
+      this.notificationPlayer.current.startNotification()
+    }
+
     this.forceUpdate();
   }
 
@@ -1915,7 +1911,30 @@ class App extends Component {
     })
   }
 
-  
+  showSettings = (action) => {
+    console.log(action)
+    this.setState({
+      showSettingsModal: action
+    })
+  }
+
+  changeNotificationVolume = (value) => {
+    this.setState({
+      notificationVolume: value
+    })
+  }
+
+  notificationMuted = (value) => {
+    this.setState({
+      notificationMuted: value
+    })
+  }
+
+  changeNotificationSound = (index) => {
+    this.setState({
+      notificationListIndex: index
+    })
+  }
 
   render() {
 
@@ -2012,6 +2031,10 @@ class App extends Component {
               <Button style={{'margin':'5px'}} onClick={() => this.showAdminModal()}>Admin Menu</Button>
             }
 
+            
+            <Button style={{'margin':'5px'}} onClick={() => this.testNotificationNoise()}>Test</Button>
+
+
 
               {/*Search Box */}
             {/* <form onSubmit={(e) => this.searchPlaylist(e)}>
@@ -2042,10 +2065,9 @@ class App extends Component {
             opts={opts}
             onReady={this.onReady}
             onStateChange={this.onPlayerStateChange}
-            onPause={this.onPlayerPause}
-            id="youtube" />
+            onPause={this.onPlayerPause} />
 
-        </div>
+        </div >
 
 
 
@@ -2107,6 +2129,15 @@ class App extends Component {
 
                 </div>
 
+                
+
+                <Notification
+                  ref={this.notificationPlayer}
+                  notificationListIndex={this.state.notificationListIndex}
+                  volume={this.state.notificationVolume}
+                  isMuted={this.state.notificationMuted}
+                />
+
 
               </div>
 
@@ -2126,11 +2157,11 @@ class App extends Component {
                   return (
                     <div key={index + value} style={{'display':'flex', 'alignItems':'center'}}>
                       {hasSkipped &&
-                        <h6 style={{ 'color': '#e50000', 'font-size': '100%', 'marginLeft':'5px', 'marginTop':'5px', 'marginBottom':'5px', }}>{value.user}</h6>
+                        <h6 style={{ 'color': '#e50000', 'fontSize': '100%', 'marginLeft':'5px', 'marginTop':'5px', 'marginBottom':'5px', }}>{value.user}</h6>
                       }
 
                       {!hasSkipped &&
-                        <h6 style={{ 'color': 'white', 'font-size': '100%', 'marginLeft':'5px', 'marginTop':'5px', 'marginBottom':'5px', }}>{value.user}</h6>
+                        <h6 style={{ 'color': 'white', 'fontSize': '100%', 'marginLeft':'5px', 'marginTop':'5px', 'marginBottom':'5px', }}>{value.user}</h6>
                       }
 
                       {hasGrabbed && 
@@ -2182,7 +2213,8 @@ class App extends Component {
             <Tab eventKey={4} title="Miscellaneous" style={tabStyle}>
               <div style={messagesStyle}>
                 <Button onClick={() => this.showLeaderboard()} style={{'margin':'10px'}}>Leaderboard</Button>
-              </div>                
+                <Button onClick={() => this.showSettings(true)} style={{'margin':'10px'}}>Settings</Button>
+              </div>
               
               {/* <Leaderboard leaderboardList={this.state.leaderboardList}/> */}
               
@@ -2429,7 +2461,7 @@ class App extends Component {
           footer={
             <div style={{'position':'fixed', 'right':'5px'}}>
               {this.state.showPlaylistSlideIn &&
-                <Button onClick={this.onCloseVideoHistoryModal}>Close Slider</Button>
+                <Button onClick={this.closePlaylistSlideIn}>Close Slider</Button>
               }
             </div> 
             
@@ -2632,7 +2664,7 @@ class App extends Component {
                 {this.state.playlists.map((playlist, index) => {
 
                   return (
-                    <ListGroupItem onClick={() => this.copyVideoToPlaylist(playlist, index)}>
+                    <ListGroupItem onClick={() => this.copyVideoToPlaylist(playlist, index)} key={index + playlist.playlistTitle}>
                       <div>
                         <h5>{playlist.playlistTitle}</h5>
 
@@ -2702,6 +2734,19 @@ class App extends Component {
             <Button onClick={() => this.showRenameVideoTitleModal(false)}>Close</Button>
           </Modal.Footer>
         </Modal>
+
+        {this.state.showSettingsModal &&
+          <Settings 
+            notificationListIndex={this.state.notificationListIndex}
+            notificationVolume={this.state.notificationVolume}
+            notificationMuted={this.state.notificationMuted}
+            showSettings={this.showSettings}
+            notificationMutedChange={this.notificationMuted}
+            notificationVolumeChange={this.changeNotificationVolume}
+            notificationListIndexChange={this.changeNotificationSound}
+          />
+        }
+        
 
 
         <Playbar
