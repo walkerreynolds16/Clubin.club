@@ -85,7 +85,7 @@ const messagesStyle = {
 
 }
 
-const SortableItem = SortableElement(({ value, onClickDeleteCallback, onClickMoveToBottom, onClickMoveToTop, listIndex, getPlaylistforCopy, renameVideoTitle }) => {
+const SortableItem = SortableElement(({ value, onClickDeleteCallback, onClickMoveToBottom, onClickMoveToTop, listIndex, getPlaylistforCopy, renameVideoTitle, getPlaylistforMove }) => {
   var image = 'https://img.youtube.com/vi/' + value.videoId + '/0.jpg'
 
   return (
@@ -126,6 +126,7 @@ const SortableItem = SortableElement(({ value, onClickDeleteCallback, onClickMov
             <Dropdown.Menu>
               <MenuItem onSelect={() => renameVideoTitle(listIndex)}>Rename Video</MenuItem>
               <MenuItem onSelect={() => getPlaylistforCopy(value)}>Copy To Another Playlist</MenuItem>
+              <MenuItem onSelect={() => getPlaylistforMove(value)}>Move to Another Playlist</MenuItem>
               <MenuItem divider />
               <MenuItem onSelect={() => onClickDeleteCallback(listIndex)}>Delete</MenuItem>
             </Dropdown.Menu>
@@ -139,6 +140,7 @@ const SortableItem = SortableElement(({ value, onClickDeleteCallback, onClickMov
             <Dropdown.Menu>
               <MenuItem onSelect={() => renameVideoTitle(listIndex)}>Rename Video</MenuItem>
               <MenuItem onSelect={() => getPlaylistforCopy(value)}>Copy To Another Playlist</MenuItem>
+              <MenuItem onSelect={() => getPlaylistforMove(value)}>Move to Another Playlist</MenuItem>
               <MenuItem divider />
               <MenuItem onSelect={() => onClickDeleteCallback(listIndex)}>Delete</MenuItem>
             </Dropdown.Menu>
@@ -154,7 +156,7 @@ const SortableItem = SortableElement(({ value, onClickDeleteCallback, onClickMov
   );
 });
 
-const SortableList = SortableContainer(({ items, onClickDeleteCallback, onClickMoveToBottom, onClickMoveToTop, getPlaylistforCopy, renameVideoTitle }) => {
+const SortableList = SortableContainer(({ items, onClickDeleteCallback, onClickMoveToBottom, onClickMoveToTop, getPlaylistforCopy, renameVideoTitle, getPlaylistforMove }) => {
   return (
     <div style={{ 'overflow': 'auto', 'position':'absolute', 'height':'93%', 'width':'100%' }}>
       <ul>
@@ -168,7 +170,8 @@ const SortableList = SortableContainer(({ items, onClickDeleteCallback, onClickM
                         onClickMoveToTop={onClickMoveToTop}
                         listIndex={index} 
                         getPlaylistforCopy={getPlaylistforCopy}
-                        renameVideoTitle={renameVideoTitle} />
+                        renameVideoTitle={renameVideoTitle}
+                        getPlaylistforMove={getPlaylistforMove} />
         ))}
       </ul>
     </div>
@@ -246,6 +249,7 @@ class App extends Component {
       showLeaderboard: false,
       adminRemoveUserInput: '',
       showCopyModal: false,
+      showMoveModal: false,
       videoToCopy: null,
       showRenameModal: false,
       renameBoxValue: '',
@@ -1803,6 +1807,51 @@ class App extends Component {
     this.forceUpdate()
   }
 
+  getPlaylistforMove = (video) => {
+    this.setState({
+      videoToCopy: video
+    })
+    this.showMoveModal()
+  }
+
+  showMoveModal = () => {
+    this.setState({
+      showMoveModal: true
+    })
+  }
+
+  closeMoveModal = () => {
+    this.setState({
+      showMoveModal: false
+    })
+  }
+
+  moveVideoToPlaylist = (playlist, index) => {
+
+    var copyOfPlaylists = this.state.playlists.slice()
+    var playlistIndex = copyOfPlaylists.indexOf(playlist)
+
+    playlist.playlistVideos.push(this.state.videoToCopy)
+    this.onClickDeleteCallback(this.state.currentPlaylist.playlistVideos.indexOf(this.state.videoToCopy))
+
+
+    this.updatePlaylistState(playlist)
+
+    copyOfPlaylists[playlistIndex] = playlist
+
+     this.setState({
+      playlists: copyOfPlaylists,
+      videoToCopy: null,
+      showMoveModal: false
+    })
+
+
+    this.setBackEndPlaylist(playlist)
+    
+    this.forceUpdate()
+
+  }
+
   showCopyModal = () => {
     this.setState({
       showCopyModal: true
@@ -2053,6 +2102,7 @@ class App extends Component {
                 onClickMoveToTop={this.onClickMoveToTop}
                 onClickCopyToPlaylist={this.copyVideoToPlaylist}
                 getPlaylistforCopy={this.getPlaylistforCopy}
+                getPlaylistforMove={this.getPlaylistforMove}
                 renameVideoTitle={this.startRenameVideoTitle} />
             
 
@@ -2665,6 +2715,31 @@ class App extends Component {
 
                   return (
                     <ListGroupItem onClick={() => this.copyVideoToPlaylist(playlist, index)} key={index + playlist.playlistTitle}>
+                      <div>
+                        <h5>{playlist.playlistTitle}</h5>
+
+                      </div>
+
+                    </ListGroupItem>
+                  )
+                })}
+              </ListGroup>
+            </div>
+          </Modal.Body>
+
+        </Modal>
+
+        <Modal show={this.state.showMoveModal} onHide={this.closeMoveModal} bsSize='small'>
+          <Modal.Header closeButton>
+            <Modal.Title>Move Song to Playlist</Modal.Title>
+          </Modal.Header>
+          <Modal.Body>
+            <div>
+              <ListGroup>
+                {this.state.playlists.map((playlist, index) => {
+
+                  return (
+                    <ListGroupItem onClick={() => this.moveVideoToPlaylist(playlist, index)}>
                       <div>
                         <h5>{playlist.playlistTitle}</h5>
 
