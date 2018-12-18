@@ -85,78 +85,159 @@ const messagesStyle = {
 
 }
 
-const SortableItem = SortableElement(({ value, onClickDeleteCallback, onClickMoveToBottom, onClickMoveToTop, listIndex, getPlaylistforCopy, renameVideoTitle, getPlaylistforMove }) => {
+const SortableItem = SortableElement(({ value, onClickDeleteCallback, onClickMoveToBottom, onClickMoveToTop, listIndex, getPlaylistforCopy, renameVideoTitle, getPlaylistforMove, recentVideosObjects }) => {
   var image = 'https://img.youtube.com/vi/' + value.videoId + '/0.jpg'
+  var isRecentVideo = false
+
+  for(var i = 0; i < recentVideosObjects.length; i++){
+    if(recentVideosObjects[i].videoId === value.videoId){
+      isRecentVideo = true
+      break
+    }
+  }
 
   return (
-    <div style={{ 'marginTop': '8px', 'marginBottom': '8px', 'position': 'relative' }}>
-      <li style={{ 'display': 'flex', 'alignItems': 'center' }}>
-        <img src={image} style={{ 'width': '80px', 'height': '55px' }} alt={listIndex} />
-        <h6 style={{ 'display': 'inline-block', 'fontWeight': 'bold', 'marginLeft': '5px' }}>{value.videoTitle}</h6>
+    <div>
+      {isRecentVideo &&
+        <div style={{ 'marginTop': '8px', 'marginBottom': '8px', 'position': 'relative', 'backgroundColor': '#7289DA'  }}>
+        <li style={{ 'display': 'flex', 'alignItems': 'center' }}>
 
-        <Button onClick={() => onClickMoveToTop(listIndex)}
-        style={{ 'display': 'inline-block', 'position': 'absolute', 'right': '85px' }}>
+          <img src={image} style={{ 'width': '80px', 'height': '55px' }} alt={listIndex} />
+          <h6 style={{ 'display': 'inline-block', 'fontWeight': 'bold', 'marginLeft': '5px' }}>{value.videoTitle}</h6>
 
-          <svg viewBox="50 0 515 515" width="13" height="15">
-            <path d="M320 117.45L417.63 214.27L515.26 311.1L412.49 311.1L412.49 522.55L227.51 522.55L227.51 311.1L124.74 311.1L222.36 214.27L320 117.45Z"/>
-          </svg>
-        
-        </Button>
+          <Button onClick={() => onClickMoveToTop(listIndex)}
+                  style={{ 'display': 'inline-block', 'position': 'absolute', 'right': '85px' }}>
 
-        <Button onClick={() => onClickMoveToBottom(listIndex)}
-          style={{ 'display': 'inline-block', 'position': 'absolute', 'right': '45px' }}>
-        
-          <svg viewBox="50 0 515 515" width="13" height="15">
+            <svg viewBox="50 0 515 515" width="13" height="15">
+              <path d="M320 117.45L417.63 214.27L515.26 311.1L412.49 311.1L412.49 522.55L227.51 522.55L227.51 311.1L124.74 311.1L222.36 214.27L320 117.45Z"/>
+            </svg>
+          
+          </Button>
 
-            <path d="M515.26 328.9L417.63 425.73L320 522.55L222.36 425.73L124.74 328.9L227.51 328.9L227.51 117.45L412.49 117.45L412.49 328.9L515.26 328.9Z"
-              style={{ 'fill': '#000000' }} />
+          <Button onClick={() => onClickMoveToBottom(listIndex)}
+            style={{ 'display': 'inline-block', 'position': 'absolute', 'right': '45px' }}>
+          
+            <svg viewBox="50 0 515 515" width="13" height="15">
 
-          </svg>
-        </Button>
+              <path d="M515.26 328.9L417.63 425.73L320 522.55L222.36 425.73L124.74 328.9L227.51 328.9L227.51 117.45L412.49 117.45L412.49 328.9L515.26 328.9Z"
+                style={{ 'fill': '#000000' }} />
 
-        <div style={{ 'display': 'inline-block', 'position': 'absolute', 'right': '5px' }}>
+            </svg>
+          </Button>
 
-          {listIndex <= 1 ? (<Dropdown pullRight title="Menu" id="menu-nav-dropdown">
+          <div style={{ 'display': 'inline-block', 'position': 'absolute', 'right': '5px' }}>
 
-            <Dropdown.Toggle noCaret>
-              <Glyphicon glyph="option-vertical" />
-            </Dropdown.Toggle>
+            {listIndex <= 1 ? (<Dropdown pullRight title="Menu" id="menu-nav-dropdown">
 
-
-            <Dropdown.Menu>
-              <MenuItem onSelect={() => renameVideoTitle(listIndex)}>Rename Video</MenuItem>
-              <MenuItem onSelect={() => getPlaylistforCopy(value)}>Copy To Another Playlist</MenuItem>
-              <MenuItem onSelect={() => getPlaylistforMove(value)}>Move to Another Playlist</MenuItem>
-              <MenuItem divider />
-              <MenuItem onSelect={() => onClickDeleteCallback(listIndex)}>Delete</MenuItem>
-            </Dropdown.Menu>
-          </Dropdown>) : (<Dropdown dropup pullRight title="Menu" id="menu-nav-dropdown">
-
-            <Dropdown.Toggle noCaret>
-              <Glyphicon glyph="option-vertical" />
-            </Dropdown.Toggle>
+              <Dropdown.Toggle noCaret>
+                <Glyphicon glyph="option-vertical" />
+              </Dropdown.Toggle>
 
 
-            <Dropdown.Menu>
-              <MenuItem onSelect={() => renameVideoTitle(listIndex)}>Rename Video</MenuItem>
-              <MenuItem onSelect={() => getPlaylistforCopy(value)}>Copy To Another Playlist</MenuItem>
-              <MenuItem onSelect={() => getPlaylistforMove(value)}>Move to Another Playlist</MenuItem>
-              <MenuItem divider />
-              <MenuItem onSelect={() => onClickDeleteCallback(listIndex)}>Delete</MenuItem>
-            </Dropdown.Menu>
-          </Dropdown>)}
+              <Dropdown.Menu>
+                <MenuItem onSelect={() => renameVideoTitle(listIndex)}>Rename Video</MenuItem>
+                <MenuItem onSelect={() => getPlaylistforCopy(value)}>Copy To Another Playlist</MenuItem>
+                <MenuItem onSelect={() => getPlaylistforMove(value)}>Move to Another Playlist</MenuItem>
+                <MenuItem divider />
+                <MenuItem onSelect={() => onClickDeleteCallback(listIndex)}>Delete</MenuItem>
+              </Dropdown.Menu>
+            </Dropdown>) : (<Dropdown dropup pullRight title="Menu" id="menu-nav-dropdown">
+
+              <Dropdown.Toggle noCaret>
+                <Glyphicon glyph="option-vertical" />
+              </Dropdown.Toggle>
+
+
+              <Dropdown.Menu>
+                <MenuItem onSelect={() => renameVideoTitle(listIndex)}>Rename Video</MenuItem>
+                <MenuItem onSelect={() => getPlaylistforCopy(value)}>Copy To Another Playlist</MenuItem>
+                <MenuItem onSelect={() => getPlaylistforMove(value)}>Move to Another Playlist</MenuItem>
+                <MenuItem divider />
+                <MenuItem onSelect={() => onClickDeleteCallback(listIndex)}>Delete</MenuItem>
+              </Dropdown.Menu>
+            </Dropdown>)}
 
 
 
 
-        </div>
-      </li>
+          </div>
+        </li>
+      </div>
+      }
+
+      {!isRecentVideo &&
+        <div style={{ 'marginTop': '8px', 'marginBottom': '8px', 'position': 'relative'}}>
+        <li style={{ 'display': 'flex', 'alignItems': 'center' }}>
+
+          <img src={image} style={{ 'width': '80px', 'height': '55px' }} alt={listIndex} />
+          <h6 style={{ 'display': 'inline-block', 'fontWeight': 'bold', 'marginLeft': '5px' }}>{value.videoTitle}</h6>
+
+          <Button onClick={() => onClickMoveToTop(listIndex)}
+                  style={{ 'display': 'inline-block', 'position': 'absolute', 'right': '85px' }}>
+
+            <svg viewBox="50 0 515 515" width="13" height="15">
+              <path d="M320 117.45L417.63 214.27L515.26 311.1L412.49 311.1L412.49 522.55L227.51 522.55L227.51 311.1L124.74 311.1L222.36 214.27L320 117.45Z"/>
+            </svg>
+          
+          </Button>
+
+          <Button onClick={() => onClickMoveToBottom(listIndex)}
+            style={{ 'display': 'inline-block', 'position': 'absolute', 'right': '45px' }}>
+          
+            <svg viewBox="50 0 515 515" width="13" height="15">
+
+              <path d="M515.26 328.9L417.63 425.73L320 522.55L222.36 425.73L124.74 328.9L227.51 328.9L227.51 117.45L412.49 117.45L412.49 328.9L515.26 328.9Z"
+                style={{ 'fill': '#000000' }} />
+
+            </svg>
+          </Button>
+
+          <div style={{ 'display': 'inline-block', 'position': 'absolute', 'right': '5px' }}>
+
+            {listIndex <= 1 ? (<Dropdown pullRight title="Menu" id="menu-nav-dropdown">
+
+              <Dropdown.Toggle noCaret>
+                <Glyphicon glyph="option-vertical" />
+              </Dropdown.Toggle>
+
+
+              <Dropdown.Menu>
+                <MenuItem onSelect={() => renameVideoTitle(listIndex)}>Rename Video</MenuItem>
+                <MenuItem onSelect={() => getPlaylistforCopy(value)}>Copy To Another Playlist</MenuItem>
+                <MenuItem onSelect={() => getPlaylistforMove(value)}>Move to Another Playlist</MenuItem>
+                <MenuItem divider />
+                <MenuItem onSelect={() => onClickDeleteCallback(listIndex)}>Delete</MenuItem>
+              </Dropdown.Menu>
+            </Dropdown>) : (<Dropdown dropup pullRight title="Menu" id="menu-nav-dropdown">
+
+              <Dropdown.Toggle noCaret>
+                <Glyphicon glyph="option-vertical" />
+              </Dropdown.Toggle>
+
+
+              <Dropdown.Menu>
+                <MenuItem onSelect={() => renameVideoTitle(listIndex)}>Rename Video</MenuItem>
+                <MenuItem onSelect={() => getPlaylistforCopy(value)}>Copy To Another Playlist</MenuItem>
+                <MenuItem onSelect={() => getPlaylistforMove(value)}>Move to Another Playlist</MenuItem>
+                <MenuItem divider />
+                <MenuItem onSelect={() => onClickDeleteCallback(listIndex)}>Delete</MenuItem>
+              </Dropdown.Menu>
+            </Dropdown>)}
+
+
+
+
+          </div>
+        </li>
+      </div>
+      }
     </div>
+    
 
   );
 });
 
-const SortableList = SortableContainer(({ items, onClickDeleteCallback, onClickMoveToBottom, onClickMoveToTop, getPlaylistforCopy, renameVideoTitle, getPlaylistforMove }) => {
+const SortableList = SortableContainer(({ items, onClickDeleteCallback, onClickMoveToBottom, onClickMoveToTop, getPlaylistforCopy, renameVideoTitle, getPlaylistforMove, recentVideosObjects }) => {
   return (
     <div style={{ 'overflow': 'auto', 'position':'absolute', 'height':'93%', 'width':'100%' }}>
       <ul>
@@ -171,7 +252,8 @@ const SortableList = SortableContainer(({ items, onClickDeleteCallback, onClickM
                         listIndex={index} 
                         getPlaylistforCopy={getPlaylistforCopy}
                         renameVideoTitle={renameVideoTitle}
-                        getPlaylistforMove={getPlaylistforMove} />
+                        getPlaylistforMove={getPlaylistforMove}
+                        recentVideosObjects={recentVideosObjects} />
         ))}
       </ul>
     </div>
@@ -261,7 +343,8 @@ class App extends Component {
       notificationListIndex: 0,
       notificationVolume: 100,
       notificationMuted: true,
-      showSettingsModal: false
+      showSettingsModal: false,
+      recentVideosObjects: []
     }
   }
 
@@ -286,6 +369,7 @@ class App extends Component {
     socket.on('Event_chaosSkipModeChanged', (data) => this.handleChaosSkipModeChanged(data))
     socket.on('Event_leaderboardChanged', (data) => this.handleLeaderBoardChange(data))
 
+    this.getRecentlyPlayedVideos()
     this.getCurrentVersion()
     this.updateWindowDimensions()
     this.getPlaylistsForCurrentUser()
@@ -296,9 +380,41 @@ class App extends Component {
     
   }
 
+  getRecentlyPlayedVideos = () => {
+    var hours = 12
+    var minutes = 0
+
+    var url = apiEndpoint + '/getRecentVideos?hours=' + hours + '&minutes=' + minutes
+
+    Axios.get(url)
+      .then((response) => {
+        var recentVideoIds = []
+
+        for(var i = 0; i < response['data'].length; i++){
+          recentVideoIds.push(response['data'][i]['video']['videoId'])
+        }
+
+        var currentPlaylistRecentVids = []
+
+        for(var i = 0; i < this.state.currentPlaylist.playlistVideos.length; i++){
+
+          if(recentVideoIds.includes(this.state.currentPlaylist.playlistVideos[i].videoId)){
+            console.log(this.state.currentPlaylist.playlistVideos[i])
+            currentPlaylistRecentVids.push(this.state.currentPlaylist.playlistVideos[i])
+          }
+        }
+
+        this.setState({
+          recentVideosObjects: currentPlaylistRecentVids
+        })
+
+
+      })
+
+
+  }
 
   testNotificationNoise = () => {
-    console.log('testing')
     this.notificationPlayer.current.startNotification()
   }
 
@@ -345,7 +461,8 @@ class App extends Component {
   startKeepBackendAlive = () => {
     var intervalTime = (60 * 10) * 1000
 
-    this.getCurrentVersion()
+    // this.getCurrentVersion()
+    this.getRecentlyPlayedVideos()
 
     setTimeout(this.startKeepBackendAlive, intervalTime)
   }
@@ -978,12 +1095,12 @@ class App extends Component {
         currentPlaylist: newPlaylist
       })
 
-      this.forceUpdate()
-
       // console.log('changeCurrentPlaylist')
       this.setBackendCurrentPlaylist(newPlaylist)
 
       this.closePlaylistSlideIn()
+
+      this.getRecentlyPlayedVideos()
 
       this.forceUpdate()
 
@@ -1320,6 +1437,8 @@ class App extends Component {
       hasSkipped: false,
       skippers: []
     })
+
+    this.getRecentlyPlayedVideos()
 
     this.forceUpdate()
   }
@@ -2106,7 +2225,8 @@ class App extends Component {
                 onClickCopyToPlaylist={this.copyVideoToPlaylist}
                 getPlaylistforCopy={this.getPlaylistforCopy}
                 getPlaylistforMove={this.getPlaylistforMove}
-                renameVideoTitle={this.startRenameVideoTitle} />
+                renameVideoTitle={this.startRenameVideoTitle}
+                recentVideosObjects={this.state.recentVideosObjects}/>
             
 
           </fieldset>
