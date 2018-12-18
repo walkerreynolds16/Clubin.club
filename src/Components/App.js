@@ -297,9 +297,6 @@ class App extends Component {
   }
 
 
-  testNotificationNoise = () => {
-    this.notificationPlayer.current.startNotification()
-  }
 
   handleLeaderBoardChange = (data) => {
     // console.log("leaderboard change")
@@ -2079,10 +2076,6 @@ class App extends Component {
             {this.state.isAdmin && 
               <Button style={{'margin':'5px'}} onClick={() => this.showAdminModal()}>Admin Menu</Button>
             }
-
-            
-            <Button style={{'margin':'5px'}} onClick={() => this.testNotificationNoise()}>Test</Button>
-
 
 
               {/*Search Box */}
