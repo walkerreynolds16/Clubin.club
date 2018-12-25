@@ -2052,6 +2052,7 @@ class App extends Component {
     this.updatePlaylistState(playlistCopy)
 
     this.setBackEndPlaylist(playlistCopy)
+    this.setBackendCurrentPlaylist(playlistCopy)
 
     this.forceUpdate()
   }
