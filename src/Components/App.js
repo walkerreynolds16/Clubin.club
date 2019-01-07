@@ -14,8 +14,9 @@ import {API_ENDPOINT} from '../api-config.js'
 import Leaderboard from '../Components/Leaderboard'
 import Notification from '../Components/Notification'
 import Settings from '../Components/Settings'
-
 import openSocket from 'socket.io-client';
+import ReactDOM from "react-dom";
+import Pagination from "react-js-pagination";
 
 const apiEndpoint = API_ENDPOINT
 
@@ -28,6 +29,7 @@ const socket = openSocket.connect(apiEndpoint, {transports: ['websocket']})
 var video = ''
 const youtubeAPIKey = 'AIzaSyD7edp0KrX7oft2f-zL2uEnQFhW4Uj5OvE'
 
+/*Style for the current playlist */
 const currentPlaylistStyle = {
   display: 'inline-block',
   position: 'fixed',
@@ -67,14 +69,7 @@ const tabStyle = {
   
 }
 
-const chatWindowStyle = {
-  width: '100%',
-  overflow: 'auto',
-  background: '#9699a0',
-  borderLeft: '2px double #74757E',
-  borderRight: '2px double #74757E',
-}
-
+/*Style for the chatbox*/
 const messagesStyle = {
   position: 'relative',
   height:'100%',
@@ -85,6 +80,8 @@ const messagesStyle = {
 
 }
 
+/*This is the item for the Video selections while they are in the current Playlist: ie houses all of the options and data for
+each indiviual video*/
 const SortableItem = SortableElement(({ value, onClickDeleteCallback, onClickMoveToBottom, onClickMoveToTop, listIndex, getPlaylistforCopy, renameVideoTitle, getPlaylistforMove, recentVideosObjects }) => {
   var image = 'https://img.youtube.com/vi/' + value.videoId + '/0.jpg'
   var isRecentVideo = false
@@ -237,25 +234,34 @@ const SortableItem = SortableElement(({ value, onClickDeleteCallback, onClickMov
   );
 });
 
-const SortableList = SortableContainer(({ items, onClickDeleteCallback, onClickMoveToBottom, onClickMoveToTop, getPlaylistforCopy, renameVideoTitle, getPlaylistforMove, recentVideosObjects }) => {
+const SortableList = SortableContainer(({ items, onClickDeleteCallback, onClickMoveToBottom, onClickMoveToTop, getPlaylistforCopy, renameVideoTitle, getPlaylistforMove, recentVideosObjects, currentPage, handlePageChange }) => {
   return (
     <div style={{ 'overflow': 'auto', 'position':'absolute', 'height':'93%', 'width':'100%' }}>
       <ul>
         {items.map((value, index) => (
 
-          <SortableItem key={`item-${index}`} 
-                        index={index} 
-                        value={value} 
-                        onClickDeleteCallback={onClickDeleteCallback} 
-                        onClickMoveToBottom={onClickMoveToBottom} 
-                        onClickMoveToTop={onClickMoveToTop}
-                        listIndex={index} 
-                        getPlaylistforCopy={getPlaylistforCopy}
-                        renameVideoTitle={renameVideoTitle}
-                        getPlaylistforMove={getPlaylistforMove}
-                        recentVideosObjects={recentVideosObjects} />
+          <SortableItem key={`item-${index}`}
+            index={index}
+            value={value}
+            onClickDeleteCallback={onClickDeleteCallback}
+            onClickMoveToBottom={onClickMoveToBottom}
+            onClickMoveToTop={onClickMoveToTop}
+            listIndex={index}
+            getPlaylistforCopy={getPlaylistforCopy}
+            renameVideoTitle={renameVideoTitle}
+            getPlaylistforMove={getPlaylistforMove}
+            recentVideosObjects={recentVideosObjects} />
         ))}
       </ul>
+
+      <Pagination
+        activePage={currentPage}
+        itemsCountPerPage={5}
+        totalItemsCount={items.length}
+        pageRangeDisplayed={3}
+        onChange={handlePageChange}
+      />
+      
     </div>
 
   );
@@ -344,7 +350,8 @@ class App extends Component {
       notificationVolume: 100,
       notificationMuted: true,
       showSettingsModal: false,
-      recentVideosObjects: []
+      recentVideosObjects: [],
+      currentPage: 1
     }
   }
 
@@ -2112,6 +2119,13 @@ class App extends Component {
     this.notificationPlayer.current.onSettingsChangeCurrentNotification(index)
   }
 
+  /*Handles changing page for CurrentPlaylist Pagination*/
+  handlePageChange = (page) => {
+    this.setState({
+      currentPage: page
+    })
+  }
+
   render() {
 
     const opts = {
@@ -2227,7 +2241,10 @@ class App extends Component {
                 getPlaylistforCopy={this.getPlaylistforCopy}
                 getPlaylistforMove={this.getPlaylistforMove}
                 renameVideoTitle={this.startRenameVideoTitle}
-                recentVideosObjects={this.state.recentVideosObjects}/>
+                recentVideosObjects={this.state.recentVideosObjects}
+                currentPage={this.state.currentPage}
+                videoCount={this.state.currentPlaylist.playlistVideos.length}
+                handlePageChange={this.handlePageChange}/>
             
 
           </fieldset>
@@ -2244,7 +2261,7 @@ class App extends Component {
         </div >
 
 
-
+        {/*Chat Box/Tabs */}
         <div >
           <Tabs
             activeKey={this.state.tabKey}
@@ -2397,6 +2414,7 @@ class App extends Component {
           </Tabs>
         </div>
         
+        {/*Version Number*/}
         <div>
           <h6>Version Number: {this.state.currentVersion}</h6>
         </div>
