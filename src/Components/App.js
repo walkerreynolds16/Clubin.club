@@ -16,7 +16,7 @@ import Notification from '../Components/Notification'
 import Settings from '../Components/Settings'
 import openSocket from 'socket.io-client';
 import ReactDOM from "react-dom";
-import Pagination from "react-js-pagination";
+import Pagination from "./Pagination"
 
 const apiEndpoint = API_ENDPOINT
 
@@ -234,10 +234,11 @@ const SortableItem = SortableElement(({ value, onClickDeleteCallback, onClickMov
   );
 });
 
-const SortableList = SortableContainer(({ items, onClickDeleteCallback, onClickMoveToBottom, onClickMoveToTop, getPlaylistforCopy, renameVideoTitle, getPlaylistforMove, recentVideosObjects, currentPage, handlePageChange }) => {
+const SortableList = SortableContainer(({ items, onClickDeleteCallback, onClickMoveToBottom, onClickMoveToTop, getPlaylistforCopy, renameVideoTitle, getPlaylistforMove, recentVideosObjects}) => {
   return (
     <div style={{ 'overflow': 'auto', 'position':'absolute', 'height':'93%', 'width':'100%' }}>
       <ul>
+
         {items.map((value, index) => (
 
           <SortableItem key={`item-${index}`}
@@ -252,16 +253,9 @@ const SortableList = SortableContainer(({ items, onClickDeleteCallback, onClickM
             getPlaylistforMove={getPlaylistforMove}
             recentVideosObjects={recentVideosObjects} />
         ))}
-      </ul>
 
-      <Pagination
-        activePage={currentPage}
-        itemsCountPerPage={5}
-        totalItemsCount={items.length}
-        pageRangeDisplayed={3}
-        onChange={handlePageChange}
-      />
-      
+        
+        </ul>
     </div>
 
   );
@@ -351,7 +345,6 @@ class App extends Component {
       notificationMuted: true,
       showSettingsModal: false,
       recentVideosObjects: [],
-      currentPage: 1
     }
   }
 
@@ -2119,12 +2112,6 @@ class App extends Component {
     this.notificationPlayer.current.onSettingsChangeCurrentNotification(index)
   }
 
-  /*Handles changing page for CurrentPlaylist Pagination*/
-  handlePageChange = (page) => {
-    this.setState({
-      currentPage: page
-    })
-  }
 
   render() {
 
@@ -2230,6 +2217,9 @@ class App extends Component {
 
             {<Button onClick={(e) => this.searchPlaylist(e)}>Search</Button> } */}
 
+          
+            
+
               <SortableList
                 items={this.state.currentPlaylist.playlistVideos}
                 onSortEnd={this.onSortEnd}
@@ -2241,11 +2231,10 @@ class App extends Component {
                 getPlaylistforCopy={this.getPlaylistforCopy}
                 getPlaylistforMove={this.getPlaylistforMove}
                 renameVideoTitle={this.startRenameVideoTitle}
-                recentVideosObjects={this.state.recentVideosObjects}
-                currentPage={this.state.currentPage}
-                videoCount={this.state.currentPlaylist.playlistVideos.length}
-                handlePageChange={this.handlePageChange}/>
+                recentVideosObjects={this.state.recentVideosObjects}/>
+
             
+           
 
           </fieldset>
         </div>
