@@ -11,6 +11,10 @@ import {API_ENDPOINT} from '../api-config.js'
 
 const apiEndpoint = API_ENDPOINT
 
+const requestHeaders = {
+  referer: "http://clubin.club"
+}
+
 export default class Home extends Component {
   constructor(props) {
     super(props)
@@ -32,7 +36,7 @@ export default class Home extends Component {
     var url = apiEndpoint + '/getCurrentVersion'
     
 
-    Axios.get(url)
+    Axios.get(url, {headers: requestHeaders})
       .then((response) => {  
         // console.log(response)      
         var currentVersion = response['data']['version']

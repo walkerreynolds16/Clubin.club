@@ -85,6 +85,10 @@ const messagesStyle = {
 
 }
 
+const requestHeaders = {
+  referer: "http://clubin.club"
+}
+
 const SortableItem = SortableElement(({ value, onClickDeleteCallback, onClickMoveToBottom, onClickMoveToTop, listIndex, getPlaylistforCopy, renameVideoTitle, getPlaylistforMove, recentVideosObjects }) => {
   var image = 'https://img.youtube.com/vi/' + value.videoId + '/0.jpg'
   var isRecentVideo = false
@@ -386,7 +390,7 @@ class App extends Component {
 
     var url = apiEndpoint + '/getRecentVideos?hours=' + hours + '&minutes=' + minutes
 
-    Axios.get(url)
+    Axios.get(url, {headers: requestHeaders})
       .then((response) => {
         var recentVideoIds = []
 
@@ -438,7 +442,7 @@ class App extends Component {
 
   getAdmins = () => {
     var url = apiEndpoint + '/getAdmins'
-    Axios.get(url)
+    Axios.get(url, {headers: requestHeaders})
       .then((response) => {
         // console.log(response)
 
@@ -469,7 +473,7 @@ class App extends Component {
 
   getCurrentVideoMetrics = () => {
     var url = apiEndpoint + '/getCurrentVideoMetrics'
-    Axios.get(url)
+    Axios.get(url, {headers: requestHeaders})
       .then((response) => {
         console.log(response)
         this.setState({
@@ -623,7 +627,7 @@ class App extends Component {
   getCurrentVideo = () => {
     //If a user connects, check if anyone is DJing, if so, get time tag and display video
     var url = apiEndpoint + '/getCurrentVideo'
-    Axios.get(url)
+    Axios.get(url, {headers: requestHeaders})
       .then((response) => {
         // console.log(response)
 
@@ -807,7 +811,7 @@ class App extends Component {
     if (q.length >= 1) {
       var idString = ''
 
-      Axios.get(url)
+      Axios.get(url, {headers: requestHeaders})
         .then(response => {
           // console.log(response)
 
@@ -836,7 +840,7 @@ class App extends Component {
           var getVideoDurationUrl = 'https://www.googleapis.com/youtube/v3/videos?id=' + idString + '&part=contentDetails&key=' + youtubeAPIKey
           var getVideoViewCountUrl = 'https://www.googleapis.com/youtube/v3/videos?id=' + idString + '&part=statistics&key=' + youtubeAPIKey
 
-          Axios.get(getVideoDurationUrl)
+          Axios.get(getVideoDurationUrl, {headers: requestHeaders})
             .then((response) => {
               // console.log(response)
 
@@ -857,7 +861,7 @@ class App extends Component {
 
             })
 
-            Axios.get(getVideoViewCountUrl)
+            Axios.get(getVideoViewCountUrl, {headers: requestHeaders})
             .then((response) =>{
               //console.log(response)
 
@@ -981,7 +985,7 @@ class App extends Component {
   getVideoTitle = (videoId) => {
     var url = 'https://www.googleapis.com/youtube/v3/videos?key=' + youtubeAPIKey + '&id=' + videoId + '&part=snippet'
     var title = ''
-    Axios.get(url)
+    Axios.get(url, {headers: requestHeaders})
       .then((response) => {
         return response['data']['items'][0]['snippet']['title']
       })
@@ -1044,7 +1048,7 @@ class App extends Component {
 
   getPlaylistsForCurrentUser = () => {
     var url = apiEndpoint + '/getPlaylists?username=' + this.state.currentUser
-    Axios.get(url)
+    Axios.get(url, {headers: requestHeaders})
       .then((response) => {
         // console.log('response getPlaylistsForCurrentUser')
         // console.log(response)
@@ -1577,7 +1581,7 @@ class App extends Component {
 
   getCurrentVersion = () => {
     var url = apiEndpoint + '/getCurrentVersion'
-    Axios.get(url)
+    Axios.get(url, {headers: requestHeaders})
       .then((response) => {
         // console.log(response)
         this.setState({
@@ -1999,7 +2003,7 @@ class App extends Component {
     var url = 'https://www.googleapis.com/youtube/v3/videos?id=' + id +'&part=snippet&key=' + youtubeAPIKey
     var searchList = []
 
-    Axios.get(url)
+    Axios.get(url, {headers: requestHeaders})
       .then(response => {
 
         if(response['data']['items'].length > 0){
@@ -2007,7 +2011,7 @@ class App extends Component {
   
           var getVideoDurationUrl = 'https://www.googleapis.com/youtube/v3/videos?id=' + id + '&part=contentDetails&key=' + youtubeAPIKey
   
-            Axios.get(getVideoDurationUrl)
+            Axios.get(getVideoDurationUrl, {headers: requestHeaders})
               .then((response) => {
                 console.log(response)
   
