@@ -1,3 +1,5 @@
+This site is old and deprecated. I have started a redesign of the site at www.streamn.live
+
 This is a project to make a PlugDJ Clone for personal use. PlugDJ is a website that synchronizes video playing among members in lobbies.
 Each lobby member may join the queue to play their video. Each member may have playlists associated to their accounts that they can play in any lobby.
 Recently, PlugDj changed their UI for the worse and I wanted an alternative application to use with friends. I don't intend on using this clone for commercial use,
